@@ -1,0 +1,6 @@
+## dotenv environment variable files
+.env.development
+
+node_modules/
+
+Done.txt
