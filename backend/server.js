@@ -1,30 +1,58 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import dotenv from "dotenv";
+// const dotenv = require("dotenv");
+import "./utils/env.js";
 import express from "express";
 import cookieParser from "cookie-parser";
-import moongose from "mongoose";
+import mongoose from "mongoose";
+import storeRouter from "./routes/store.js";
+import authRouter from "./routes/user.js";
+import adminRouter from "./routes/admin.js";
+import { setHeaders } from "./middlewares/setHeaders.js";
+import cors from "cors";
 
 // Utils
-
-dotenv.config({ path: `.env${process.env.NODE_ENV}` });
 const port = process.env.PORT || 5000;
 const app = express();
 
-// Middleware
+// Make this variable available in all views
+app.use((req, res, next) => {
+    next();
+});
+
+// Middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+    origin: 'http://localhost:5173', // Allow requests from this origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these HTTP methods
+    credentials: true // Allow cookies to be sent with requests
+  }));
 
-app.use("/", (req, res) => {
-    res.send("testing");
+
+// Routes
+app.use("", storeRouter);
+app.use("", authRouter);
+app.use("/admin", adminRouter);
+app.use((req, res) => {
+    res.status(404).json({"error": "Route not found."});
 });
-try {
-    await moongose.connect(process.env.MONGO_URI);
-    app.listen(port, () => {
-        console.log(`Server is running on port ${port}`);
-    });
-} catch (error) {
-    console.log(err);
-}
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({"error": "Internal Server Error"});
+  });
+
+// Start server
+const startServer = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        app.listen(port, () => {
+            console.log(`Server is running on port ${port}`);
+        });
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+startServer();
