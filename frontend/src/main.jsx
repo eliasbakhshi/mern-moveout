@@ -12,6 +12,8 @@ import UserRoutes from "./pages/user/UserRoutes";
 import AdminRoutes from "./pages/admin/AdminRoutes";
 import Dashboard from "./pages/user/Dashboard.jsx";
 import UserList from "./pages/admin/UserList.jsx";
+import Error404 from "./pages/Error404";
+import Profile from "./pages/user/Profile";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -21,12 +23,15 @@ const router = createBrowserRouter(
 
       {/* Registered users */}
       <Route element={<UserRoutes />}>
-        <Route path="/profile" element={<Dashboard />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       <Route path="/admin" element={<AdminRoutes />}>
+        <Route path="" element={<Dashboard />} />
         <Route path="user-list" element={<UserList />} />
       </Route>
+
+      <Route path="*" element={<Error404 />} />
     </Route>
   )
 );

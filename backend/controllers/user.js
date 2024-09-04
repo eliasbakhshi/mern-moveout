@@ -3,6 +3,30 @@ import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
 import createSetToken from "../middlewares/createSetToken.js";
 
+const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
+var path = require("path");
+const fs = require("node:fs");
+const { validationResult } = require("express-validator");
+
+/**
+ * Create a transporter for sending emails
+ */
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_SECURE,
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+    },
+    // allow less secure apps to access the email account for localhost
+    tls: {
+        rejectUnauthorized: process.env.SMTP_PRODUCTION,
+    },
+});
+
 const secret = process.env.JWT_KEY;
 
 export const register = async (req, res) => {
@@ -19,11 +43,13 @@ export const register = async (req, res) => {
     }
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashed });
-    return res.status(201).json({ userId: user._id });
+    // return res.status(201).json({ id: user._id, name: user.name, email: user.email, role: user.role });
+
+    return res.status(201).json({ message: "User created successfully" });
 };
 
 export const login = async (req, res, next) => {
-    const { email, password } = req.body;
+    const { email, password, remember } = req.body;
     if (!email || !password) {
         return res.status(400).json({ error: "Please fill in all the fields" });
     }
@@ -43,7 +69,7 @@ export const login = async (req, res, next) => {
         return res.status(400).json({ error: "Invalid credentials" });
     }
 
-    createSetToken(res, user._id);
+    createSetToken(res, user._id, remember);
     return res.status(200).json({ id: user._id, name: user.name, email: user.email, role: user.role });
 };
 

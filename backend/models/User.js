@@ -19,6 +19,16 @@ const userSchema = new Schema({
         required: true,
         default: "user",
     },
+    emailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    emailVerificationToken: {
+        type: String,
+    },
+    passwordResetToken: {
+        type: String,
+    },
 }, { timestamps: true });
 
 export default model("User", userSchema);

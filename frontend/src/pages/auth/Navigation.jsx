@@ -1,74 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Avatar, Button, Dropdown, Navbar, NavbarLink } from "flowbite-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Avatar, Dropdown, Navbar } from "flowbite-react";
 import { useDispatch, useSelector } from "react-redux";
 // import Loader from "../../components/Loader";
-import {
-  useLoginMutation,
-  useRegisterMutation,
-  useLogoutMutation,
-} from "../../redux/api/usersApiSlice";
-import {
-  setCredentials,
-  removeCredentials,
-} from "../../redux/features/auth/authSlice";
+import { useLogoutMutation } from "../../redux/api/usersApiSlice";
+import { removeCredentials } from "../../redux/features/auth/authSlice";
 import { toast } from "react-toastify";
 import { FaRegHeart } from "react-icons/fa";
 import { IoCartOutline } from "react-icons/io5";
 import { MdDashboard } from "react-icons/md";
-import { PiSignOut,PiSignIn } from "react-icons/pi";
-import { BsCartCheckFill, BsPersonPlus  } from "react-icons/bs";
+import { PiSignOut, PiSignIn } from "react-icons/pi";
+import { BsCartCheckFill, BsPersonPlus } from "react-icons/bs";
+import Loading from "../Loading";
 
 const Login = () => {
-  const [name, setName] = useState("222222");
-  const [email, setEmail] = useState("222222@gmail.com");
-  const [password, setPassword] = useState("222222");
-
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const [login, { isLoading: loginLoading }] = useLoginMutation();
-  const [register, { isLoading: registerLoading }] = useRegisterMutation();
   const [logout, { isLoading: logoutLoading }] = useLogoutMutation();
 
   const { userInfo } = useSelector((state) => state.auth);
 
-  const { search } = useLocation();
-  const sp = new URLSearchParams(search);
-  const redirect = sp.get("redirect") || "/";
-
-  useEffect(() => {
-    if (userInfo) {
-      navigate(redirect);
-    }
-  }, [navigate, redirect, userInfo]);
-
-  if (loginLoading || registerLoading || logoutLoading) {
-    return <div>Loading...</div>;
-  }
-
-  const loginHandler = async () => {
-    let credentials = { email, password };
-    try {
-      const res = await login(credentials).unwrap();
-      // Handle successful login
-      dispatch(setCredentials(res));
-    } catch (err) {
-      toast.error(err.data.error);
-    }
-  };
-
-  const registerHandler = async (e) => {
-    e.preventDefault();
-    try {
-      await register({ name, email, password }).unwrap();
-      // Handle successful login
-    } catch (err) {
-      toast.error(err.data.error);
-    }
-  };
+  logoutLoading && <Loading />;
 
   const logoutHandler = async () => {
     try {
@@ -81,13 +33,9 @@ const Login = () => {
   };
 
   return (
-    <Navbar fluid rounded>
-      <Navbar.Brand href="https://flowbite-react.com">
-        <img
-          src="/logo.png"
-          className="mr-3 h-6 sm:h-9"
-          alt="Flowbite React Logo"
-        />
+    <Navbar fluid className="fixed left-0 top-0 w-full">
+      <Navbar.Brand href="/">
+        <img src="/logo.png" className="mr-3 h-6 sm:h-9" alt="Store" />
         <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
           Store
         </span>
@@ -126,29 +74,29 @@ const Login = () => {
               />
             }
           >
-              <Dropdown.Item>
-                <Avatar
-                  img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                  alt="User"
-                  rounded
-                  color="red"
-                  size="xs"
-                  className="mr-2"
-                />
-                Bonnie Green
-              </Dropdown.Item>
-              <Dropdown.Divider />
+            <Dropdown.Item href="/admin">
+              <Avatar
+                img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                alt="User"
+                rounded
+                color="red"
+                size="xs"
+                className="mr-2"
+              />
+              Bonnie Green
+            </Dropdown.Item>
+            <Dropdown.Divider />
             {userInfo.role == "admin" && (
-              <Dropdown.Item>
+              <Dropdown.Item href="admin">
                 <MdDashboard className="mr-2" />
                 Dashboard
               </Dropdown.Item>
             )}
-            <Dropdown.Item>
+            <Dropdown.Item href="cart">
               <IoCartOutline className="mr-2" />
               Cart
             </Dropdown.Item>
-            <Dropdown.Item>
+            <Dropdown.Item href="orders">
               <BsCartCheckFill className="mr-2" />
               Orders
             </Dropdown.Item>
@@ -174,8 +122,14 @@ const Login = () => {
               />
             }
           >
-            <Dropdown.Item onClick={loginHandler}><PiSignIn className="mr-2" />Login</Dropdown.Item>
-            <Dropdown.Item onClick={loginHandler}><BsPersonPlus className="mr-2" />Register</Dropdown.Item>
+            <Dropdown.Item href="/login">
+              <PiSignIn className="mr-2" />
+              Login
+            </Dropdown.Item>
+            <Dropdown.Item href="/register">
+              <BsPersonPlus className="mr-2" />
+              Register
+            </Dropdown.Item>
           </Dropdown>
         )}
         <Navbar.Toggle />
