@@ -2,169 +2,220 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
 import createSetToken from "../middlewares/createSetToken.js";
-
-const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
-const crypto = require("crypto");
-var path = require("path");
-const fs = require("node:fs");
-const { validationResult } = require("express-validator");
-
-/**
- * Create a transporter for sending emails
- */
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-    // allow less secure apps to access the email account for localhost
-    tls: {
-        rejectUnauthorized: process.env.SMTP_PRODUCTION,
-    },
-});
+import transporter from "../config/nodemailer.js";
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 const secret = process.env.JWT_KEY;
 
 export const register = async (req, res) => {
-    const { name, email, password } = req.body;
+  const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-        return res.status(400).json({ error: "Please fill in all the fields" });
-    }
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Please fill in all the fields" });
+  }
 
-    // Check if the email already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-        return res.status(400).json({ error: "Email already exists" });
-    }
-    const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashed });
-    // return res.status(201).json({ id: user._id, name: user.name, email: user.email, role: user.role });
+  // Check if the email already exists
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    return res.status(400).json({ message: "Email already exists" });
+  }
+  // Create hashed password and email token
+  const hashed = await bcrypt.hash(password, 10);
+  const emailToken = crypto.randomBytes(32).toString("hex");
+  const emailVerificationToken = crypto
+    .createHash("sha256")
+    .update(emailToken)
+    .digest("hex");
+  const tokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+  // Create a new user
+  const user = await User.create({
+    name,
+    email,
+    password: hashed,
+    emailVerificationToken,
+    tokenExpiresAt,
+  });
+  // Get the email template
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") + "/backend/views/template-email-verification.html",
+    "utf8",
+  );
+  emailTemplate = emailTemplate.replace(
+    "**email_link**",
+    `${process.env.BASE_URL}/verify-email/${emailVerificationToken}`,
+  );
+  emailTemplate = emailTemplate.replace("**name**", name);
+  // Send the email
+  await transporter.sendMail({
+    from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: "Please verify your email.",
+    text: `Thank you ${name} for signing up! We're excited to have you on board.`,
+    html: emailTemplate,
+  });
 
-    return res.status(201).json({ message: "User created successfully" });
+  return res.status(201).json({ message: "User created successfully" });
 };
 
 export const login = async (req, res, next) => {
-    const { email, password, remember } = req.body;
-    if (!email || !password) {
-        return res.status(400).json({ error: "Please fill in all the fields" });
-    }
-
-    const err = validationResult(req);
-    if (!err.isEmpty()) {
-        return res.status(422).json({ error: err.array()[0].msg});
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-        return res.status(400).json({ error: "User not found" });
-    }
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-        return res.status(400).json({ error: "Invalid credentials" });
-    }
-
-    createSetToken(res, user._id, remember);
-    return res.status(200).json({ id: user._id, name: user.name, email: user.email, role: user.role });
+  const { email, password, remember } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ message: "Please fill in all the fields" });
+  }
+  // Validate the email and password
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
+  // Check if the user exists
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
+  // Check if the email is verified
+  if (!user.emailVerified) {
+    return res.status(400).json({ message: "Please verify your email" });
+  }
+  // Check if the password is correct
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) {
+    return res.status(400).json({ message: "Invalid credentials" });
+  }
+  // Create and set a token
+  createSetToken(res, user._id, remember);
+  return res.status(200).json({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  });
 };
 
 export const logout = (req, res, next) => {
-    res.clearCookie("JWTMERNStore");
-    return res.status(200).json({ message: "Logged out" });
+  // Clear the cookie
+  res.clearCookie("JWTMERNStore");
+  return res.status(200).json({ message: "Logged out" });
 };
 
 export const getAllUsers = async (req, res) => {
-    const users = await User.find({});
-    return res.status(200).json(users);
+  const users = await User.find({});
+  return res.status(200).json(users);
 };
 
 export const getCurrentUser = async (req, res) => {
-    const users = await User.findById({ _id: req.user._id });
+  const users = await User.findById({ _id: req.user._id });
 
-    if (!users) {
-        return res.status(404).json({ error: "User not found" });
-    }
-    return res.status(200).json(users);
+  if (!users) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  return res.status(200).json(users);
 };
 
 export const updateCurrentUser = async (req, res) => {
-    const { name, email, password, role = "user" } = req.body;
+  const { name, email, password, role = "user" } = req.body;
+  // Find the user
+  const user = await User.findById({ _id: req.user._id });
 
-    const user = await User.findById({ _id: req.user._id });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  // Update the user
+  user.name = name || user.name;
+  user.email = email || user.email;
+  user.password = password ? await bcrypt.hash(password, 10) : user.password;
+  user.role = role || user.role;
+  const updatedUser = await user.save();
 
-    if (!user) {
-        return res.status(404).json({ error: "User not found" });
-    }
-    user.name = name || user.name;
-    user.email = email || user.email;
-    user.password = password ? await bcrypt.hash(password, 10) : user.password;
-    user.role = role || user.role;
-    const updatedUser = await user.save();
+  return res.status(200).json({
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    role: updatedUser.role,
+  });
+};
 
-    return res.status(200).json({
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-    });
+export const verifyEmail = async (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.status(400).json({ message: "Token is required" });
+  }
+  // Find the user
+  const user = await User.findOne({
+    emailVerificationToken: token,
+    tokenExpiresAt: { $gt: Date.now() },
+  });
+  if (!user) {
+    return res.status(400).json({ message: "Invalid token or token expired" });
+  }
+  // Update the user and set emailVerified to true
+  user.emailVerificationToken = undefined;
+  user.tokenExpiresAt = undefined;
+  user.emailVerified = true;
+  await user.save();
+  return res.status(200).json({ message: "Email verified" });
 };
 
 export const deleteUser = async (req, res) => {
-    const userId = req.params.userId;
-    console.log(userId);
+  const userId = req.params.userId;
+  // Find the user and delete it
+  const user = await User.findOneAndDelete({ _id: userId });
 
-    const user = await User.findOneAndDelete({ _id: userId });
-
-    if (!user) {
-        return res.status(404).json({ error: "User not found" });
-    }
-    return res.status(200).json({ message: "User has been deleted." });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  return res.status(200).json({ message: "User has been deleted." });
 };
 
 export const getUserById = async (req, res) => {
-    const userId = req.params.userId;
+  const userId = req.params.userId;
 
-    const user = await User.findOne({ _id: userId }).select("-password -createAt -updatedAt");
+  // Find the user but exclude the password, createdAt, and updatedAt fields
+  const user = await User.findOne({ _id: userId }).select(
+    "-password -createAt -updatedAt",
+  );
 
-    if (!user) {
-        return res.status(404).json({ error: "User not found" });
-    }
-    return res.status(200).json(user);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  return res.status(200).json(user);
 };
 
 export const updateUserById = async (req, res) => {
-    const userId = req.params.userId;
+  const userId = req.params.userId;
+  // Find the user
+  const user = await User.findOne({ _id: userId });
 
-    const user = await User.findOne({ _id: userId });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
 
-    if (!user) {
-        return res.status(404).json({ error: "User not found" });
-    }
+  const { name, email, role } = req.body;
+  // Update the user
+  user.name = name || user.name;
+  user.email = email || user.email;
+  user.role = role || user.role;
 
-    const { name, email, role } = req.body;
+  const updatedUser = await user.save();
 
-    user.name = name || user.name;
-    user.email = email || user.email;
-    user.role = role || user.role;
-
-    const updatedUser = await user.save();
-
-    return res.status(200).json({ _id: updatedUser._id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role });
+  return res.status(200).json({
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    role: updatedUser.role,
+  });
 };
 
 export default {
-    register,
-    login,
-    logout,
-    getAllUsers,
-    getCurrentUser,
-    updateCurrentUser,
-    deleteUser,
-    getUserById,
-    updateUserById,
+  register,
+  login,
+  logout,
+  verifyEmail,
+  getAllUsers,
+  getCurrentUser,
+  updateCurrentUser,
+  deleteUser,
+  getUserById,
+  updateUserById,
 };

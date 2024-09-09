@@ -23,7 +23,14 @@ export const usersApi = apiSlice.injectEndpoints({
                 method: "POST",
             }),
         }),
+        verifyEmail: builder.query({
+            query: (token) => ({
+                url: "/api/verify-email",
+                method: "GET",
+                params: { token },
+            }),
+        }),
     }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation } = usersApi;
+export const { useLoginMutation, useRegisterMutation, useLogoutMutation, useVerifyEmailQuery } = usersApi;

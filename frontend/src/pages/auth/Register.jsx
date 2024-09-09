@@ -1,10 +1,9 @@
 import { useRef, useEffect } from "react";
 import { useRegisterMutation } from "../../redux/api/usersApiSlice";
-import { setCredentials } from "../../redux/features/auth/authSlice";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 function Register() {
   const nameRef = useRef(null);
@@ -12,7 +11,6 @@ function Register() {
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { search } = useLocation();
 
@@ -22,7 +20,7 @@ function Register() {
   const redirect = sp.get("redirect") || "/";
 
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo?.role) {
       navigate(redirect);
     }
   }, [navigate, redirect, userInfo]);
@@ -39,12 +37,14 @@ function Register() {
     }
 
     try {
-      const user = await register({ name, email, password }).unwrap();
-      // Handle successful login
-      dispatch(setCredentials(user));
-      navigate("/");
+      const registered = await register({ name, email, password }).unwrap();
+      // Handle successful register
+      if (registered) {
+        toast.success("Registration successful. Check your email to verify.");
+        e.target.reset();
+      }
     } catch (err) {
-      return toast.error(err?.data?.error || "An error occurred");
+      return toast.error(err?.data?.message || "An error occurred");
     }
   };
 

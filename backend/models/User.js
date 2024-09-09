@@ -29,6 +29,9 @@ const userSchema = new Schema({
     passwordResetToken: {
         type: String,
     },
+    tokenExpiresAt: {
+        type: Date,
+    },
 }, { timestamps: true });
 
 export default model("User", userSchema);

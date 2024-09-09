@@ -28,7 +28,7 @@ const Login = () => {
       dispatch(removeCredentials());
       // Handle successful login
     } catch (err) {
-      toast.error(err?.data?.error || err.message);
+      toast.error(err?.data?.message || err.message);
     }
   };
 
@@ -59,7 +59,7 @@ const Login = () => {
           status=""
           img={() => <FaRegHeart size="1.5rem" />}
         />
-        {userInfo ? (
+        {userInfo && userInfo.role ? (
           <Dropdown
             arrowIcon={false}
             inline
@@ -74,7 +74,7 @@ const Login = () => {
               />
             }
           >
-            <Dropdown.Item href="/admin">
+            <Dropdown.Item href="/profile">
               <Avatar
                 img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
                 alt="User"

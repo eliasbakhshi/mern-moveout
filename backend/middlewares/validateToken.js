@@ -3,18 +3,20 @@ import User from "../models/User.js";
 import asyncHandler from "express-async-handler";
 
 const validateToken = asyncHandler(async (req, res, next) => {
-    let token = req.cookies.JWTMERNStore;
-    if (!token) {
-        return res.status(401).json({ error: "You need to be logged in to access this route" });
-    }
+  let token = req.cookies.JWTMERNStore;
+  if (!token) {
+    return res
+      .status(401)
+      .json({ message: "You need to be logged in to access this route" });
+  }
 
-    const decoded = jwt.verify(token, process.env.JWT_KEY);
-    if (!decoded) {
-        return res.status(401).json({ error: "Invalid token" });
-    }
+  const decoded = jwt.verify(token, process.env.JWT_KEY);
+  if (!decoded) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
 
-    req.user = await User.findById(decoded.id);
-    next();
+  req.user = await User.findById(decoded.id);
+  next();
 });
 
 export default validateToken;

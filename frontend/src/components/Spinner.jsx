@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 function Spinner({ h = 3, w = 3, className = "" }) {
   return (
     <>
@@ -21,10 +23,10 @@ function Spinner({ h = 3, w = 3, className = "" }) {
   );
 }
 
-export default Spinner;
-
 Spinner.propTypes = {
-  h: Number,
-  w: Number,
-  className: String,
+  h: PropTypes.number,
+  w: PropTypes.number,
+  className: PropTypes.string,
 };
+
+export default Spinner;

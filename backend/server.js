@@ -4,7 +4,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import storeRouter from "./routes/store.js";
-import authRouter from "./routes/user.js";
+import userRouter from "./routes/user.js";
 import adminRouter from "./routes/admin.js";
 import { setHeaders } from "./middlewares/setHeaders.js";
 import cors from "cors";
@@ -31,7 +31,7 @@ app.use(cors({
 
 // Routes
 app.use("", storeRouter);
-app.use("", authRouter);
+app.use("", userRouter);
 app.use("/admin", adminRouter);
 app.use((req, res) => {
     res.status(404).json({"error": "Route not found."});
