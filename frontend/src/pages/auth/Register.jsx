@@ -44,14 +44,12 @@ function Register() {
         e.target.reset();
       }
     } catch (err) {
-      return toast.error(err?.data?.message || "An error occurred");
+      return toast.error(err?.data?.message || "An error occurred.");
     }
   };
 
   return (
-    <>
-      {/* min-h-[calc(100vh-3.75rem)] justify-center p-0 align-middle md:min-h-[calc(100vh-3.5rem)] */}
-      <section className="flex flex-grow">
+    <section className="flex flex-grow">
         <form
           onSubmit={registerHandler}
           className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
@@ -107,8 +105,7 @@ function Register() {
             className="h-full w-full object-cover"
           />
         </div>
-      </section>
-    </>
+    </section>
   );
 }
 

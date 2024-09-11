@@ -36,7 +36,7 @@ function ResetPassword() {
       dispatch(setCredentials(user));
       navigate("/");
     } catch (err) {
-      return toast.error(err?.data?.message || "An error occurred");
+      return toast.error(err?.data?.message || "An error occurred.");
     }
   };
 

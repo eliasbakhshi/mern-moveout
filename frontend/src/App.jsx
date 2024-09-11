@@ -5,17 +5,15 @@ import "react-toastify/dist/ReactToastify.css";
 import Footer from "./components/Footer";
 
 function App() {
-    return (
-        <>
-            <ToastContainer />
-            <Navigation />
-            <main className='flex flex-col m-0 p-0 mt-[3.75rem] md:mt-[3.5rem] min-h-[calc(100vh-3.75rem)] md:min-h-[calc(100vh-3.5rem)]'>
-                <Outlet />
-                <Footer />
-            </main>
-
-        </>
-    );
+  return (
+    <>
+      <ToastContainer />
+      <Navigation />
+      <main className="mt-[3.75rem] flex flex-grow flex-col h-full items-center justify-center md:mt-[3.5rem]">
+        <Outlet />
+      </main>
+      <Footer />
+    </>
+  );
 }
-
 export default App;

@@ -30,7 +30,14 @@ export const usersApi = apiSlice.injectEndpoints({
                 params: { token },
             }),
         }),
+        sendVerificationEmail: builder.mutation({
+            query: (email) => ({
+                url: "/api/verify-email",
+                method: "POST",
+                body: email,
+            }),
+        }),
     }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation, useVerifyEmailQuery } = usersApi;
+export const { useLoginMutation, useRegisterMutation, useLogoutMutation, useVerifyEmailQuery, useSendVerificationEmailMutation } = usersApi;

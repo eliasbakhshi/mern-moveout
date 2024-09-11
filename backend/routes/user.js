@@ -1,6 +1,12 @@
 import { Router } from "express";
 import asyncHandler from "express-async-handler";
-import { login, register, logout, verifyEmail } from "../controllers/user.js";
+import {
+  login,
+  register,
+  logout,
+  verifyEmail,
+  sendVerificationEmail,
+} from "../controllers/user.js";
 import { body } from "express-validator";
 import User from "../models/User.js";
 
@@ -45,7 +51,9 @@ router.post(
 );
 router.post("/logout", asyncHandler(logout));
 router.get("/verify-email", asyncHandler(verifyEmail));
+router.post("/verify-email", body("email").trim().isEmail().withMessage("The email is not valid."), asyncHandler(sendVerificationEmail));
 
 export default router;
 
+// TODO: redirect to verification page after the token was expired or changed or invalid
 // TODO: Implement reset password

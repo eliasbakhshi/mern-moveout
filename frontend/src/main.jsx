@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import { Route, RouterProvider, createRoutesFromElements } from "react-router";
 import { createBrowserRouter } from "react-router-dom";
+import Home from "./pages/Home.jsx";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import UserRoutes from "./pages/user/UserRoutes";
@@ -14,26 +15,28 @@ import Dashboard from "./pages/user/Dashboard.jsx";
 import UserList from "./pages/admin/UserList.jsx";
 import Error404 from "./pages/Error404.jsx";
 import Profile from "./pages/user/Profile.jsx";
-import Cart from "./pages/Cart.jsx";
-import Orders from "./pages/user/Orders.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
+import SendVerificationEmail from "./pages/auth/sendVerificationEmail.jsx";
+
+// TODO: Add a loading page then user is navigating between pages
+
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
+      <Route path="" element={<Home />} />
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />
       <Route path="verify-email/:token" element={<VerifyEmail />} />
-      <Route path="cart" element={<Cart />} />
-      <Route path="orders" element={<Orders />} />
+      <Route path="send-verification-email" element={<SendVerificationEmail />} />
 
       {/* Registered users */}
       <Route element={<UserRoutes />}>
         <Route path="profile" element={<Profile />} />
+        <Route path="dashboard" element={<Dashboard />} />
       </Route>
 
       <Route path="/admin" element={<AdminRoutes />}>
-        <Route path="" element={<Dashboard />} />
         <Route path="user-list" element={<UserList />} />
       </Route>
 
