@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import { useDispatch, useSelector } from "react-redux";
 import Loading from "../Loading";
+import Button from "../../components/Button";
 
 function ResetPassword() {
   const emailRef = useRef(null);
@@ -36,7 +37,10 @@ function ResetPassword() {
       dispatch(setCredentials(user));
       navigate("/");
     } catch (err) {
-      return toast.error(err?.data?.message || "An error occurred.");
+      toast.error(
+        err?.data?.message ||
+          "An error occurred. Please contact the administration.",
+      );
     }
   };
 
@@ -57,14 +61,10 @@ function ResetPassword() {
           className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
           ref={emailRef}
         />
-        <button
-          type="submit"
-          disabled={loginLoading}
-          className="mt-5 w-full rounded-md bg-blue-500 px-4 py-2 text-white"
-        >
+        <Button disabled={loginLoading}>
           {loginLoading && <Spinner />}
           Login
-        </button>
+        </Button>
       </form>
       <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-green-100 md:block">
         <img

@@ -3,7 +3,7 @@ import User from "../models/User.js";
 import asyncHandler from "express-async-handler";
 
 const validateToken = asyncHandler(async (req, res, next) => {
-  let token = req.cookies.JWTMERNStore;
+  let token = req.cookies.JWTMERNMoveOut;
   if (!token) {
     return res
       .status(401)
@@ -15,6 +15,7 @@ const validateToken = asyncHandler(async (req, res, next) => {
     return res.status(401).json({ message: "Invalid token" });
   }
 
+  // Save the user to the request
   req.user = await User.findById(decoded.id);
   next();
 });

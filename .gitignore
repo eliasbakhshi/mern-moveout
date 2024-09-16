@@ -3,5 +3,6 @@
 .env.production
 
 node_modules/
+/uploads
 
 Done.txt

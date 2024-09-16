@@ -10,7 +10,7 @@ import { MdDashboard } from "react-icons/md";
 import { PiSignOut, PiSignIn } from "react-icons/pi";
 import { BsPersonPlus } from "react-icons/bs";
 import Loading from "../../components/Loading";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -26,7 +26,6 @@ const Login = () => {
     try {
       await logout().unwrap();
       dispatch(removeCredentials());
-      // Handle successful login
       navigate("/");
     } catch (err) {
       toast.error(err?.data?.message || err.message);

@@ -1,3 +1,4 @@
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
@@ -10,16 +11,17 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import UserRoutes from "./pages/user/UserRoutes";
+import Profile from "./pages/user/Profile.jsx";
+import CreateItem from "./pages/user/CreateItem.jsx";
+import CreateBox from "./pages/user/CreateBox.jsx";
+import BoxDetails from "./pages/user/BoxDetails.jsx";
 import AdminRoutes from "./pages/admin/AdminRoutes";
-import Dashboard from "./pages/user/Dashboard.jsx";
 import UserList from "./pages/admin/UserList.jsx";
 import Error404 from "./pages/Error404.jsx";
-import Profile from "./pages/user/Profile.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 import SendVerificationEmail from "./pages/auth/sendVerificationEmail.jsx";
 
 // TODO: Add a loading page then user is navigating between pages
-
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -28,12 +30,18 @@ const router = createBrowserRouter(
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />
       <Route path="verify-email/:token" element={<VerifyEmail />} />
-      <Route path="send-verification-email" element={<SendVerificationEmail />} />
+      <Route
+        path="send-verification-email"
+        element={<SendVerificationEmail />}
+      />
+      <Route path="boxes/:id" element={<BoxDetails />} />
 
       {/* Registered users */}
       <Route element={<UserRoutes />}>
         <Route path="profile" element={<Profile />} />
-        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="boxes" element={<Home />} />
+        <Route path="boxes/create" element={<CreateBox />} />
+        <Route path="boxes/add/:id" element={<CreateItem />} />
       </Route>
 
       <Route path="/admin" element={<AdminRoutes />}>
@@ -41,8 +49,8 @@ const router = createBrowserRouter(
       </Route>
 
       <Route path="*" element={<Error404 />} />
-    </Route>
-  )
+    </Route>,
+  ),
 );
 
 createRoot(document.getElementById("root")).render(

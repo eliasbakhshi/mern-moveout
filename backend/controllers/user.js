@@ -11,7 +11,6 @@ const secret = process.env.JWT_KEY;
 
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
-
   if (!name || !email || !password) {
     return res.status(400).json({ message: "Please fill in all the fields." });
   }
@@ -95,7 +94,7 @@ export const login = async (req, res, next) => {
 
 export const logout = (req, res, next) => {
   // Clear the cookie
-  res.clearCookie("JWTMERNStore");
+  res.clearCookie("JWTMERNMoveOut");
   return res.status(200).json({ message: "Logged out." });
 };
 
@@ -206,11 +205,9 @@ export const sendVerificationEmail = async (req, res) => {
     text: `Thank you ${user.name} for signing up! We're excited to have you on board.`,
     html: emailTemplate,
   });
-  return res
-    .status(200)
-    .json({
-      message: "Verification sent successfully. Please check your email.",
-    });
+  return res.status(200).json({
+    message: "Verification sent successfully. Please check your email.",
+  });
 };
 
 export const deleteUser = async (req, res) => {

@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import { useDispatch, useSelector } from "react-redux";
 import Loading from "../../components/Loading";
+import Button from "../../components/Button";
 
 function Login() {
   const emailRef = useRef(null);
@@ -37,13 +38,16 @@ function Login() {
       const user = await login({ email, password, remember }).unwrap();
       // Handle successful login
       dispatch(setCredentials(user));
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       if (err?.data?.message.includes("verify")) {
         setVerify(true);
-        return toast.error("Verify your email first to login");
+        toast.error("Verify your email first to login");
       } else {
-        return toast.error(err?.data?.message || "An error occurred.");
+        toast.error(
+          err?.data?.message ||
+            "An error occurred. Please contact the administration.",
+        );
       }
     }
   };
@@ -88,14 +92,11 @@ function Login() {
             Reset password
           </a>
         </div>
-        <button
-          type="submit"
-          disabled={loginLoading}
-          className="mt-5 w-full rounded-md bg-blue-500 px-4 py-2 text-white"
-        >
+        <Button disabled={loginLoading} extraClasses="mt-5">
           {loginLoading && <Spinner />}
           Login
-        </button>
+        </Button>
+
         {verify && (
           <a
             href="/verify-email"

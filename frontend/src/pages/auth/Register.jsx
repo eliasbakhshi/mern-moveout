@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import { useSelector } from "react-redux";
+import Button from "../../components/Button";
 
 function Register() {
   const nameRef = useRef(null);
@@ -33,7 +34,7 @@ function Register() {
     const confirmPassword = confirmPasswordRef.current.value;
 
     if (password !== confirmPassword) {
-      return toast.error("Passwords do not match");
+      toast.error("Passwords do not match");
     }
 
     try {
@@ -44,67 +45,66 @@ function Register() {
         e.target.reset();
       }
     } catch (err) {
-      return toast.error(err?.data?.message || "An error occurred.");
+      toast.error(
+        err?.data?.message ||
+          "An error occurred. Please contact the administration.",
+      );
     }
   };
 
   return (
     <section className="flex flex-grow">
-        <form
-          onSubmit={registerHandler}
-          className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
-        >
-          <h2 className="mb-4 text-2xl font-bold">Register</h2>
-          <label htmlFor="name">Name</label>
-          <input
-            type="text"
-            id="name"
-            required
-            className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
-            ref={nameRef}
-          />
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            required
-            className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
-            ref={emailRef}
-          />
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            required
-            minLength={6}
-            className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
-            ref={passwordRef}
-          />
-          <label htmlFor="confirmPassword">Confirm Password</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            required
-            minLength={6}
-            className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
-            ref={confirmPasswordRef}
-          />
-          <button
-            type="submit"
-            disabled={registerLoading}
-            className="mt-5 w-full rounded-md bg-blue-500 px-4 py-2 text-white"
-          >
-            {registerLoading && <Spinner />}
-            Register
-          </button>
-        </form>
-        <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-green-100 md:block">
-          <img
-            src="/img/login-bg.jpg"
-            alt="Login"
-            className="h-full w-full object-cover"
-          />
-        </div>
+      <form
+        onSubmit={registerHandler}
+        className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
+      >
+        <h2 className="mb-4 text-2xl font-bold">Register</h2>
+        <label htmlFor="name">Name</label>
+        <input
+          type="text"
+          id="name"
+          required
+          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          ref={nameRef}
+        />
+        <label htmlFor="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          required
+          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          ref={emailRef}
+        />
+        <label htmlFor="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          required
+          minLength={6}
+          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          ref={passwordRef}
+        />
+        <label htmlFor="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          required
+          minLength={6}
+          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          ref={confirmPasswordRef}
+        />
+        <Button disabled={registerLoading}>
+          {registerLoading && <Spinner />}
+          Register
+        </Button>
+      </form>
+      <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-green-100 md:block">
+        <img
+          src="/img/login-bg.jpg"
+          alt="Login"
+          className="h-full w-full object-cover"
+        />
+      </div>
     </section>
   );
 }
