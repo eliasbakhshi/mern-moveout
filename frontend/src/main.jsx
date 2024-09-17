@@ -1,4 +1,3 @@
-
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
@@ -12,8 +11,8 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import UserRoutes from "./pages/user/UserRoutes";
 import Profile from "./pages/user/Profile.jsx";
-import CreateItem from "./pages/user/CreateItem.jsx";
-import CreateBox from "./pages/user/CreateBox.jsx";
+import CreateItem from "./pages/user/Items.jsx";
+import CreateBox from "./pages/user/Boxes.jsx";
 import BoxDetails from "./pages/user/BoxDetails.jsx";
 import AdminRoutes from "./pages/admin/AdminRoutes";
 import UserList from "./pages/admin/UserList.jsx";
@@ -25,8 +24,8 @@ import SendVerificationEmail from "./pages/auth/sendVerificationEmail.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<App />}>
-      <Route path="" element={<Home />} />
+    <Route path="" element={<App />}>
+      <Route path="/" element={<Home />} />
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />
       <Route path="verify-email/:token" element={<VerifyEmail />} />
@@ -41,7 +40,7 @@ const router = createBrowserRouter(
         <Route path="profile" element={<Profile />} />
         <Route path="boxes" element={<Home />} />
         <Route path="boxes/create" element={<CreateBox />} />
-        <Route path="boxes/add/:id" element={<CreateItem />} />
+        <Route path="boxes/:id/items/add" element={<CreateItem />} />
       </Route>
 
       <Route path="/admin" element={<AdminRoutes />}>

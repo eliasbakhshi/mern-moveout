@@ -21,16 +21,22 @@ export const getBoxes = async (req, res) => {
 };
 export const getBox = async (req, res) => {
   const { boxId } = req.params;
-  const box = await Box.findOne({ user: req.user._id, _id: boxId })
+  const box = await Box.findOne({ user: req.user._id, _id: boxId });
   if (!box) {
     return res.status(400).json({ message: "No box found." });
   }
+
+  const sortedItems = box.items.sort((a, b) => b.createdAt - a.createdAt);
+  box.items = sortedItems;
+
   return res.status(200).json({ box });
 };
 export const createBox = async (req, res) => {
   const { name, labelNum } = req.body;
   if (!name || !labelNum) {
-    return res.status(400).json({ message: "Please provide a name and a label" });
+    return res
+      .status(400)
+      .json({ message: "Please provide a name and a label" });
   }
 
   const box = new Box({
@@ -41,13 +47,11 @@ export const createBox = async (req, res) => {
 
   const newBox = await box.save();
 
-
   return res.status(201).json({ id: newBox._id });
 };
 export const updateBox = async (req, res) => {};
 export const deleteBox = async (req, res) => {
   const { boxId } = req.params;
-
 
   if (!boxId) {
     return res.status(400).json({ message: "Please provide an box ID" });
@@ -84,6 +88,12 @@ export const createItem = async (req, res) => {
   const err = validationResult(req);
   if (!err.isEmpty()) {
     return res.status(422).json({ message: err.array()[0].msg });
+  }
+
+  if (description === "" && !media) {
+    return res
+      .status(400)
+      .json({ message: "Please give a description or upload a file." });
   }
 
   // if there is a file, check if it is an image or an audio file

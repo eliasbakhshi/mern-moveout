@@ -26,7 +26,7 @@ export const usersApi = apiSlice.injectEndpoints({
     verifyEmail: builder.query({
       query: (token) => ({
         url: "/api/verify-email",
-        method: "GET",
+        method: "PUT",
         params: { token },
         providesTags: ["User"],
       }),
@@ -37,7 +37,7 @@ export const usersApi = apiSlice.injectEndpoints({
         method: "POST",
         body: email,
         invalidatesTags: ["User"],
-        
+
       }),
     }),
   }),

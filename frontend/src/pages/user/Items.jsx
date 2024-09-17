@@ -3,7 +3,6 @@ import { useState } from "react";
 import { FaDownload, FaTrash, FaPen } from "react-icons/fa";
 import {
   useCreateItemMutation,
-  useGetItemsQuery,
   useDeleteItemMutation,
   useGetBoxQuery,
 } from "../../redux/api/boxApiSlice";
@@ -11,13 +10,9 @@ import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loading from "../../components/Loading";
 
-import "dotenv/config";
 
 
-
-
-
-function CreateItem() {
+function Items() {
   const [image, setImage] = useState("");
   const { id } = useParams();
   const [inputs, setInputs] = useState({
@@ -26,15 +21,7 @@ function CreateItem() {
     media: "",
   });
 
-  const c1 = new Client(process.env.API_KEY);
 
-  c1.report(new Error('documented example'))
-
-
-  console.log(process.env.REACT_APP_API_BASE_URL);
-
-  // TODO: check backend validation for the inputs
-  // TODO: check inputs before sending them to the backend
   // TODO: check the responsiveness of the page
 
   const [createItem, { isLoading: createItemLoading }] =
@@ -42,17 +29,13 @@ function CreateItem() {
   const [deleteItem, { isLoading: deleteItemLoading }] =
     useDeleteItemMutation();
   const {
-    data: items,
-    isLoading: itemsLoading,
-    isFetching: itemsFetching,
-    refetch: refetchItems,
-  } = useGetItemsQuery(id);
-  const {
     data: box,
     isLoading: boxLoading,
     isFetching: boxFetching,
+    refetch: refetchBox,
   } = useGetBoxQuery(id);
 
+  console.log(box)
   const fileChangeHandler = async (e) => {
     const media = e.target.files[0];
     // TODO: check the media type before adding it to the box
@@ -82,6 +65,11 @@ function CreateItem() {
   const submitHandler = async (e) => {
     e.preventDefault();
 
+    if (inputs.description === "" && inputs.media === "") {
+      toast.error("Please give a description or upload a file.");
+      return;
+    }
+
     try {
       const productData = new FormData();
       productData.append("boxId", inputs.boxId);
@@ -97,7 +85,7 @@ function CreateItem() {
       });
       setImage("");
 
-      refetchItems();
+      refetchBox();
       e.target.reset();
 
       if (error) {
@@ -123,7 +111,7 @@ function CreateItem() {
         err?.message || "An error occurred. Please contact the administration.",
       );
     }
-    refetchItems();
+    refetchBox();
   };
 
   return boxLoading ? (
@@ -136,7 +124,7 @@ function CreateItem() {
         className="container mb-10 grid w-full grid-cols-1 grid-rows-6 gap-10 px-4 py-5 md:grid-cols-2 xl:px-0"
       >
         <div
-          className={`row-span-6 min-h-20 w-full rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
+          className={`row-span-6 w-full rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
           style={{ backgroundImage: `url(${image})` }}
         >
           <label
@@ -159,7 +147,7 @@ function CreateItem() {
               type="file"
               accept=".jpg,.jpeg,.png,.webp,.mp3"
               className="hidden"
-              onChange={fileChangeHandler}
+              onInput={fileChangeHandler}
             />
           </label>
         </div>
@@ -173,8 +161,8 @@ function CreateItem() {
         </Button>
       </form>
       <div className="container flex flex-grow flex-row flex-wrap gap-x-[10%] gap-y-24 px-4 py-5 xl:px-0">
-        {Array.isArray(items?.items) &&
-          items.items.map((e) => (
+        {Array.isArray(box?.box?.items) &&
+          box.box.items.map((e) => (
             <div
               key={e._id}
               className="relative flex h-60 min-h-28 w-[calc(80%/3)] min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:shadow-lg"
@@ -182,7 +170,7 @@ function CreateItem() {
               <div className="absolute left-1 top-1 bg-green-50 p-2 text-green-500">
                 {e.description}
               </div>
-              <img src={e.mediaPath} alt={e.description} />
+              {/* <img src={`/api/${e.mediaPath}`} alt={e.description} /> */}
               <FaTrash
                 size="2.5rem"
                 id={e._id}
@@ -205,4 +193,4 @@ function CreateItem() {
   );
 }
 
-export default CreateItem;
+export default Items;

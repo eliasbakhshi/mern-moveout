@@ -53,7 +53,7 @@ function Register() {
   };
 
   return (
-    <section className="flex flex-grow">
+    <section className="flex flex-grow w-full">
       <form
         onSubmit={registerHandler}
         className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
@@ -98,13 +98,7 @@ function Register() {
           Register
         </Button>
       </form>
-      <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-green-100 md:block">
-        <img
-          src="/img/login-bg.jpg"
-          alt="Login"
-          className="h-full w-full object-cover"
-        />
-      </div>
+      <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-center bg-no-repeat md:block"></div>
     </section>
   );
 }

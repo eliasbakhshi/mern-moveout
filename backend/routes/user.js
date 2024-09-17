@@ -50,7 +50,7 @@ router.post(
   asyncHandler(register),
 );
 router.post("/logout", asyncHandler(logout));
-router.get("/verify-email", asyncHandler(verifyEmail));
+router.put("/verify-email", asyncHandler(verifyEmail));
 router.post("/verify-email", body("email").trim().isEmail().withMessage("The email is not valid."), asyncHandler(sendVerificationEmail));
 
 export default router;

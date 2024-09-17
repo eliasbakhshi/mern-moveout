@@ -10,7 +10,7 @@ import { MdDashboard } from "react-icons/md";
 import { PiSignOut, PiSignIn } from "react-icons/pi";
 import { BsPersonPlus } from "react-icons/bs";
 import Loading from "../../components/Loading";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -36,12 +36,14 @@ const Login = () => {
 
   return (
     <Navbar fluid className="fixed left-0 top-0 w-full">
-      <Navbar.Brand href="/">
-        <img src="/logo.png" className="mr-3 h-6 sm:h-9" alt="Moveout" />
-        <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
-          Moveout
-        </span>
-      </Navbar.Brand>
+      <Link to="/">
+        <Navbar.Brand>
+          <img src="/logo.png" className="mr-3 h-6 sm:h-9" alt="Moveout" />
+          <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
+            Moveout
+          </span>
+        </Navbar.Brand>
+      </Link>
       <div className="flex gap-3 md:order-2">
         {userInfo && userInfo.role ? (
           <Dropdown
@@ -58,23 +60,27 @@ const Login = () => {
               />
             }
           >
-            <Dropdown.Item href="/profile">
-              <Avatar
-                img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                alt="User"
-                rounded
-                color="red"
-                size="xs"
-                className="mr-2"
-              />
-              Bonnie Green
-            </Dropdown.Item>
+            <Link to="/profile">
+              <Dropdown.Item>
+                <Avatar
+                  img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                  alt="User"
+                  rounded
+                  color="red"
+                  size="xs"
+                  className="mr-2"
+                />
+                Bonnie Green
+              </Dropdown.Item>
+            </Link>
             <Dropdown.Divider />
             {userInfo.role == "admin" && (
-              <Dropdown.Item href="admin">
-                <MdDashboard className="mr-2" />
-                Dashboard
-              </Dropdown.Item>
+              <Link to="/admin">
+                <Dropdown.Item href="admin">
+                  <MdDashboard className="mr-2" />
+                  Dashboard
+                </Dropdown.Item>
+              </Link>
             )}
             <Dropdown.Divider />
             <Dropdown.Item onClick={logoutHandler}>
@@ -98,23 +104,25 @@ const Login = () => {
               />
             }
           >
-            <Dropdown.Item href="/login">
-              <PiSignIn className="mr-2" />
-              Login
-            </Dropdown.Item>
-            <Dropdown.Item href="/register">
-              <BsPersonPlus className="mr-2" />
-              Register
-            </Dropdown.Item>
+            <Link to="/login">
+              <Dropdown.Item>
+                <PiSignIn className="mr-2" />
+                Login
+              </Dropdown.Item>
+            </Link>
+            <Link to="/register">
+              <Dropdown.Item>
+                <BsPersonPlus className="mr-2" />
+                Register
+              </Dropdown.Item>
+            </Link>
           </Dropdown>
         )}
         <Navbar.Toggle />
       </div>
       <Navbar.Collapse>
-        <Navbar.Link href="/" active>
-          Home
-        </Navbar.Link>
-        <Navbar.Link href="#">Contact</Navbar.Link>
+        <Link to="/">Home</Link>
+        <Link to="/contact">Contact</Link>
       </Navbar.Collapse>
     </Navbar>
   );
