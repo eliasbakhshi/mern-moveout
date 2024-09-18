@@ -9,18 +9,19 @@ import {
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loading from "../../components/Loading";
-
-
+import ModalDelete from "../../components/ModalDelete";
+import {createPortal } from "react-dom";
 
 function Items() {
   const [image, setImage] = useState("");
   const { id } = useParams();
   const [inputs, setInputs] = useState({
+    itemId: "",
     boxId: id,
     description: "",
     media: "",
   });
-
+  const [openModal, setOpenModal] = useState(false);
 
   // TODO: check the responsiveness of the page
 
@@ -35,12 +36,8 @@ function Items() {
     refetch: refetchBox,
   } = useGetBoxQuery(id);
 
-  console.log(box)
   const fileChangeHandler = async (e) => {
     const media = e.target.files[0];
-    // TODO: check the media type before adding it to the box
-    console.log(media.type);
-
     const allowedTypes = [
       "image/jpeg",
       "image/png",
@@ -76,18 +73,11 @@ function Items() {
       productData.append("description", inputs.description);
       productData.append("media", inputs.media);
 
-      // const { data, status } = await createItem(productData);
       const { data, error } = await createItem(productData);
-      setInputs({
-        boxId: id,
-        description: "",
-        media: "",
-      });
-      setImage("");
 
+      setImage("");
       refetchBox();
       e.target.reset();
-
       if (error) {
         toast.error(error.data.message);
       } else {
@@ -101,10 +91,9 @@ function Items() {
     }
   };
 
-  console.log("box", box);
-  const deleteItemHandler = async (itemId) => {
+  const deleteItemHandler = async () => {
     try {
-      const { data, error } = await deleteItem(itemId);
+      const { data, error } = await deleteItem(inputs.itemId);
       toast.success(data.message);
     } catch (err) {
       toast.error(
@@ -112,7 +101,23 @@ function Items() {
       );
     }
     refetchBox();
+    setOpenModal(false);
+    document.getElementById("overlay").style.display = "none";
+
   };
+
+  const showModal = (itemId) => {
+    setInputs({ ...inputs, itemId });
+    setOpenModal(true);
+    document.getElementById("overlay").style.display = "flex";
+  };
+
+  const setUpdateItemHandler = (itemId) => {
+    console.log("itemId", itemId);
+    setInputs({ ...inputs, itemId });
+    console.log("inputs", inputs);
+    setOpenModal(true);
+  }
 
   return boxLoading ? (
     <Loading />
@@ -153,7 +158,7 @@ function Items() {
         </div>
         <textarea
           name="description"
-          onChange={changeHandler}
+          onInput={changeHandler}
           className="row-span-5 min-h-12 w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
         ></textarea>
         <Button extraClasses="row-span-1" disabled={createItemLoading}>
@@ -175,12 +180,13 @@ function Items() {
                 size="2.5rem"
                 id={e._id}
                 className="absolute right-1 top-1 rounded-md p-2.5 text-red-500 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
-                onClick={() => deleteItemHandler(e._id)}
+                onClick={() => showModal(e._id)}
               />
               Box
             </div>
           ))}
       </div>
+      {  openModal && createPortal(<ModalDelete openModal={openModal} setOpenModal={setOpenModal} deleteHandler={deleteItemHandler} />, document.getElementById("overlay"))}
     </>
   ) : (
     <>

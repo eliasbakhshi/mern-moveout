@@ -9,7 +9,7 @@ function App() {
     <>
       <ToastContainer />
       <Navigation />
-      <main className="mt-[3.75rem] flex flex-grow flex-col h-full items-center md:mt-[3.5rem]">
+      <main className="mt-[3.75rem] flex h-full flex-grow flex-col items-center md:mt-[3.5rem]">
         <Outlet />
       </main>
       <Footer />

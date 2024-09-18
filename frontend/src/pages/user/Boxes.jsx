@@ -10,7 +10,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { FaPen, FaTrash } from "react-icons/fa";
 import Input from "../../components/Input";
 import ModalDelete from "../../components/ModalDelete";
-
+import { createPortal } from "react-dom";
 
 function Boxes() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ function Boxes() {
   } = useGetBoxesQuery(id);
 
   const [inputs, setInputs] = useState({
-    id: "",
+    boxId: "",
     mode: "create",
     name: "",
     labelNum: 1,
@@ -62,7 +62,7 @@ function Boxes() {
   };
 
   const deleteBoxHandler = async () => {
-    const boxId = inputs.id || "";
+    const boxId = inputs.boxId || "";
     try {
       const { data, error } = await deleteBox(boxId);
 
@@ -75,6 +75,7 @@ function Boxes() {
 
     refetchBoxes();
     setOpenModal(false);
+    document.getElementById("overlay").style.display = "none";
   };
 
   const navigateToAddItems = (boxId, e) => {
@@ -84,11 +85,10 @@ function Boxes() {
   };
 
   const showModal = (boxId) => {
-    setInputs({ ...inputs, id: boxId });
+    setInputs({ ...inputs, boxId });
     setOpenModal(true);
+    document.getElementById("overlay").style.display = "flex";
   };
-
-  console.log("inputs", inputs);
 
   return (
     <>
@@ -150,18 +150,13 @@ function Boxes() {
               <FaTrash
                 size="2.5rem"
                 className="absolute right-1 top-1 rounded-md p-2.5 text-red-500 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
-                // onClick={() => deleteBoxHandler(e._id)}
                 onClick={() => showModal(e._id)}
               />
               {e.name}
             </div>
           ))}
       </div>
-      <ModalDelete
-        openModal={openModal}
-        setOpenModal={setOpenModal}
-        deleteBoxHandler={deleteBoxHandler}
-      ></ModalDelete>
+      {  openModal && createPortal(<ModalDelete openModal={openModal} setOpenModal={setOpenModal} deleteHandler={deleteBoxHandler} />, document.getElementById("overlay"))}
     </>
   );
 }

@@ -36,14 +36,12 @@ const Login = () => {
 
   return (
     <Navbar fluid className="fixed left-0 top-0 w-full">
-      <Link to="/">
-        <Navbar.Brand>
+      <Navbar.Brand onClick={()=> navigate("/")} className="hover:cursor-pointer">
           <img src="/logo.png" className="mr-3 h-6 sm:h-9" alt="Moveout" />
           <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
             Moveout
           </span>
-        </Navbar.Brand>
-      </Link>
+      </Navbar.Brand>
       <div className="flex gap-3 md:order-2">
         {userInfo && userInfo.role ? (
           <Dropdown
@@ -60,8 +58,7 @@ const Login = () => {
               />
             }
           >
-            <Link to="/profile">
-              <Dropdown.Item>
+            <Dropdown.Item onClick={()=> navigate("/profile")}>
                 <Avatar
                   img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
                   alt="User"
@@ -71,16 +68,13 @@ const Login = () => {
                   className="mr-2"
                 />
                 Bonnie Green
-              </Dropdown.Item>
-            </Link>
+            </Dropdown.Item>
             <Dropdown.Divider />
             {userInfo.role == "admin" && (
-              <Link to="/admin">
-                <Dropdown.Item href="admin">
+              <Dropdown.Item href="admin" onClick={()=> navigate("/admin")}>
                   <MdDashboard className="mr-2" />
                   Dashboard
-                </Dropdown.Item>
-              </Link>
+              </Dropdown.Item>
             )}
             <Dropdown.Divider />
             <Dropdown.Item onClick={logoutHandler}>
@@ -104,18 +98,15 @@ const Login = () => {
               />
             }
           >
-            <Link to="/login">
-              <Dropdown.Item>
+            <Dropdown.Item onClick={()=> navigate("/login")}>
                 <PiSignIn className="mr-2" />
                 Login
-              </Dropdown.Item>
-            </Link>
-            <Link to="/register">
-              <Dropdown.Item>
+            </Dropdown.Item>
+
+            <Dropdown.Item onClick={()=> navigate("/login")}>
                 <BsPersonPlus className="mr-2" />
                 Register
-              </Dropdown.Item>
-            </Link>
+            </Dropdown.Item>
           </Dropdown>
         )}
         <Navbar.Toggle />
