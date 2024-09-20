@@ -12,8 +12,9 @@ import Register from "./pages/auth/Register";
 import UserRoutes from "./pages/user/UserRoutes";
 import Profile from "./pages/user/Profile.jsx";
 import CreateItem from "./pages/user/Items.jsx";
-import CreateBox from "./pages/user/Boxes.jsx";
+import Boxes from "./pages/user/Boxes.jsx";
 import BoxDetails from "./pages/user/BoxDetails.jsx";
+import Label from "./pages/user/Label.jsx";
 import AdminRoutes from "./pages/admin/AdminRoutes";
 import UserList from "./pages/admin/UserList.jsx";
 import Error404 from "./pages/Error404.jsx";
@@ -38,13 +39,13 @@ const router = createBrowserRouter(
       {/* Registered users */}
       <Route element={<UserRoutes />}>
         <Route path="profile" element={<Profile />} />
-        <Route path="boxes" element={<Home />} />
-        <Route path="boxes/create" element={<CreateBox />} />
-        <Route path="boxes/:id/items/add" element={<CreateItem />} />
+        <Route path="boxes" element={<Boxes />} />
+        <Route path="boxes/:boxId/items" element={<CreateItem />} />
+        <Route path="label" element={<Label />} />
       </Route>
 
       <Route path="/admin" element={<AdminRoutes />}>
-        <Route path="user-list" element={<UserList />} />
+        <Route path="users" element={<UserList />} />
       </Route>
 
       <Route path="*" element={<Error404 />} />

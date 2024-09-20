@@ -7,8 +7,6 @@ function VerifyEmail() {
   const { token } = useParams();
   const { error, isLoading } = useVerifyEmailQuery(token);
 
-  console.log("e", error, "i", isLoading);
-
   return isLoading ? (
     <Loading />
   ) : (

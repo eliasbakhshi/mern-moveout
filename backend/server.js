@@ -7,7 +7,6 @@ import mongoose from "mongoose";
 import mainRouter from "./routes/main.js";
 import userRouter from "./routes/user.js";
 import adminRouter from "./routes/admin.js";
-import { setHeaders } from "./middlewares/setHeaders.js";
 import cors from "cors";
 import multer from "multer";
 import "./utils/env.js";
@@ -25,7 +24,6 @@ const uid = new ShortUniqueId({ length: 10 });
 // Check if the img directory exists, if not, create it
 const uploadDir = process.env.UPLOADS_PATH || "uploads";
 const imgProducts = path.join(__dirname, process.env.UPLOADS_PATH);
-console.log(imgProducts);
 
 if (!fs.existsSync(imgProducts)) {
   fs.mkdirSync(imgProducts);

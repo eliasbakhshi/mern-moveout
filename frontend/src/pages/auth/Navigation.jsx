@@ -36,11 +36,14 @@ const Login = () => {
 
   return (
     <Navbar fluid className="fixed left-0 top-0 w-full">
-      <Navbar.Brand onClick={()=> navigate("/")} className="hover:cursor-pointer">
-          <img src="/logo.png" className="mr-3 h-6 sm:h-9" alt="Moveout" />
-          <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
-            Moveout
-          </span>
+      <Navbar.Brand
+        onClick={() => navigate("/")}
+        className="hover:cursor-pointer"
+      >
+        <img src="/logo.png" className="mr-3 h-6 sm:h-9" alt="Moveout" />
+        <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
+          Moveout
+        </span>
       </Navbar.Brand>
       <div className="flex gap-3 md:order-2">
         {userInfo && userInfo.role ? (
@@ -58,27 +61,26 @@ const Login = () => {
               />
             }
           >
-            <Dropdown.Item onClick={()=> navigate("/profile")}>
-                <Avatar
-                  img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                  alt="User"
-                  rounded
-                  color="red"
-                  size="xs"
-                  className="mr-2"
-                />
-                Bonnie Green
+            <Dropdown.Item onClick={() => navigate("/profile")}>
+              <Avatar
+                img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                alt="User"
+                rounded
+                color="red"
+                size="xs"
+                className="mr-2"
+              />
+              Bonnie Green
             </Dropdown.Item>
             <Dropdown.Divider />
             {userInfo.role == "admin" && (
-              <Dropdown.Item href="admin" onClick={()=> navigate("/admin")}>
-                  <MdDashboard className="mr-2" />
-                  Dashboard
+              <Dropdown.Item href="admin" onClick={() => navigate("/admin")}>
+                <MdDashboard className="mr-2" />
+                Dashboard
               </Dropdown.Item>
             )}
             <Dropdown.Divider />
             <Dropdown.Item onClick={logoutHandler}>
-              {" "}
               <PiSignOut className="mr-2" />
               Sign out
             </Dropdown.Item>
@@ -98,14 +100,14 @@ const Login = () => {
               />
             }
           >
-            <Dropdown.Item onClick={()=> navigate("/login")}>
-                <PiSignIn className="mr-2" />
-                Login
+            <Dropdown.Item onClick={() => navigate("/login")}>
+              <PiSignIn className="mr-2" />
+              Login
             </Dropdown.Item>
 
-            <Dropdown.Item onClick={()=> navigate("/login")}>
-                <BsPersonPlus className="mr-2" />
-                Register
+            <Dropdown.Item onClick={() => navigate("/register")}>
+              <BsPersonPlus className="mr-2" />
+              Register
             </Dropdown.Item>
           </Dropdown>
         )}

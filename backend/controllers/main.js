@@ -1,3 +1,4 @@
+import { Console } from "console";
 import Box from "../models/Box.js";
 import { validationResult } from "express-validator";
 import fs from "fs";
@@ -47,9 +48,29 @@ export const createBox = async (req, res) => {
 
   const newBox = await box.save();
 
-  return res.status(201).json({ id: newBox._id });
+  return res.status(201).json({ id: newBox._id, message: "Box created." });
 };
-export const updateBox = async (req, res) => {};
+export const updateBox = async (req, res) => {
+  const { name, labelNum, boxId } = req.body;
+  if (!name || !labelNum || !boxId) {
+    return res.status(400).json({
+      message: "Please provide a name, a label, and a box ID",
+    });
+  }
+
+  const box = await Box.findOne({ user: req.user._id, _id: boxId });
+
+  if (!box) {
+    return res.status(400).json({ message: "Box not found" });
+  }
+
+  box.name = name;
+  box.labelNum = labelNum;
+
+  await box.save();
+
+  return res.status(200).json({ message: "Box updated successfully." });
+};
 export const deleteBox = async (req, res) => {
   const { boxId } = req.params;
 
@@ -128,7 +149,69 @@ export const createItem = async (req, res) => {
 
   return res.status(201).json({ message: "Item added to the box" });
 };
-export const updateItem = async (req, res) => {};
+
+export const updateItem = async (req, res) => {
+  const { itemId, description } = req.body;
+  const media = req.file;
+  let mediaType = undefined,
+    mediaPath = undefined;
+
+  // Return the errors if there are any
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
+
+  if (description === "" && !media) {
+    return res
+      .status(400)
+      .json({ message: "Please give a description or upload a file." });
+  }
+
+  // if there is a file, check if it is an image or an audio file
+  if (media) {
+    mediaPath = `${process.env.UPLOADS_PATH}/${media.filename}`;
+    const mediaType = media.mimetype;
+    // if the file mediaType is not an image or an audio file, return an error
+    if (
+      mediaType !== "image/png" &&
+      mediaType !== "image/jpg" &&
+      mediaType !== "image/jpeg" &&
+      mediaType !== "audio/mpeg"
+    ) {
+      return res.status(400).json({ message: "Please provide a valid file" });
+    }
+  }
+
+  const box = await Box.findOne({ user: req.user._id, "items._id": itemId });
+
+  if (!box) {
+    return res.status(400).json({ message: "Item not found" });
+  }
+
+  // Find the item and update it
+  box.items = box.items.map((item) => {
+    if (item._id.toString() === itemId) {
+      try {
+        if (item.mediaPath && mediaPath) {
+          // remove the media in the uploads folder
+          fs.unlinkSync(path.join(__dirname, item.mediaPath));
+        }
+      } catch (error) {
+        console.log(error);
+      }
+
+      item.description = description;
+      item.mediaPath = mediaPath || item.mediaPath;
+      item.mediaType = mediaType;
+    }
+    return item;
+  });
+
+  await box.save();
+
+  return res.status(200).json({ message: "Item updated successfully." });
+};
 
 export const deleteItem = async (req, res) => {
   const { itemId } = req.params;
