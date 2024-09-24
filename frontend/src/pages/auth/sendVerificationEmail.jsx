@@ -3,6 +3,7 @@ import { useSendVerificationEmailMutation } from "../../redux/api/usersApiSlice"
 import Spinner from "../../components/Spinner";
 import { toast } from "react-toastify";
 import Button from "../../components/Button";
+import Input from "../../components/Input";
 
 function SendVerificationEmail() {
   const [sendVerificationEmail, { isLoading: sendVerificationEmailLoading }] =
@@ -39,14 +40,8 @@ function SendVerificationEmail() {
       >
         <h2 className="mb-4 text-2xl font-bold">Send verification email</h2>
         <label htmlFor="email">Email</label>
-        <input
-          type="email"
-          id="email"
-          required
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
-          ref={emailRef}
-        />
-        <Button disabled={sendVerificationEmailLoading}>
+        <Input type="email" id="email" required ref={emailRef} />
+        <Button disabled={sendVerificationEmailLoading} extraClasses="mt-5">
           {sendVerificationEmailLoading && <Spinner />}
           Send verification email
         </Button>

@@ -151,10 +151,10 @@ export const createItem = async (req, res) => {
 };
 
 export const updateItem = async (req, res) => {
-  const { itemId, description } = req.body;
+  const { itemId, description, mediaPath } = req.body;
   const media = req.file;
   let mediaType = undefined,
-    mediaPath = undefined;
+    newMediaPath = undefined;
 
   // Return the errors if there are any
   const err = validationResult(req);
@@ -163,6 +163,7 @@ export const updateItem = async (req, res) => {
   }
 
   if (description === "" && !media) {
+    // if there is no description and no media, return an error
     return res
       .status(400)
       .json({ message: "Please give a description or upload a file." });
@@ -170,8 +171,8 @@ export const updateItem = async (req, res) => {
 
   // if there is a file, check if it is an image or an audio file
   if (media) {
-    mediaPath = `${process.env.UPLOADS_PATH}/${media.filename}`;
-    const mediaType = media.mimetype;
+    newMediaPath = `${process.env.UPLOADS_PATH}/${media.filename}`;
+    mediaType = media.mimetype;
     // if the file mediaType is not an image or an audio file, return an error
     if (
       mediaType !== "image/png" &&
@@ -181,6 +182,7 @@ export const updateItem = async (req, res) => {
     ) {
       return res.status(400).json({ message: "Please provide a valid file" });
     }
+    mediaType = mediaType.split("/")[0];
   }
 
   const box = await Box.findOne({ user: req.user._id, "items._id": itemId });
@@ -193,17 +195,28 @@ export const updateItem = async (req, res) => {
   box.items = box.items.map((item) => {
     if (item._id.toString() === itemId) {
       try {
-        if (item.mediaPath && mediaPath) {
-          // remove the media in the uploads folder
+        if (item.mediaPath && newMediaPath) {
+          // if there is a new media, remove the media in the uploads folder
+          fs.unlinkSync(path.join(__dirname, item.mediaPath));
+        } else if (item.mediaPath && !mediaPath) {
+          // if there is no media, remove the media in the uploads folder
           fs.unlinkSync(path.join(__dirname, item.mediaPath));
         }
       } catch (error) {
         console.log(error);
       }
 
+      if (newMediaPath) {
+        // if there is a new media, update the media path and media type
+        item.mediaPath = newMediaPath;
+        item.mediaType = mediaType;
+      } else if (!mediaPath) {
+        // if there is no media , remove the media path and media type
+        item.mediaPath = undefined;
+        item.mediaType = undefined;
+      }
+
       item.description = description;
-      item.mediaPath = mediaPath || item.mediaPath;
-      item.mediaType = mediaType;
     }
     return item;
   });

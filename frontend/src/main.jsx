@@ -11,7 +11,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import UserRoutes from "./pages/user/UserRoutes";
 import Profile from "./pages/user/Profile.jsx";
-import CreateItem from "./pages/user/Items.jsx";
+import Items from "./pages/user/Items.jsx";
 import Boxes from "./pages/user/Boxes.jsx";
 import BoxDetails from "./pages/user/BoxDetails.jsx";
 import Label from "./pages/user/Label.jsx";
@@ -20,12 +20,14 @@ import UserList from "./pages/admin/UserList.jsx";
 import Error404 from "./pages/Error404.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 import SendVerificationEmail from "./pages/auth/sendVerificationEmail.jsx";
+import Contact from "./pages/Contact.jsx";
 
 // TODO: Add a loading page then user is navigating between pages
+// TODO: Add ResetPassword page
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="" element={<App />}>
+    <Route path="/" element={<App />}>
       <Route path="/" element={<Home />} />
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />
@@ -35,12 +37,13 @@ const router = createBrowserRouter(
         element={<SendVerificationEmail />}
       />
       <Route path="boxes/:id" element={<BoxDetails />} />
+      <Route path="contact" element={<Contact />} />
 
       {/* Registered users */}
       <Route element={<UserRoutes />}>
         <Route path="profile" element={<Profile />} />
         <Route path="boxes" element={<Boxes />} />
-        <Route path="boxes/:boxId/items" element={<CreateItem />} />
+        <Route path="boxes/:boxId/items" element={<Items />} />
         <Route path="label" element={<Label />} />
       </Route>
 

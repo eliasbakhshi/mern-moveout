@@ -7,6 +7,10 @@ import Spinner from "../../components/Spinner";
 import { useDispatch, useSelector } from "react-redux";
 import Loading from "../../components/Loading";
 import Button from "../../components/Button";
+import Input from "../../components/Input";
+import LinkButton from "../../components/LinkButton";
+
+// TODO: Make a focus for login button when the user press enter
 
 function Login() {
   const emailRef = useRef(null);
@@ -37,7 +41,7 @@ function Login() {
     try {
       const user = await login({ email, password, remember }).unwrap();
       // Handle successful login
-      dispatch(setCredentials(user));
+      dispatch(setCredentials({user, remember}));
       navigate("/");
     } catch (err) {
       if (err?.data?.message.includes("verify")) {
@@ -62,20 +66,21 @@ function Login() {
       >
         <h2 className="mb-4 text-2xl font-bold">Login</h2>
         <label htmlFor="email">Email</label>
-        <input
+        <Input
           type="email"
           id="email"
           required
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          extraClasses="mb-3"
           ref={emailRef}
         />
         <label htmlFor="password">Password</label>
-        <input
+        <Input
           type="password"
           id="password"
           required
           minLength={6}
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          placeholder="At least 6 characters"
+          extraClasses="mb-3"
           ref={passwordRef}
         />
         <div className="mb-4 flex items-center justify-between">
@@ -98,12 +103,12 @@ function Login() {
         </Button>
 
         {verify && (
-          <a
-            href="/verify-email"
-            className="mt-5 w-full rounded-md bg-blue-500 px-4 py-2 text-center text-white"
+          <LinkButton
+            href="/send-verification-email"
+            extraClasses="mt-5"
           >
             Verify email
-          </a>
+          </LinkButton>
         )}
       </form>
       <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-center bg-no-repeat md:block"></div>

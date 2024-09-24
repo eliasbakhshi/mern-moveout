@@ -49,7 +49,7 @@ function Overlay({
           className="bottom-0 left-0 flex w-full justify-end gap-4 p-4"
         >
           <button
-            className={`rounded capitalize bg-${submitColor}-500 px-4 py-2 text-white hover:bg-red-600`}
+            className={`rounded capitalize bg-${submitColor}-500 bg-red-500 px-4 py-2 text-white hover:bg-${submitColor}-600`}
           >
             {submitText}
           </button>

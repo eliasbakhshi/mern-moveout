@@ -24,6 +24,7 @@ function Items() {
     media: "",
     boxId,
     mode: "create",
+    mediaPath: "",
   });
 
   // TODO: check the responsiveness of the page
@@ -44,6 +45,7 @@ function Items() {
     const media = e.target.files[0];
     const allowedTypes = [
       "image/jpeg",
+      "image/jpg",
       "image/png",
       "image/webp",
       "audio/mpeg",
@@ -62,13 +64,16 @@ function Items() {
     const { value, name, id } = e.target;
     setInputs({ ...inputs, [name]: value });
   };
+  const deletePreview = () => {
+    setImage("");
+    setInputs({ ...inputs, media: "", mediaPath: "" });
+  };
 
   const createItemHandler = async (e) => {
     e.preventDefault();
 
     if (inputs.description === "" && inputs.media === "") {
-      toast.error("Please give a description or upload a file.");
-      return;
+      return toast.error("Please give a description or upload a file.");
     }
 
     try {
@@ -87,6 +92,7 @@ function Items() {
         media: "",
         boxId,
         mode: "create",
+        mediaPath: "",
       });
       setIsOpenModal(false);
       e.target.reset();
@@ -127,6 +133,7 @@ function Items() {
         mode,
         itemId,
         boxId,
+        mediaPath: item.mediaPath,
       });
       setImage(`/api/${item.mediaPath}`);
     } else if (mode === "create") {
@@ -136,6 +143,7 @@ function Items() {
         media: "",
         boxId,
         mode,
+        mediaPath: "",
       });
       setImage("");
     } else {
@@ -146,27 +154,28 @@ function Items() {
 
   const editItemHandler = async (e) => {
     e.preventDefault();
+    const productData = new FormData();
+    productData.append("boxId", inputs.boxId);
+    productData.append("itemId", inputs.itemId);
+    productData.append("description", inputs.description);
+    productData.append("media", inputs.media);
+    productData.append("mediaPath", inputs.mediaPath);
 
     try {
-      const productData = new FormData();
-      productData.append("boxId", inputs.boxId);
-      productData.append("itemId", inputs.itemId);
-      productData.append("description", inputs.description);
-      productData.append("media", inputs.media);
-
       const { data, error } = await updateItem(productData);
-      setInputs({
-        itemId: "",
-        mode: "create",
-        name: "",
-        labelNum: 1,
-      });
       if (error) {
         toast.error(error.data.message);
       } else {
         toast.success(data.message);
       }
 
+      setInputs({
+        itemId: "",
+        mode: "create",
+        name: "",
+        labelNum: 1,
+        mediaPath: "",
+      });
       e.target.reset();
       refetchBox();
       setIsOpenModal(false);
@@ -177,6 +186,8 @@ function Items() {
       );
     }
   };
+
+  console.log("inputs", inputs);
 
   return boxLoading ? (
     <Loading />
@@ -211,7 +222,7 @@ function Items() {
           ))}
       </div>
 
-      {/* Show the delete message for creating */}
+      {/* Show the popup for creating */}
       {isOpenModal && inputs.mode === "create" && (
         <Overlay
           isOpen={isOpenModal}
@@ -225,7 +236,7 @@ function Items() {
         >
           <div className="container flex w-full gap-10 py-3 xl:px-0">
             <div
-              className={`h-96 w-full rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
+              className={`group relative h-96 w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
               style={{ backgroundImage: `url(${image})` }}
             >
               <label
@@ -233,10 +244,12 @@ function Items() {
                 className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
               >
                 <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                  <FaDownload size="2rem" className="mb-3" />
+                  <div className="flex flex-row items-center justify-center gap-5">
+                    <FaDownload size="2rem" className="mb-3" />
+                  </div>
                   <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                     <span className="font-semibold">Click to upload</span> or
-                    drag and drop
+                    drag and drop 2
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     PNG, JPG, JPEG, WEBP, MP3 (MAX. 2 MB)
@@ -249,8 +262,19 @@ function Items() {
                   accept=".jpg,.jpeg,.png,.webp,.mp3"
                   className="hidden"
                   onInput={fileChangeHandler}
+                  onClick={(e) => {
+                    e.value = null;
+                    return false;
+                  }}
+                  value=""
                 />
               </label>
+              <div
+                className="absolute flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer group-hover:-translate-y-full"
+                onClick={deletePreview}
+              >
+                <FaTrash size="2rem" />
+              </div>
             </div>
             <textarea
               name="description"
@@ -261,7 +285,7 @@ function Items() {
           </div>
         </Overlay>
       )}
-      {/* Show the delete message for creating */}
+      {/* Show the popup for editing */}
       {isOpenModal && inputs.mode === "edit" && (
         <Overlay
           isOpen={isOpenModal}
@@ -275,7 +299,7 @@ function Items() {
         >
           <div className="container flex w-full gap-10 py-3 xl:px-0">
             <div
-              className={`h-96 w-full rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
+              className={`group relative h-96 w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
               style={{ backgroundImage: `url(${image})` }}
             >
               <label
@@ -299,8 +323,19 @@ function Items() {
                   accept=".jpg,.jpeg,.png,.webp,.mp3"
                   className="hidden"
                   onInput={fileChangeHandler}
+                  onClick={(e) => {
+                    e.value = null;
+                    return false;
+                  }}
+                  value=""
                 />
               </label>
+              <div
+                className="absolute flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer group-hover:-translate-y-full"
+                onClick={deletePreview}
+              >
+                <FaTrash size="2rem" />
+              </div>
             </div>
             <textarea
               name="description"

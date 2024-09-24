@@ -32,8 +32,6 @@ const Login = () => {
     }
   };
 
-  // const test = process.env.SITE_NAME;
-
   return (
     <Navbar fluid className="fixed left-0 top-0 w-full">
       <Navbar.Brand
@@ -52,7 +50,7 @@ const Login = () => {
             inline
             label={
               <Avatar
-                img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                img={userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : "/img/avatar.png"}
                 alt="User"
                 rounded
                 size="sm"
@@ -63,14 +61,14 @@ const Login = () => {
           >
             <Dropdown.Item onClick={() => navigate("/profile")}>
               <Avatar
-                img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                img={userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : "/img/avatar.png"}
                 alt="User"
                 rounded
                 color="red"
                 size="xs"
                 className="mr-2"
               />
-              Bonnie Green
+              {userInfo.name}
             </Dropdown.Item>
             <Dropdown.Divider />
             {userInfo.role == "admin" && (

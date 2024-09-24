@@ -37,7 +37,21 @@ export const usersApi = apiSlice.injectEndpoints({
         method: "POST",
         body: email,
         invalidatesTags: ["User"],
-
+      }),
+    }),
+    editCurrentUser: builder.mutation({
+      query: (info) => ({
+        url: "/api/users",
+        method: "PUT",
+        body: info,
+        invalidatesTags: ["User"],
+      }),
+    }),
+    getCurrentUser: builder.query({
+      query: (id) => ({
+        url: "/api/user/" + id,
+        method: "GET",
+        invalidatesTags: ["User"],
       }),
     }),
   }),
@@ -49,4 +63,6 @@ export const {
   useLogoutMutation,
   useVerifyEmailQuery,
   useSendVerificationEmailMutation,
+  useEditCurrentUserMutation,
+  useGetCurrentUserQuery,
 } = usersApi;

@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
 
-const createSetToken = (res, id, remember) => {
+const createSetToken = (res, id, remember = false) => {
   const expiresIn = remember ? "30d" : "1d";
-  const oneMonth = remember ? 30 : 1;
+  const expirationTime = remember ? 30 : 1;
+  const oneDay = 24 * 60 * 60 * 1000;
   const token = jwt.sign({ id }, process.env.JWT_KEY, { expiresIn });
   res.cookie("JWTMERNMoveOut", token, {
-    maxAge: oneMonth * 24 * 60 * 60 * 1000,
+    maxAge: expirationTime * oneDay,
     httpOnly: true,
   });
 };

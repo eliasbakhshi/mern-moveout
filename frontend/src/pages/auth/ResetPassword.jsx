@@ -7,6 +7,7 @@ import Spinner from "../../components/Spinner";
 import { useDispatch, useSelector } from "react-redux";
 import Loading from "../Loading";
 import Button from "../../components/Button";
+import Input from "../../components/Input";
 
 function ResetPassword() {
   const emailRef = useRef(null);
@@ -54,7 +55,7 @@ function ResetPassword() {
       >
         <h2 className="mb-4 text-2xl font-bold">Reset Password</h2>
         <label htmlFor="email">Email</label>
-        <input
+        <Input
           type="email"
           id="email"
           required

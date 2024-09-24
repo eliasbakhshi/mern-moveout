@@ -19,6 +19,9 @@ const userSchema = new Schema({
         required: true,
         default: "user",
     },
+    mediaPath: {
+        type: String,
+    },
     emailVerified: {
         type: Boolean,
         default: false,

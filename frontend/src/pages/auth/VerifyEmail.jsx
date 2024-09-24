@@ -3,6 +3,9 @@ import { useVerifyEmailQuery } from "../../redux/api/usersApiSlice";
 import Loading from "../../components/Loading";
 import MessageBox from "../../components/MessageBox";
 
+// TODO: Check if the user is already logged in and redirect to the home page
+
+
 function VerifyEmail() {
   const { token } = useParams();
   const { error, isLoading } = useVerifyEmailQuery(token);

@@ -6,9 +6,12 @@ import {
   logout,
   verifyEmail,
   sendVerificationEmail,
+  updateCurrentUser,
 } from "../controllers/user.js";
 import { body } from "express-validator";
 import User from "../models/User.js";
+import validateToken from "../middlewares/validateToken.js";
+import checkAccess from "../middlewares/checkAccess.js";
 
 const router = Router();
 
@@ -49,9 +52,35 @@ router.post(
   }),
   asyncHandler(register),
 );
+router.put(
+  "/users",
+  validateToken,
+  checkAccess("user"),
+  body("email").isEmail().withMessage("The email is not correct."),
+  body(
+    "password",
+    "The password must be alphanumeric and at least 6 characters long.",
+  )
+    .optional({ checkFalsy: true })
+    .isLength({ min: 6, max: 100 })
+    .isAlphanumeric(),
+  body("confirmPassword")
+    .optional({ checkFalsy: true })
+    .custom((value, { req }) => {
+      if (value && value !== req.body.password) {
+        throw new Error("The passwords do not match.");
+      }
+      return true;
+    }),
+  asyncHandler(updateCurrentUser),
+);
 router.post("/logout", asyncHandler(logout));
 router.put("/verify-email", asyncHandler(verifyEmail));
-router.post("/verify-email", body("email").trim().isEmail().withMessage("The email is not valid."), asyncHandler(sendVerificationEmail));
+router.post(
+  "/verify-email",
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(sendVerificationEmail),
+);
 
 export default router;
 

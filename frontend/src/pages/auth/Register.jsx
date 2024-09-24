@@ -5,6 +5,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import { useSelector } from "react-redux";
 import Button from "../../components/Button";
+import Input from "../../components/Input";
+
+// TODO: Make a focus for register button when the user press enter
+// Add reCaptcha to prevent bots from registering and login and contact form submission
 
 function Register() {
   const nameRef = useRef(null);
@@ -53,47 +57,49 @@ function Register() {
   };
 
   return (
-    <section className="flex flex-grow w-full">
+    <section className="flex w-full flex-grow">
       <form
         onSubmit={registerHandler}
         className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
       >
         <h2 className="mb-4 text-2xl font-bold">Register</h2>
         <label htmlFor="name">Name</label>
-        <input
+        <Input
           type="text"
           id="name"
           required
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          extraClasses="mb-3"
           ref={nameRef}
         />
         <label htmlFor="email">Email</label>
-        <input
+        <Input
           type="email"
           id="email"
           required
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          extraClasses="mb-3"
           ref={emailRef}
         />
         <label htmlFor="password">Password</label>
-        <input
+        <Input
           type="password"
           id="password"
           required
           minLength={6}
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          extraClasses="mb-3"
           ref={passwordRef}
+          placeholder="At least 6 characters"
         />
         <label htmlFor="confirmPassword">Confirm Password</label>
-        <input
+        <Input
           type="password"
           id="confirmPassword"
           required
           minLength={6}
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+          extraClasses="mb-3"
           ref={confirmPasswordRef}
+          placeholder="At least 6 characters"
         />
-        <Button disabled={registerLoading}>
+        <Button disabled={registerLoading} extraClasses={"mt-5"}>
           {registerLoading && <Spinner />}
           Register
         </Button>

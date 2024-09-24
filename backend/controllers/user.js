@@ -7,10 +7,11 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
-const secret = process.env.JWT_KEY;
+const __dirname = path.resolve();
 
 export const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  let { name, email, password } = req.body;
+  email = email.trim().toLowerCase();
   if (!name || !email || !password) {
     return res.status(400).json({ message: "Please fill in all the fields." });
   }
@@ -59,7 +60,8 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res, next) => {
-  const { email, password, remember } = req.body;
+  let { email, password, remember } = req.body;
+  email = email.trim().toLowerCase();
   if (!email || !password) {
     return res.status(400).json({ message: "Please fill in all the fields." });
   }
@@ -85,10 +87,10 @@ export const login = async (req, res, next) => {
   // Create and set a token
   createSetToken(res, user._id, remember);
   return res.status(200).json({
-    id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
+    mediaPath: user.mediaPath,
   });
 };
 
@@ -98,10 +100,10 @@ export const logout = (req, res, next) => {
   return res.status(200).json({ message: "Logged out." });
 };
 
-export const getAllUsers = async (req, res) => {
-  const users = await User.find({});
-  return res.status(200).json(users);
-};
+// export const getAllUsers = async (req, res) => {
+//   const users = await User.find({});
+//   return res.status(200).json(users);
+// };
 
 export const getCurrentUser = async (req, res) => {
   const users = await User.findById({ _id: req.user._id });
@@ -113,25 +115,78 @@ export const getCurrentUser = async (req, res) => {
 };
 
 export const updateCurrentUser = async (req, res) => {
-  const { name, email, password, role = "user" } = req.body;
+  const { name, email, password, mediaPath } = req.body;
+  const media = req.file;
+  let mediaType = undefined,
+    newMediaPath = undefined;
+
+  // Return the errors if there are any
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
+
   // Find the user
   const user = await User.findById({ _id: req.user._id });
 
   if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
+
+  // if there is a file, check if it is an image or an audio file
+  if (media) {
+    // get the file path
+    newMediaPath = `${process.env.UPLOADS_PATH}/${media.filename}`;
+    // get the file mediaType
+    mediaType = media.mimetype;
+    // if the file mediaType is not an image or an audio file, return an error
+    if (
+      mediaType !== "image/png" &&
+      mediaType !== "image/jpg" &&
+      mediaType !== "image/jpeg"
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Valid files are .jpg,.jpeg,.png" });
+    }
+    mediaType = mediaType.split("/")[0];
+  }
+
+  try {
+    if (user.mediaPath && newMediaPath) {
+      // if there is a new media, remove the media in the uploads folder
+      fs.unlinkSync(path.join(__dirname, user.mediaPath));
+    } else if (user.mediaPath && !mediaPath) {
+      // if there is no media, remove the media in the uploads folder
+      fs.unlinkSync(path.join(__dirname, user.mediaPath));
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  if (newMediaPath) {
+    // if there is a new media, update the media path and media type
+    user.mediaPath = newMediaPath;
+  } else if (!mediaPath) {
+    // if there is no media , remove the media path and media type
+    user.mediaPath = undefined;
+  }
+
   // Update the user
   user.name = name || user.name;
   user.email = email || user.email;
   user.password = password ? await bcrypt.hash(password, 10) : user.password;
-  user.role = role || user.role;
+
   const updatedUser = await user.save();
 
+  console.log("updatedUser", updatedUser);
+
+  createSetToken(res, user._id);
+
   return res.status(200).json({
-    _id: updatedUser._id,
     name: updatedUser.name,
     email: updatedUser.email,
     role: updatedUser.role,
+    mediaPath: updatedUser.mediaPath,
   });
 };
 
@@ -221,44 +276,44 @@ export const deleteUser = async (req, res) => {
   return res.status(200).json({ message: "User has been deleted." });
 };
 
-export const getUserById = async (req, res) => {
-  const userId = req.params.userId;
+// export const getUserById = async (req, res) => {
+//   const userId = req.params.userId;
 
-  // Find the user but exclude the password, createdAt, and updatedAt fields
-  const user = await User.findOne({ _id: userId }).select(
-    "-password -createAt -updatedAt",
-  );
+//   // Find the user but exclude the password, createdAt, and updatedAt fields
+//   const user = await User.findOne({ _id: userId }).select(
+//     "-password -createAt -updatedAt",
+//   );
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found." });
-  }
-  return res.status(200).json(user);
-};
+//   if (!user) {
+//     return res.status(404).json({ message: "User not found." });
+//   }
+//   return res.status(200).json(user);
+// };
 
-export const updateUserById = async (req, res) => {
-  const userId = req.params.userId;
-  // Find the user
-  const user = await User.findOne({ _id: userId });
+// export const updateUserById = async (req, res) => {
+//   const userId = req.user._id;
+//   // Find the user
+//   const user = await User.findOne({ _id: userId });
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found." });
-  }
+//   if (!user) {
+//     return res.status(404).json({ message: "User not found." });
+//   }
 
-  const { name, email, role } = req.body;
-  // Update the user
-  user.name = name || user.name;
-  user.email = email || user.email;
-  user.role = role || user.role;
+//   const { name, email, role } = req.body;
+//   // Update the user
+//   user.name = name || user.name;
+//   user.email = email || user.email;
+//   user.role = role || user.role;
 
-  const updatedUser = await user.save();
+//   const updatedUser = await user.save();
 
-  return res.status(200).json({
-    _id: updatedUser._id,
-    name: updatedUser.name,
-    email: updatedUser.email,
-    role: updatedUser.role,
-  });
-};
+//   return res.status(200).json({
+//     _id: updatedUser._id,
+//     name: updatedUser.name,
+//     email: updatedUser.email,
+//     role: updatedUser.role,
+//   });
+// };
 
 export default {
   register,
@@ -266,10 +321,10 @@ export default {
   logout,
   verifyEmail,
   sendVerificationEmail,
-  getAllUsers,
+  // getAllUsers,
   getCurrentUser,
   updateCurrentUser,
   deleteUser,
-  getUserById,
-  updateUserById,
+  // getUserById,
+  // updateUserById,
 };

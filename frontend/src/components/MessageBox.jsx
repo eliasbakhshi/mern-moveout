@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import LinkButton from "./LinkButton";
 
 function MessageBox({ title, message, buttonText, buttonLink }) {
   return (
@@ -8,12 +9,12 @@ function MessageBox({ title, message, buttonText, buttonLink }) {
       </div>
       <div className="my-6 bg-white px-3 py-2">{message}</div>
       <div className="flex justify-end bg-blue-50/50 p-3">
-        <a
+        <LinkButton
           href={buttonLink}
-          className="rounded bg-blue-500 px-4 py-2 font-bold capitalize text-white hover:bg-blue-600"
+          extraClasses="mt-5"
         >
           {buttonText}
-        </a>
+        </LinkButton>
       </div>
     </div>
   );
