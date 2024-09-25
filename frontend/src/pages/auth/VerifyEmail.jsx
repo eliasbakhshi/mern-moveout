@@ -13,7 +13,7 @@ function VerifyEmail() {
   return isLoading ? (
     <Loading />
   ) : (
-    <div className="flex flex-grow items-center justify-center">
+    <div className="flex flex-grow items-center justify-center bg-[url('/img/login-bg.jpg')] w-full">
       {error ? (
         <MessageBox
           title="Error Verifying Email"

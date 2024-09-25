@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { useLoginMutation } from "../../redux/api/usersApiSlice";
 import { setCredentials } from "../../redux/features/auth/authSlice";
 import { toast } from "react-toastify";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import { useDispatch, useSelector } from "react-redux";
 import Loading from "../../components/Loading";
@@ -93,9 +93,9 @@ function Login() {
             />
             <label htmlFor="remember">Remember me</label>
           </div>
-          <a href="/reset-password" className="text-blue-500">
+          <Link to="/reset-password" className="text-blue-500">
             Reset password
-          </a>
+          </Link>
         </div>
         <Button disabled={loginLoading} extraClasses="mt-5">
           {loginLoading && <Spinner />}

@@ -27,7 +27,7 @@ export const usersApi = apiSlice.injectEndpoints({
       query: (token) => ({
         url: "/api/verify-email",
         method: "PUT",
-        params: { token },
+        body: { token },
         providesTags: ["User"],
       }),
     }),
@@ -54,6 +54,29 @@ export const usersApi = apiSlice.injectEndpoints({
         invalidatesTags: ["User"],
       }),
     }),
+    sendEmailResetPassword: builder.mutation({
+      query: (email) => ({
+        url: "/api/reset-password/",
+        method: "POST",
+        body: email,
+        invalidatesTags: ["User"],
+      }),
+    }),
+    checkTokenResetPassword: builder.query({
+      query: (token) => ({
+        url: "/api/reset-password/" + token,
+        method: "GET",
+        providesTags: ["User"],
+      }),
+    }),
+    resetPassword: builder.mutation({
+      query: (info) => ({
+        url: "/api/reset-password/",
+        method: "PUT",
+        body: info,
+        invalidatesTags: ["User"],
+      }),
+    }),
   }),
 });
 
@@ -65,4 +88,7 @@ export const {
   useSendVerificationEmailMutation,
   useEditCurrentUserMutation,
   useGetCurrentUserQuery,
+  useSendEmailResetPasswordMutation,
+  useResetPasswordMutation,
+  useCheckTokenResetPasswordQuery,
 } = usersApi;

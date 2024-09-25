@@ -49,6 +49,7 @@ function Items() {
       "image/png",
       "image/webp",
       "audio/mpeg",
+      "audio/wav",
     ];
 
     if (allowedTypes.indexOf(media.type) === -1) {
@@ -195,7 +196,7 @@ function Items() {
     <>
       <div className="container flex justify-start">
         <Button extraClasses="mb-5" onClick={() => showModal("", "create")}>
-          Create Item
+          Add New Item
         </Button>
       </div>
 
@@ -229,7 +230,7 @@ function Items() {
           onClose={() => setIsOpenModal(!isOpenModal)}
           setIsOpen={setIsOpenModal}
           extraClasses={"w-full"}
-          title="Create Item"
+          title="Add Item"
           submitText="Create"
           cancelText="Cancel"
           onSubmit={createItemHandler}

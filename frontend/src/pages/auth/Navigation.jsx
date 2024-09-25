@@ -50,7 +50,7 @@ const Login = () => {
             inline
             label={
               <Avatar
-                img={userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : "/img/avatar.png"}
+                img={userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : ""}
                 alt="User"
                 rounded
                 size="sm"
@@ -61,7 +61,7 @@ const Login = () => {
           >
             <Dropdown.Item onClick={() => navigate("/profile")}>
               <Avatar
-                img={userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : "/img/avatar.png"}
+                img={userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : ""}
                 alt="User"
                 rounded
                 color="red"

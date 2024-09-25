@@ -128,7 +128,8 @@ export const createItem = async (req, res) => {
       mediaType !== "image/png" &&
       mediaType !== "image/jpg" &&
       mediaType !== "image/jpeg" &&
-      mediaType !== "audio/mpeg"
+      mediaType !== "audio/mpeg" &&
+      mediaType !== "audio/wav"
     ) {
       return res.status(400).json({ message: "Please provide a valid file" });
     }
@@ -178,7 +179,8 @@ export const updateItem = async (req, res) => {
       mediaType !== "image/png" &&
       mediaType !== "image/jpg" &&
       mediaType !== "image/jpeg" &&
-      mediaType !== "audio/mpeg"
+      mediaType !== "audio/mpeg" &&
+      mediaType !== "audio/wav"
     ) {
       return res.status(400).json({ message: "Please provide a valid file" });
     }

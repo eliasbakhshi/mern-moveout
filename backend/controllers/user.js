@@ -28,14 +28,14 @@ export const register = async (req, res) => {
     .createHash("sha256")
     .update(emailToken)
     .digest("hex");
-  const tokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+  const emailVerificationTokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
   // Create a new user
   const user = await User.create({
     name,
     email,
     password: hashed,
     emailVerificationToken,
-    tokenExpiresAt,
+    emailVerificationTokenExpiresAt,
   });
   // Get the email template
   let emailTemplate = fs.readFileSync(
@@ -100,11 +100,6 @@ export const logout = (req, res, next) => {
   return res.status(200).json({ message: "Logged out." });
 };
 
-// export const getAllUsers = async (req, res) => {
-//   const users = await User.find({});
-//   return res.status(200).json(users);
-// };
-
 export const getCurrentUser = async (req, res) => {
   const users = await User.findById({ _id: req.user._id });
 
@@ -115,7 +110,8 @@ export const getCurrentUser = async (req, res) => {
 };
 
 export const updateCurrentUser = async (req, res) => {
-  const { name, email, password, mediaPath } = req.body;
+  let { name, email, password, mediaPath } = req.body;
+  email = email.trim().toLowerCase();
   const media = req.file;
   let mediaType = undefined,
     newMediaPath = undefined;
@@ -178,8 +174,6 @@ export const updateCurrentUser = async (req, res) => {
 
   const updatedUser = await user.save();
 
-  console.log("updatedUser", updatedUser);
-
   createSetToken(res, user._id);
 
   return res.status(200).json({
@@ -191,21 +185,21 @@ export const updateCurrentUser = async (req, res) => {
 };
 
 export const verifyEmail = async (req, res) => {
-  const { token } = req.query;
+  const { token } = req.body;
   if (!token) {
     return res.status(400).json({ message: "Token is required." });
   }
   // Find the user
   const user = await User.findOne({
     emailVerificationToken: token,
-    tokenExpiresAt: { $gt: Date.now() },
+    emailVerificationTokenExpiresAt: { $gt: Date.now() },
   });
   if (!user) {
     return res.status(400).json({ message: "Invalid token or token expired." });
   }
   // Update the user and set emailVerified to true
   user.emailVerificationToken = undefined;
-  user.tokenExpiresAt = undefined;
+  user.emailVerificationTokenExpiresAt = undefined;
   user.emailVerified = true;
   await user.save();
   return res.status(200).json({ message: "Email verified." });
@@ -218,7 +212,8 @@ export const sendVerificationEmail = async (req, res) => {
     return res.status(422).json({ message: err.array()[0].msg });
   }
 
-  const { email } = req.body;
+  let { email } = req.body;
+  email = email.trim().toLowerCase();
   if (!email) {
     return res.status(400).json({ message: "Email is required." });
   }
@@ -237,10 +232,9 @@ export const sendVerificationEmail = async (req, res) => {
     .createHash("sha256")
     .update(emailToken)
     .digest("hex");
-  const tokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
   // Update the user
   user.emailVerificationToken = emailVerificationToken;
-  user.tokenExpiresAt = tokenExpiresAt;
+  user.emailVerificationTokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
   await user.save();
   // Get the email template
   let emailTemplate = fs.readFileSync(
@@ -265,55 +259,96 @@ export const sendVerificationEmail = async (req, res) => {
   });
 };
 
-export const deleteUser = async (req, res) => {
-  const userId = req.params.userId;
-  // Find the user and delete it
-  const user = await User.findOneAndDelete({ _id: userId });
-
-  if (!user) {
-    return res.status(404).json({ message: "User not found." });
+export const sendResetPasswordEmail = async (req, res) => {
+  // Validate the email
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
   }
-  return res.status(200).json({ message: "User has been deleted." });
+
+  let { email } = req.body;
+  email = email.trim().toLowerCase();
+  if (!email) {
+    return res.status(400).json({ message: "Email is required." });
+  }
+  // Find the user
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "Email not found." });
+  }
+
+  // Create a new email token
+  const emailToken = crypto.randomBytes(32).toString("hex");
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(emailToken)
+    .digest("hex");
+  // Update the user
+  user.resetPasswordToken = resetPasswordToken;
+  user.resetPasswordTokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days;
+  await user.save();
+  // Get the email template
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") + "/backend/views/template-email-reset-password.html",
+    "utf8",
+  );
+  emailTemplate = emailTemplate.replace(
+    "**email_link**",
+    `${process.env.BASE_URL}/reset-password/${resetPasswordToken}`,
+  );
+  emailTemplate = emailTemplate.replace("**name**", user.name);
+  // Send the email
+  await transporter.sendMail({
+    from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: "Resetting your password.",
+    text: `Hi ${user.name}! You can click on the link below to reset your password.`,
+    html: emailTemplate,
+  });
+  return res.status(200).json({
+    message: "Instruction email sent successfully. Please check your email.",
+  });
 };
 
-// export const getUserById = async (req, res) => {
-//   const userId = req.params.userId;
+export const verifyTokenResetPassword = async (req, res) => {
+  const { token } = req.params;
 
-//   // Find the user but exclude the password, createdAt, and updatedAt fields
-//   const user = await User.findOne({ _id: userId }).select(
-//     "-password -createAt -updatedAt",
-//   );
+  if (!token) {
+    return res.status(400).json({ message: "Token is required." });
+  }
+  // Find the user
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordTokenExpiresAt: { $gt: Date.now() },
+  });
+  if (!user) {
+    return res.status(400).json({ message: "Invalid token or token expired." });
+  }
 
-//   if (!user) {
-//     return res.status(404).json({ message: "User not found." });
-//   }
-//   return res.status(200).json(user);
-// };
+  return res.status(200).json({ message: "Token verified.", userId: user._id });
+};
 
-// export const updateUserById = async (req, res) => {
-//   const userId = req.user._id;
-//   // Find the user
-//   const user = await User.findOne({ _id: userId });
+export const updateUserPasswordById = async (req, res) => {
+  const { password, userId } = req.body;
+  // Return the errors if there are any
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
 
-//   if (!user) {
-//     return res.status(404).json({ message: "User not found." });
-//   }
+  // Find the user
+  const user = await User.findOne({ _id: userId });
+  if (!user) {
+    return res.status(400).json({ message: "User not found." });
+  }
+  // Update the user and set emailVerified to true
+  user.password = await bcrypt.hash(password, 10);
+  user.resetPasswordToken = undefined;
+  user.resetPasswordTokenExpiresAt = undefined;
+  await user.save();
 
-//   const { name, email, role } = req.body;
-//   // Update the user
-//   user.name = name || user.name;
-//   user.email = email || user.email;
-//   user.role = role || user.role;
-
-//   const updatedUser = await user.save();
-
-//   return res.status(200).json({
-//     _id: updatedUser._id,
-//     name: updatedUser.name,
-//     email: updatedUser.email,
-//     role: updatedUser.role,
-//   });
-// };
+  return res.status(200).json({ message: "Password has been updated." });
+};
 
 export default {
   register,
@@ -321,10 +356,9 @@ export default {
   logout,
   verifyEmail,
   sendVerificationEmail,
-  // getAllUsers,
   getCurrentUser,
   updateCurrentUser,
-  deleteUser,
-  // getUserById,
-  // updateUserById,
+  sendResetPasswordEmail,
+  verifyTokenResetPassword,
+  updateUserPasswordById,
 };

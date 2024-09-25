@@ -1,40 +1,46 @@
 import { Schema, model } from "mongoose";
 
-const userSchema = new Schema({
+const userSchema = new Schema(
+  {
     name: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     password: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     email: {
-        type: String,
-        required: true,
-        unique: true,
+      type: String,
+      required: true,
+      unique: true,
     },
     role: {
-        type: String,
-        required: true,
-        default: "user",
+      type: String,
+      required: true,
+      default: "user",
     },
     mediaPath: {
-        type: String,
+      type: String,
     },
     emailVerified: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
     },
     emailVerificationToken: {
-        type: String,
+      type: String,
     },
-    passwordResetToken: {
-        type: String,
+    resetPasswordToken: {
+      type: String,
     },
-    tokenExpiresAt: {
-        type: Date,
+    emailVerificationTokenExpiresAt: {
+      type: String,
     },
-}, { timestamps: true });
+    resetPasswordTokenExpiresAt: {
+      type: String,
+    },
+  },
+  { timestamps: true },
+);
 
 export default model("User", userSchema);

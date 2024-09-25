@@ -49,8 +49,8 @@ const fileStorage = multer.diskStorage({
 
 // Filter the files that are allowed to be uploaded
 const fileFilter = (req, file, cb) => {
-  const filetypes = /jpe?g|png|webp|mp3/;
-  const mimeTypes = /image\/jpe?g|image\/png|image\/webp|audio\/mpeg/;
+  const filetypes = /jpe?g|png|webp|mp3|wav/;
+  const mimeTypes = /image\/jpe?g|image\/png|image\/webp|audio\/mpeg|audio\/wav/;
 
   const extname = path.extname(file.originalname).toLowerCase();
   const mimetype = file.mimetype.toLowerCase();
@@ -86,6 +86,8 @@ app.use(
     credentials: true, // Allow cookies to be sent with requests
   }),
 );
+
+
 
 // Routes
 app.use("", mainRouter);

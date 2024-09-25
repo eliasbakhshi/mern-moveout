@@ -6,7 +6,11 @@ import {
   logout,
   verifyEmail,
   sendVerificationEmail,
+  sendResetPasswordEmail,
+  getCurrentUser,
   updateCurrentUser,
+  verifyTokenResetPassword,
+  updateUserPasswordById,
 } from "../controllers/user.js";
 import { body } from "express-validator";
 import User from "../models/User.js";
@@ -81,6 +85,41 @@ router.post(
   body("email").trim().isEmail().withMessage("The email is not valid."),
   asyncHandler(sendVerificationEmail),
 );
+router.post(
+  "/reset-password",
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(sendResetPasswordEmail),
+);
+router.get("/reset-password/:token", asyncHandler(verifyTokenResetPassword));
+router.put(
+  "/reset-password",
+  body(
+    "password",
+    "The password must be alphanumeric and at least 6 characters long.",
+  )
+    .isLength({ min: 6, max: 100 })
+    .isAlphanumeric(),
+  body("confirmPassword").custom((value, { req }) => {
+    if (value && value !== req.body.password) {
+      throw new Error("The passwords do not match.");
+    }
+    return true;
+  }),
+  asyncHandler(updateUserPasswordById),
+);
+
+router.get(
+  "/users/current",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(getCurrentUser),
+);
+// router.patch(
+//   "/users/current",
+//   validateToken,
+//   checkAccess("user"),
+//   asyncHandler(updateCurrentUser),
+// );
 
 export default router;
 

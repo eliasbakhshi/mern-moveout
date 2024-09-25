@@ -20,10 +20,12 @@ import UserList from "./pages/admin/UserList.jsx";
 import Error404 from "./pages/Error404.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 import SendVerificationEmail from "./pages/auth/sendVerificationEmail.jsx";
+import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import Contact from "./pages/Contact.jsx";
 
 // TODO: Add a loading page then user is navigating between pages
 // TODO: Add ResetPassword page
+// TODO: use the same template for showing the message in the confirm email and reset password page
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -36,6 +38,8 @@ const router = createBrowserRouter(
         path="send-verification-email"
         element={<SendVerificationEmail />}
       />
+      <Route path="reset-password" element={<ResetPassword />} />
+      <Route path="reset-password/:token" element={<ResetPassword />} />
       <Route path="boxes/:id" element={<BoxDetails />} />
       <Route path="contact" element={<Contact />} />
 
@@ -55,6 +59,10 @@ const router = createBrowserRouter(
     </Route>,
   ),
 );
+
+router.subscribe(({ location }) => {
+  console.log(`Navigated to: ${location.pathname}`);
+});
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

@@ -151,7 +151,7 @@ function Boxes() {
     <>
       <div className="container my-2 flex items-center">
         <Button extraClasses="mb-4" onClick={() => showModal("", "create")}>
-          Create Box
+          Create New Box
         </Button>
       </div>
       <div className="container flex flex-row flex-wrap gap-[5%] gap-y-6 px-4 py-5 lg:gap-x-[10%] xl:px-0">
@@ -219,7 +219,7 @@ function Boxes() {
               minLength={1}
               name="name"
               type="text"
-              placeholder="Box name"
+              placeholder="Box Name"
               onInput={(e) => setInputs({ ...inputs, name: e.target.value })}
               extraClasses="col-span-1 md:col-span-12 row-span-1"
             />
@@ -264,7 +264,7 @@ function Boxes() {
               name="name"
               type="text"
               value={inputs.name}
-              placeholder="Box name"
+              placeholder="Box Name"
               onInput={(e) => setInputs({ ...inputs, name: e.target.value })}
               extraClasses="col-span-1 md:col-span-12 row-span-1"
             />

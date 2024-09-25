@@ -1,4 +1,5 @@
 import { IoClose } from "react-icons/io5";
+import Button from "./Button";
 
 function Overlay({
   isOpen,
@@ -48,17 +49,17 @@ function Overlay({
           id="footer"
           className="bottom-0 left-0 flex w-full justify-end gap-4 p-4"
         >
-          <button
+          <Button
             className={`rounded capitalize bg-${submitColor}-500 bg-red-500 px-4 py-2 text-white hover:bg-${submitColor}-600`}
           >
             {submitText}
-          </button>
-          <button
+          </Button>
+          <Button
             className="rounded bg-gray-100 px-4 py-2 capitalize text-gray-700 hover:bg-gray-400"
             onClick={hideOverlay}
           >
             {cancelText}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

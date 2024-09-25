@@ -1,42 +1,52 @@
 import { useRef, useEffect } from "react";
-import { useLoginMutation } from "../../redux/api/usersApiSlice";
+import {
+  useResetPasswordMutation,
+  useCheckTokenResetPasswordQuery,
+  useSendEmailResetPasswordMutation,
+} from "../../redux/api/usersApiSlice";
 import { setCredentials } from "../../redux/features/auth/authSlice";
 import { toast } from "react-toastify";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import { useDispatch, useSelector } from "react-redux";
-import Loading from "../Loading";
+import Loading from "../../components/Loading";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
+import MessageBox from "../../components/MessageBox";
 
 function ResetPassword() {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { search } = useLocation();
 
-  const [login, { isLoading: loginLoading }] = useLoginMutation();
+  const { token } = useParams();
+
+  const [resetPassword, { isLoading: resetPasswordLoading }] =
+    useResetPasswordMutation();
+  const [sendEmailResetPassword, { isLoading: sendEmailResetPasswordLoading }] =
+    useSendEmailResetPasswordMutation();
+  const {
+    data: user,
+    error,
+    isLoading: checkTokenResetPasswordLoading,
+  } = useCheckTokenResetPasswordQuery(token);
   const { userInfo } = useSelector((state) => state.auth);
-  const sp = new URLSearchParams(search);
-  const redirect = sp.get("redirect") || "/";
 
   useEffect(() => {
     if (userInfo) {
-      navigate(redirect);
+      navigate("/");
     }
-  }, [navigate, redirect, userInfo]);
+  }, [navigate, userInfo]);
 
-  const loginHandler = async (e) => {
+  const sendResetPasswordEmailHandler = async (e) => {
     e.preventDefault();
     const email = emailRef.current.value;
-    const password = passwordRef.current.value;
     try {
-      const user = await login({ email, password }).unwrap();
-      // Handle successful login
-      dispatch(setCredentials(user));
-      navigate("/");
+      const res = await sendEmailResetPassword({ email }).unwrap();
+      toast.success(res.message);
     } catch (err) {
       toast.error(
         err?.data?.message ||
@@ -45,36 +55,130 @@ function ResetPassword() {
     }
   };
 
-  loginLoading && <Loading />;
+  const ResetPasswordHandler = async (e) => {
+    e.preventDefault();
+    const password = passwordRef.current.value;
+    const confirmPassword = confirmPasswordRef.current.value;
+    try {
+      const res = await resetPassword({
+        password,
+        confirmPassword,
+        userId: user.userId,
+      }).unwrap();
+      toast.success(res.message);
+      navigate("/login");
+    } catch (err) {
+      toast.error(
+        err?.data?.message ||
+          "An error occurred. Please contact the administration.",
+      );
+    }
+  };
 
-  return (
-    <section className="flex flex-grow">
-      <form
-        onSubmit={loginHandler}
-        className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
-      >
-        <h2 className="mb-4 text-2xl font-bold">Reset Password</h2>
-        <label htmlFor="email">Email</label>
-        <Input
-          type="email"
-          id="email"
-          required
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
-          ref={emailRef}
-        />
-        <Button disabled={loginLoading}>
-          {loginLoading && <Spinner />}
-          Login
-        </Button>
-      </form>
-      <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-green-100 md:block">
-        <img
-          src="/img/login-bg.jpg"
-          alt="Login"
-          className="h-full w-full object-cover"
-        />
-      </div>
-    </section>
+  resetPasswordLoading && <Loading />;
+
+  console.log(token);
+  console.log("user", user);
+
+  return      token ? (
+        checkTokenResetPasswordLoading ? (
+          <Loading />
+        ) : // if the token is provided in the URL
+        error ? (
+          // show the error message when the token is invalid
+          <>
+            <div className="flex w-full flex-grow items-center justify-center bg-[url('/img/login-bg.jpg')]">
+              <MessageBox
+                title="Error Resetting Password"
+                message={
+                  error?.data?.message ||
+                  "An error occurred while resetting your password. Please try again later."
+                }
+                buttonText="send a new reset password email"
+                buttonLink="/reset-password"
+              />
+            </div>
+          </>
+        ) : (
+          // show the form to reset the password
+          <>
+            <section className="flex flex-grow">
+              <form
+                onSubmit={ResetPasswordHandler}
+                className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
+              >
+                <h2 className="mb-4 text-2xl font-bold">Reset Password</h2>
+
+                <label htmlFor="password">Password</label>
+                <Input
+                  type="password"
+                  id="password"
+                  required
+                  minlength="6"
+                  extraClasses="mb-3"
+                  ref={passwordRef}
+                />
+
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <Input
+                  type="password"
+                  id="confirmPassword"
+                  required
+                  minlength="6"
+                  extraClasses="mb-3 "
+                  ref={confirmPasswordRef}
+                />
+
+                <Button disabled={resetPasswordLoading} extraClasses="mt-5">
+                  {resetPasswordLoading && <Spinner />}
+                  Reset Password
+                </Button>
+              </form>
+              <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-green-100 md:block">
+                <img
+                  src="/img/login-bg.jpg"
+                  alt="Login"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </section>
+          </>
+        )
+      ) : (
+        // if the token is not provided in the URL and user want to reset the password by email
+        <>
+          <section className="flex flex-grow">
+            <form
+              onSubmit={sendResetPasswordEmailHandler}
+              className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
+            >
+              <h2 className="mb-4 text-2xl font-bold">Reset Password</h2>
+              <label htmlFor="email">Email</label>
+              <Input
+                type="email"
+                id="email"
+                required
+                className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+                ref={emailRef}
+              />
+              <Button
+                disabled={sendEmailResetPasswordLoading}
+                extraClasses="mt-5"
+              >
+                {sendEmailResetPasswordLoading && <Spinner />}
+                Send Reset Link
+              </Button>
+            </form>
+            <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-green-100 md:block">
+              <img
+                src="/img/login-bg.jpg"
+                alt="Login"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </section>
+        </>
+      
   );
 }
 

@@ -12,7 +12,6 @@ import {
 } from "../../redux/api/usersApiSlice";
 import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
-import { IoPerson } from "react-icons/io5";
 
 
 // TODO: Check the expirationTime in the Profile component. If the expirationTime is less than the current time, dispatch the removeCredentials action to remove the user credentials from the state and local storage. This will log out the user automatically when the token expires.
