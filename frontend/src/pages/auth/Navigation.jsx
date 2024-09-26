@@ -33,7 +33,7 @@ const Login = () => {
   };
 
   return (
-    <Navbar fluid className="fixed left-0 top-0 w-full">
+    <Navbar fluid className="fixed left-0 top-0 w-full z-50">
       <Navbar.Brand
         onClick={() => navigate("/")}
         className="hover:cursor-pointer"

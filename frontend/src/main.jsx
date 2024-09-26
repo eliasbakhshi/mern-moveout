@@ -14,7 +14,7 @@ import Profile from "./pages/user/Profile.jsx";
 import Items from "./pages/user/Items.jsx";
 import Boxes from "./pages/user/Boxes.jsx";
 import BoxDetails from "./pages/user/BoxDetails.jsx";
-import Label from "./pages/user/Label.jsx";
+import Labels from "./pages/user/Labels.jsx";
 import AdminRoutes from "./pages/admin/AdminRoutes";
 import UserList from "./pages/admin/UserList.jsx";
 import Error404 from "./pages/Error404.jsx";
@@ -48,7 +48,7 @@ const router = createBrowserRouter(
         <Route path="profile" element={<Profile />} />
         <Route path="boxes" element={<Boxes />} />
         <Route path="boxes/:boxId/items" element={<Items />} />
-        <Route path="label" element={<Label />} />
+        <Route path="labels/:id" element={<Labels />} />
       </Route>
 
       <Route path="/admin" element={<AdminRoutes />}>

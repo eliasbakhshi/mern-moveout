@@ -158,7 +158,7 @@ function ResetPassword() {
                 type="email"
                 id="email"
                 required
-                className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2"
+                extraClasses="mb-5 w-full rounded-md border border-gray-300 px-4 py-2"
                 ref={emailRef}
               />
               <Button
@@ -178,7 +178,7 @@ function ResetPassword() {
             </div>
           </section>
         </>
-      
+
   );
 }
 

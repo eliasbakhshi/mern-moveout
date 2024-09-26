@@ -11,6 +11,7 @@ import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loading from "../../components/Loading";
 import Overlay from "../../components/Overlay";
+import LinkButton from "../../components/LinkButton";
 
 // TODO: Add sort by type or name or date
 // TODO: Make a filter for the media type
@@ -35,7 +36,6 @@ function Items() {
   const {
     data: box,
     isLoading: boxLoading,
-    isFetching: boxFetching,
     refetch: refetchBox,
   } = useGetBoxQuery(boxId);
 
@@ -194,10 +194,16 @@ function Items() {
     <Loading />
   ) : box ? (
     <>
-      <div className="container flex justify-start">
-        <Button extraClasses="mb-5" onClick={() => showModal("", "create")}>
+      <div className="container my-2 flex items-center px-4 xl:px-0">
+        <Button
+          extraClasses="mr-0 md:mr-5"
+          onClick={() => showModal("", "create")}
+        >
           Add New Item
         </Button>
+        <LinkButton extraClasses="mr-0" href={`/labels/${boxId}`}>
+          Show label
+        </LinkButton>
       </div>
 
       <div className="container flex flex-grow flex-row flex-wrap gap-x-[10%] gap-y-24 px-4 py-5 xl:px-0">
@@ -205,7 +211,8 @@ function Items() {
           box.box.items.map((e) => (
             <div
               key={e._id}
-              className="relative flex h-60 min-h-28 w-[calc(80%/3)] min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:shadow-lg"
+              className="relative flex h-60 min-h-28 w-[calc(80%/3)] min-w-28 flex-col items-center justify-center rounded-lg bg-white bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg"
+              style={{ backgroundImage: `url('/api/${e.mediaPath}')` }}
             >
               <FaPen
                 size="2.5rem"

@@ -149,7 +149,7 @@ function Boxes() {
 
   return (
     <>
-      <div className="container my-2 flex items-center">
+      <div className="container my-2 flex items-center px-4 xl:px-0">
         <Button extraClasses="mb-4" onClick={() => showModal("", "create")}>
           Create New Box
         </Button>
@@ -159,8 +159,9 @@ function Boxes() {
           boxes.boxes.map((e) => (
             <div
               key={e._id}
-              className="relative flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:cursor-pointer hover:shadow-lg md:min-h-36 md:w-[calc(90%/3)] lg:w-[calc(80%/3)]"
+              className={`relative flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:cursor-pointer hover:shadow-lg md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-52`}
               onClick={(event) => navigateToAddItems(e._id, event)}
+              style={{ backgroundImage: `url('/img/label_${e.labelNum}.png')` }}
             >
               <FaPen
                 size="2.5rem"
@@ -187,29 +188,39 @@ function Boxes() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          extraClasses={"w-full"}
+          extraClasses={"w-full md:mx-4"}
           title="Create Box"
           submitText="Create"
+          submitColor="blue"
           cancelText="Cancel"
           onSubmit={createBoxHandler}
         >
-          <div className="container grid w-full grid-cols-1 gap-4 px-4 py-5 md:grid-cols-12 xl:px-0">
-            <div className="container mb-5 flex h-full flex-grow flex-col gap-[5%] md:col-span-12 md:row-span-5 md:flex-row lg:gap-x-[10%] xl:px-0">
+          <div className="container flex w-full flex-col py-5 xl:px-0">
+            <div className="row-span-row-1 container col-span-1 mb-5 flex h-full flex-grow flex-col gap-x-[5%] gap-y-5 md:col-span-12 md:row-span-5 md:flex-row lg:gap-x-[10%] xl:px-0">
               <div
                 onClick={() => setInputs({ ...inputs, labelNum: 1 })}
-                className={`flex min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:h-[10%] md:min-h-36 md:w-[calc(90%/3)] lg:w-[calc(80%/3)] ${inputs.labelNum === 1 ? "border-2 border-blue-500" : ""}`}
+                className={`flex min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:h-[10%] md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-52 ${inputs.labelNum === 1 ? "border-2 border-blue-500" : ""}`}
+                style={{
+                  backgroundImage: `url('/img/label_1.png')`,
+                }}
               >
                 Box
               </div>
               <div
                 onClick={() => setInputs({ ...inputs, labelNum: 2 })}
-                className={`flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-36 md:w-[calc(90%/3)] lg:w-[calc(80%/3)] ${inputs.labelNum === 2 ? "border-2 border-blue-500" : ""}`}
+                className={`flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-52 ${inputs.labelNum === 2 ? "border-2 border-blue-500" : ""}`}
+                style={{
+                  backgroundImage: `url('/img/label_2.png')`,
+                }}
               >
                 Box
               </div>
               <div
                 onClick={() => setInputs({ ...inputs, labelNum: 3 })}
-                className={`flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-36 md:w-[calc(90%/3)] lg:w-[calc(80%/3)] ${inputs.labelNum === 3 ? "border-2 border-blue-500" : ""}`}
+                className={`flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-52 ${inputs.labelNum === 3 ? "border-2 border-blue-500" : ""}`}
+                style={{
+                  backgroundImage: `url('/img/label_3.png')`,
+                }}
               >
                 Box
               </div>
@@ -231,29 +242,38 @@ function Boxes() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          extraClasses={"w-full"}
+          extraClasses={"w-full md:mx-4"}
           title="Edit Box"
           submitText="Edit"
           cancelText="Cancel"
           onSubmit={editBoxHandler}
         >
-          <div className="container grid w-full grid-cols-1 gap-4 px-4 py-5 md:grid-cols-12 xl:px-0">
-            <div className="container mb-5 flex h-full flex-grow flex-col gap-[5%] md:col-span-12 md:row-span-5 md:flex-row lg:gap-x-[10%] xl:px-0">
+          <div className="container flex w-full flex-col py-5 xl:px-0">
+            <div className="row-span-row-1 container col-span-1 mb-5 flex h-full flex-grow flex-col gap-x-[5%] gap-y-5 md:col-span-12 md:row-span-5 md:flex-row lg:gap-x-[10%] xl:px-0">
               <div
                 onClick={() => setInputs({ ...inputs, labelNum: 1 })}
-                className={`flex min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:h-[10%] md:min-h-36 md:w-[calc(90%/3)] lg:w-[calc(80%/3)] ${inputs.labelNum === 1 ? "border-2 border-blue-500" : ""}`}
+                className={`flex min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:h-[10%] md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-52 ${inputs.labelNum === 1 ? "border-2 border-blue-500" : ""}`}
+                style={{
+                  backgroundImage: `url('/img/label_1.png')`,
+                }}
               >
                 Box
               </div>
               <div
                 onClick={() => setInputs({ ...inputs, labelNum: 2 })}
-                className={`flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-36 md:w-[calc(90%/3)] lg:w-[calc(80%/3)] ${inputs.labelNum === 2 ? "border-2 border-blue-500" : ""}`}
+                className={`flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-52 ${inputs.labelNum === 2 ? "border-2 border-blue-500" : ""}`}
+                style={{
+                  backgroundImage: `url('/img/label_2.png')`,
+                }}
               >
                 Box
               </div>
               <div
                 onClick={() => setInputs({ ...inputs, labelNum: 3 })}
-                className={`flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-36 md:w-[calc(90%/3)] lg:w-[calc(80%/3)] ${inputs.labelNum === 3 ? "border-2 border-blue-500" : ""}`}
+                className={`flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-52 ${inputs.labelNum === 3 ? "border-2 border-blue-500" : ""}`}
+                style={{
+                  backgroundImage: `url('/img/label_3.png')`,
+                }}
               >
                 Box
               </div>
@@ -281,8 +301,9 @@ function Boxes() {
           submitColor="red"
           cancelText="No"
           onSubmit={deleteBoxHandler}
+          extraClasses={"w-96 md:mx-4"}
         >
-          <p>Are you sure you want to delete this box?</p>
+          <p className="py-4">Are you sure you want to delete this box?</p>
         </Overlay>
       )}
     </>

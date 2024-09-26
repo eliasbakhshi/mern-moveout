@@ -73,22 +73,17 @@ export const usersApi = apiSlice.injectEndpoints({
         invalidatesTags: ["Box"],
       }),
     }),
-    // deleteItem: builder.mutation({
-    //   query: (id) => {
-    //     console.log("id2sfasdf", id);
-
-    //     return {
-    //     url: `/api/boxes/items/222222`,
-    //     method: "DELETE",
-    //     invalidatesTags: ["Box"],
-    //   }},
-    // }),
-
     deleteItem: builder.mutation({
       query: (id) => ({
         url: "/api/boxes/items/" + id,
         method: "DELETE",
         invalidatesTags: ["Box"],
+      }),
+    }),
+    getLabel: builder.query({
+      query: (boxId) => ({
+        url: `/api/labels/${boxId}`,
+        method: "GET",
       }),
     }),
   }),
@@ -105,4 +100,5 @@ export const {
   useCreateItemMutation,
   useUpdateItemMutation,
   useDeleteItemMutation,
+  useGetLabelQuery,
 } = usersApi;

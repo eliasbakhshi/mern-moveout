@@ -28,11 +28,11 @@ function Overlay({
       <form
         encType="multipart/form-data"
         onSubmit={onSubmit}
-        className={`container flex w-auto flex-col rounded-lg bg-white shadow-lg ${extraClasses} overflow-y-auto`}
+        className={`container m-4 flex h-[95vh] flex-col overflow-hidden rounded-lg bg-white shadow-lg md:h-auto ${extraClasses}`}
       >
         <div
           id="header"
-          className="container left-0 top-0 flex w-full justify-between bg-gray-100 p-2"
+          className="container left-0 top-0 flex h-[6%] w-full justify-between bg-gray-100 p-2"
         >
           <h2 className="text-lg font-semibold">{title}</h2>
           <button
@@ -42,15 +42,15 @@ function Overlay({
             <IoClose />
           </button>
         </div>
-        <div id="body" className="p-4">
+        <div id="body" className="h-[90%] overflow-y-auto px-4">
           {children}
         </div>
         <div
           id="footer"
-          className="bottom-0 left-0 flex w-full justify-end gap-4 p-4"
+          className="bottom-0 left-0 flex h-[10%] w-full justify-end gap-4 p-4"
         >
           <Button
-            className={`rounded capitalize bg-${submitColor}-500 bg-red-500 px-4 py-2 text-white hover:bg-${submitColor}-600`}
+            className={`rounded capitalize bg-${submitColor}-500 px-4 py-2 text-white hover:bg-${submitColor}-600`}
           >
             {submitText}
           </Button>

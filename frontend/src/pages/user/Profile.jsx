@@ -13,7 +13,6 @@ import {
 import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
 
-
 // TODO: Check the expirationTime in the Profile component. If the expirationTime is less than the current time, dispatch the removeCredentials action to remove the user credentials from the state and local storage. This will log out the user automatically when the token expires.
 // TODO: Get the current expirationTime and set it again
 
@@ -34,7 +33,9 @@ function Profile() {
     mediaPath: userInfo.mediaPath,
     media: null,
   });
-  const [image, setImage] = useState(userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : "/img/avatar.png");
+  const [image, setImage] = useState(
+    userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : "/img/avatar.png",
+  );
 
   const [edit, { isLoading: editLoading, error, isSuccess }] =
     useEditCurrentUserMutation();
@@ -95,15 +96,15 @@ function Profile() {
   console.log("user", user);
 
   return (
-    <div className="flex h-full flex-grow items-center justify-center">
+    <div className="flex h-full flex-grow items-center justify-center w-full md:w-auto">
       <form
         type="multipart/form-data"
         onSubmit={editUser}
-        className="flex flex-grow items-start justify-center rounded-lg bg-white p-6 shadow-lg"
+        className="flex flex-grow flex-col md:flex-row md:items-start justify-center rounded-lg bg-white p-6 shadow-lg"
       >
-        <div className="flex w-[50%] flex-col justify-center">
+        <div className="flex w-full md:w-[50%] flex-col justify-center items-center md:items-start mb-4">
           <div
-            className={`group overflow-hidden relative  mb-4 h-32 w-32 rounded-full bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
+            className={`group relative mb-4 h-32 w-32 overflow-hidden rounded-full bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
             style={{ backgroundImage: `url(${image})` }}
           >
             <label
@@ -128,26 +129,19 @@ function Profile() {
               />
             </label>
             <div
-                className="absolute flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer group-hover:-translate-y-full"
-                onClick={deletePreview}
-              >
-                <FaTrash size="" />
-              </div>
+              className="absolute flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer group-hover:-translate-y-full"
+              onClick={deletePreview}
+            >
+              <FaTrash size="" />
+            </div>
           </div>
           <h1 className="text-2xl font-bold">{userInfo.name}</h1>
           <p className="text-gray-700">
             <span className="font-semibold">Role: </span>
             {userInfo.role}
           </p>
-
-          <div className="flex w-full space-x-4">
-            <LinkButton extraClasses="bg-red-500">Delete</LinkButton>
-
-            {editLoading && <Spinner />}
-            <Button extraClasses="bg-green-500">Save</Button>
-          </div>
         </div>
-        <div className="flex w-[50%] flex-col">
+        <div className="flex w-full flex-col md:w-[50%]">
           <label htmlFor="name">Name</label>
           <Input
             type="text"
@@ -184,6 +178,12 @@ function Profile() {
             placeholder="At least 6 characters"
             onInput={changeHandler}
           />
+          <div className="mt-5 flex w-full flex-col space-y-3">
+            <Button extraClasses="bg-green-500 w-full">
+              {editLoading && <Spinner />}Save
+            </Button>
+            <LinkButton extraClasses="bg-red-500 w-full">Delete</LinkButton>
+          </div>
         </div>
       </form>
     </div>
