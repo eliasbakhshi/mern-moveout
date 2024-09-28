@@ -3,6 +3,7 @@ import Box from "../models/Box.js";
 import { validationResult } from "express-validator";
 import fs from "fs";
 import path from "path";
+import transporter from "../config/nodemailer.js";
 
 const __dirname = path.resolve();
 
@@ -143,7 +144,6 @@ export const createItem = async (req, res) => {
 
   console.log("222", mediaType);
 
-
   theBox.items.push({
     mediaType,
     description,
@@ -260,6 +260,43 @@ export const deleteItem = async (req, res) => {
   return res.status(200).json({ message: "Item deleted successfully." });
 };
 
+export const sendContactMessage = async (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res
+      .status(400)
+      .json({ message: "Please provide a name, email, and message" });
+  }
+
+  // send the email
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: process.env.ADMIN_EMAIL,
+      subject: `Hello Elias! New message from ${name}`,
+      text: `${name} wants to contact you.`,
+      html: `
+
+      <h1>Hello Elias!</h1>
+      <h3>This message is from ${process.env.BASE_URL}</h3>
+      <p>
+      <b>Name:</b> ${name} <br />
+      <b>Email:</b> ${email} <br />
+      <b>Message:</b> ${message}
+      </p>`,
+    });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
+  }
+
+  return res.status(200).json({ message: "Message sent successfully." });
+};
+
 export default {
   home,
   getBoxes,
@@ -272,4 +309,5 @@ export default {
   createItem,
   updateItem,
   deleteItem,
+  sendContactMessage,
 };

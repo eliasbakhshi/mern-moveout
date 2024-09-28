@@ -6,7 +6,7 @@ import {
   useDeleteItemMutation,
   useUpdateItemMutation,
   useGetBoxQuery,
-} from "../../redux/api/boxApiSlice";
+} from "../../redux/api/mainApiSlice";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loading from "../../components/Loading";
@@ -159,13 +159,17 @@ function Items() {
   const editItemHandler = async (e) => {
     e.preventDefault();
 
-    if (inputs.description === "" && (inputs.media === undefined || inputs.media === "")&& (inputs.mediaPath === undefined || inputs.mediaPath === "")) {
+    if (
+      inputs.description === "" &&
+      (inputs.media === undefined || inputs.media === "") &&
+      (inputs.mediaPath === undefined || inputs.mediaPath === "")
+    ) {
       return toast.error("Please give a description or upload a file.");
     }
 
-    console.log("inputs.description", inputs.description)
-    console.log("inputs.mediaPath", inputs.mediaPath)
-    console.log("inputs.media", inputs.media)
+    console.log("inputs.description", inputs.description);
+    console.log("inputs.mediaPath", inputs.mediaPath);
+    console.log("inputs.media", inputs.media);
 
     const productData = new FormData();
     productData.append("boxId", inputs.boxId);
@@ -250,12 +254,12 @@ function Items() {
                 <CiEdit
                   size="2rem"
                   onClick={() => showModal(e._id, "edit")}
-                  className="absolute left-1 top-1 rounded-md bg-gray-50/50 p-2 text-black transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner z-20"
+                  className="absolute left-1 top-1 z-20 rounded-md bg-gray-50/50 p-2 text-black transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
                 />
                 <LuTrash
                   size="2rem"
                   id={e._id}
-                  className="absolute right-1 top-1 rounded-md bg-gray-50/50 p-2 text-red-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner z-20"
+                  className="absolute right-1 top-1 z-20 rounded-md bg-gray-50/50 p-2 text-red-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
                   onClick={() => showModal(e._id, "delete")}
                 />
                 <div
@@ -289,12 +293,12 @@ function Items() {
                 <CiEdit
                   size="2rem"
                   onClick={() => showModal(e._id, "edit")}
-                  className="absolute left-1 top-1 rounded-md bg-gray-50/50 p-2 text-black transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner z-20"
+                  className="absolute left-1 top-1 z-20 rounded-md bg-gray-50/50 p-2 text-black transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
                 />
                 <LuTrash
                   size="2rem"
                   id={e._id}
-                  className="absolute right-1 top-1 rounded-md bg-gray-50/50 p-2 text-red-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner z-20"
+                  className="absolute right-1 top-1 z-20 rounded-md bg-gray-50/50 p-2 text-red-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
                   onClick={() => showModal(e._id, "delete")}
                 />
                 <div
@@ -359,7 +363,7 @@ function Items() {
                 />
               </label>
               <div
-                className="absolute flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:group-hover:-translate-y-full bottom-0 lg:bottom-auto"
+                className="absolute bottom-0 flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:bottom-auto lg:group-hover:-translate-y-full"
                 onClick={deletePreview}
               >
                 <FaTrash size="2rem" />
@@ -368,7 +372,7 @@ function Items() {
             <textarea
               name="description"
               onInput={changeHandler}
-              className="w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner h-full"
+              className="h-full w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
               value={inputs.description}
             ></textarea>
           </div>
@@ -420,7 +424,7 @@ function Items() {
                 />
               </label>
               <div
-                className="absolute flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:group-hover:-translate-y-full bottom-0 lg:bottom-auto"
+                className="absolute bottom-0 flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:bottom-auto lg:group-hover:-translate-y-full"
                 onClick={deletePreview}
               >
                 <FaTrash size="2rem" />
@@ -429,7 +433,7 @@ function Items() {
             <textarea
               name="description"
               onInput={changeHandler}
-              className="min-h-12 w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner h-full"
+              className="h-full min-h-12 w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
               value={inputs.description}
             ></textarea>
           </div>

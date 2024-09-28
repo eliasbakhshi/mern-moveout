@@ -101,7 +101,7 @@ function Register() {
           ref={confirmPasswordRef}
           placeholder="At least 6 characters"
         />
-        <Button disabled={registerLoading} extraClasses={"mt-5"}>
+        <Button disabled={registerLoading} extraClasses={"mt-auto"}>
           {registerLoading && <Spinner />}
           Register
         </Button>

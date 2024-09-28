@@ -41,7 +41,7 @@ function Login() {
     try {
       const user = await login({ email, password, remember }).unwrap();
       // Handle successful login
-      dispatch(setCredentials({user, remember}));
+      dispatch(setCredentials({ user, remember }));
       navigate("/");
     } catch (err) {
       if (err?.data?.message.includes("verify")) {
@@ -97,16 +97,12 @@ function Login() {
             Reset password
           </Link>
         </div>
-        <Button disabled={loginLoading} extraClasses="mt-5">
+        <Button disabled={loginLoading} extraClasses="mt-auto">
           {loginLoading && <Spinner />}
           Login
         </Button>
-
         {verify && (
-          <LinkButton
-            href="/send-verification-email"
-            extraClasses="mt-5"
-          >
+          <LinkButton href="/send-verification-email" extraClasses="mt-5">
             Verify email
           </LinkButton>
         )}

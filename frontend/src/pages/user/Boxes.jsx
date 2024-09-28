@@ -5,7 +5,7 @@ import {
   useDeleteBoxMutation,
   useUpdateBoxMutation,
   useGetBoxesQuery,
-} from "../../redux/api/boxApiSlice";
+} from "../../redux/api/mainApiSlice";
 import { toast } from "react-toastify";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { FaPen, FaTrash } from "react-icons/fa";

@@ -1,6 +1,6 @@
 import apiSlice from "./apiSlice";
 
-export const usersApi = apiSlice.injectEndpoints({
+export const mainApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getBoxes: builder.query({
       query: () => ({
@@ -40,9 +40,7 @@ export const usersApi = apiSlice.injectEndpoints({
       }),
     }),
 
-
-
-
+    // Items
     getItems: builder.query({
       query: (boxId) => ({
         url: `/api/boxes/${boxId}/items/`,
@@ -79,7 +77,16 @@ export const usersApi = apiSlice.injectEndpoints({
         method: "DELETE",
         invalidatesTags: ["Box"],
       }),
-    })
+    }),
+
+    // public stuff
+    sendContactMessage: builder.mutation({
+      query: (info) => ({
+        url: "/api/contact",
+        method: "POST",
+        body: info,
+      }),
+    }),
   }),
 });
 
@@ -94,4 +101,5 @@ export const {
   useCreateItemMutation,
   useUpdateItemMutation,
   useDeleteItemMutation,
-} = usersApi;
+  useSendContactMessageMutation,
+} = mainApi;

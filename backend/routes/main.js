@@ -11,6 +11,7 @@ import {
   createItem,
   updateItem,
   deleteItem,
+  sendContactMessage,
 } from "../controllers/main.js";
 import asyncHandler from "express-async-handler";
 import validateToken from "../middlewares/validateToken.js";
@@ -89,5 +90,6 @@ router.delete(
   checkAccess("user"),
   asyncHandler(deleteItem),
 );
+router.post("/contact", asyncHandler(sendContactMessage));
 
 export default router;

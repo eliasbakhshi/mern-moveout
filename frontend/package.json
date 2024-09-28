@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-pdf/renderer": "^4.0.0",
     "@reduxjs/toolkit": "^2.2.7",
     "dotenv": "^16.4.5",
     "flowbite": "^2.5.1",
