@@ -9,6 +9,7 @@ import Loading from "../../components/Loading";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import LinkButton from "../../components/LinkButton";
+import ReCAPTCHA from "react-google-recaptcha";
 
 // TODO: Make a focus for login button when the user press enter
 
@@ -16,6 +17,8 @@ function Login() {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const rememberRef = useRef(null);
+  const reCaptchaRef = useRef(null);
+
   const [verify, setVerify] = useState(false);
 
   const dispatch = useDispatch();
@@ -38,6 +41,12 @@ function Login() {
     const email = emailRef.current.value;
     const password = passwordRef.current.value;
     const remember = rememberRef.current.checked;
+    const reCaptcha = reCaptchaRef.current.getValue();
+
+    if (!reCaptcha) {
+      return toast.error("Please verify you are not a robot");
+    }
+
     try {
       const user = await login({ email, password, remember }).unwrap();
       // Handle successful login
@@ -97,6 +106,12 @@ function Login() {
             Reset password
           </Link>
         </div>
+
+        <ReCAPTCHA
+          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+          className="mt-3"
+          ref={reCaptchaRef}
+        />
         <Button disabled={loginLoading} extraClasses="mt-auto">
           {loginLoading && <Spinner />}
           Login

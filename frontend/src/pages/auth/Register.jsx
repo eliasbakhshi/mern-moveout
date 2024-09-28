@@ -6,6 +6,7 @@ import Spinner from "../../components/Spinner";
 import { useSelector } from "react-redux";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
+import ReCAPTCHA from "react-google-recaptcha";
 
 // TODO: Make a focus for register button when the user press enter
 // Add reCaptcha to prevent bots from registering and login and contact form submission
@@ -15,6 +16,7 @@ function Register() {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
+  const reCaptchaRef = useRef(null);
 
   const navigate = useNavigate();
   const { search } = useLocation();
@@ -36,6 +38,11 @@ function Register() {
     const email = emailRef.current.value;
     const password = passwordRef.current.value;
     const confirmPassword = confirmPasswordRef.current.value;
+    const reCaptcha = reCaptchaRef.current.getValue();
+
+    if (!reCaptcha) {
+      return toast.error("Please verify you are not a robot");
+    }
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -101,6 +108,12 @@ function Register() {
           ref={confirmPasswordRef}
           placeholder="At least 6 characters"
         />
+        <ReCAPTCHA
+          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+          className="mt-3"
+          ref={reCaptchaRef}
+        />
+
         <Button disabled={registerLoading} extraClasses={"mt-auto"}>
           {registerLoading && <Spinner />}
           Register

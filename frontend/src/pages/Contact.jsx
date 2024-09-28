@@ -6,11 +6,13 @@ import Spinner from "./../components/Spinner";
 import { useSelector } from "react-redux";
 import Button from "./../components/Button";
 import Input from "./../components/Input";
+import ReCAPTCHA from "react-google-recaptcha";
 
 function Contact() {
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const messageRef = useRef(null);
+  const reCaptchaRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -23,7 +25,11 @@ function Contact() {
     const name = nameRef.current.value;
     const email = emailRef.current.value;
     const message = messageRef.current.value;
-    console.log(name, email, message);
+    const reCaptcha = reCaptchaRef.current.getValue();
+
+    if (!reCaptcha) {
+      return toast.error("Please verify you are not a robot");
+    }
 
     try {
       const res = await sendContactMessage({ name, email, message }).unwrap();
@@ -74,6 +80,11 @@ function Contact() {
           ref={messageRef}
           required
         ></textarea>
+        <ReCAPTCHA
+          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+          className="mt-5"
+          ref={reCaptchaRef}
+        />
         <Button disabled={sendContactMessageLoading} extraClasses={"mt-auto"}>
           {sendContactMessageLoading && <Spinner />}
           Send
