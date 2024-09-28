@@ -49,6 +49,8 @@ function Register() {
         e.target.reset();
       }
     } catch (err) {
+      console.log(err);
+
       toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",

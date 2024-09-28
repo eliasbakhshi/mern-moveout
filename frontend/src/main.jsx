@@ -6,7 +6,7 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import { Route, RouterProvider, createRoutesFromElements } from "react-router";
 import { createBrowserRouter } from "react-router-dom";
-import Home from "./pages/Home.jsx";
+import Home from "./pages/Home";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import UserRoutes from "./pages/user/UserRoutes";
@@ -30,7 +30,7 @@ import Contact from "./pages/Contact.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
-      <Route path="/" element={<Home />} />
+      <Route index element={<Home />} />
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />
       <Route path="verify-email/:token" element={<VerifyEmail />} />
@@ -48,7 +48,7 @@ const router = createBrowserRouter(
         <Route path="profile" element={<Profile />} />
         <Route path="boxes" element={<Boxes />} />
         <Route path="boxes/:boxId/items" element={<Items />} />
-        <Route path="labels/:id" element={<Labels />} />
+        <Route path="labels/:labelId" element={<Labels />} />
       </Route>
 
       <Route path="/admin" element={<AdminRoutes />}>
@@ -59,10 +59,6 @@ const router = createBrowserRouter(
     </Route>,
   ),
 );
-
-router.subscribe(({ location }) => {
-  console.log(`Navigated to: ${location.pathname}`);
-});
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

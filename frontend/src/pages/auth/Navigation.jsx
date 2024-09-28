@@ -10,7 +10,8 @@ import { MdDashboard } from "react-icons/md";
 import { PiSignOut, PiSignIn } from "react-icons/pi";
 import { BsPersonPlus } from "react-icons/bs";
 import Loading from "../../components/Loading";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 
 const Login = () => {
   const dispatch = useDispatch();

@@ -77,6 +77,13 @@ export const usersApi = apiSlice.injectEndpoints({
         invalidatesTags: ["User"],
       }),
     }),
+    deleteCurrentUser: builder.mutation({
+      query: () => ({
+        url: "/api/users/delete-current/",
+        method: "DELETE",
+        providesTags: ["User"],
+      }),
+    }),
   }),
 });
 
@@ -91,4 +98,5 @@ export const {
   useSendEmailResetPasswordMutation,
   useResetPasswordMutation,
   useCheckTokenResetPasswordQuery,
+  useDeleteCurrentUserMutation,
 } = usersApi;

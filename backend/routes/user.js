@@ -9,6 +9,7 @@ import {
   sendResetPasswordEmail,
   getCurrentUser,
   updateCurrentUser,
+  deleteCurrentUser,
   verifyTokenResetPassword,
   updateUserPasswordById,
 } from "../controllers/user.js";
@@ -114,12 +115,13 @@ router.get(
   checkAccess("user"),
   asyncHandler(getCurrentUser),
 );
-// router.patch(
-//   "/users/current",
-//   validateToken,
-//   checkAccess("user"),
-//   asyncHandler(updateCurrentUser),
-// );
+
+router.delete(
+  "/users/delete-current/",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(deleteCurrentUser),
+);
 
 export default router;
 

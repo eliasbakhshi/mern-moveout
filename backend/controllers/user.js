@@ -47,14 +47,21 @@ export const register = async (req, res) => {
     `${process.env.BASE_URL}/verify-email/${emailVerificationToken}`,
   );
   emailTemplate = emailTemplate.replace("**name**", name);
-  // Send the email
-  await transporter.sendMail({
-    from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: "Please verify your email.",
-    text: `Thank you ${name} for signing up! We're excited to have you on board.`,
-    html: emailTemplate,
-  });
+
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Please verify your email.",
+      text: `Thank you ${name} for signing up! We're excited to have you on board.`,
+      html: emailTemplate,
+    });
+  } catch (error) {
+    // Delete the user if the email is not sent
+    await user.deleteOne();
+    return res.status(500).json({ message: "Email address rejected because domain not found." });
+  }
 
   return res.status(201).json({ message: "User created successfully." });
 };
@@ -182,6 +189,28 @@ export const updateCurrentUser = async (req, res) => {
     role: updatedUser.role,
     mediaPath: updatedUser.mediaPath,
   });
+};
+
+export const deleteCurrentUser = async (req, res) => {
+  const users = await User.findOne({ _id: req.user._id });
+
+  if (!users) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // remove the media in the uploads folder
+  try {
+    if (users.mediaPath) {
+      fs.unlinkSync(path.join(__dirname, users.mediaPath));
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+  // Delete the user
+  await users.deleteOne();
+
+  return res.status(200).json({ message: "User deleted successfully." });
 };
 
 export const verifyEmail = async (req, res) => {
@@ -358,6 +387,7 @@ export default {
   sendVerificationEmail,
   getCurrentUser,
   updateCurrentUser,
+  deleteCurrentUser,
   sendResetPasswordEmail,
   verifyTokenResetPassword,
   updateUserPasswordById,

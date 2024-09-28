@@ -79,13 +79,7 @@ export const usersApi = apiSlice.injectEndpoints({
         method: "DELETE",
         invalidatesTags: ["Box"],
       }),
-    }),
-    getLabel: builder.query({
-      query: (boxId) => ({
-        url: `/api/labels/${boxId}`,
-        method: "GET",
-      }),
-    }),
+    })
   }),
 });
 
@@ -100,5 +94,4 @@ export const {
   useCreateItemMutation,
   useUpdateItemMutation,
   useDeleteItemMutation,
-  useGetLabelQuery,
 } = usersApi;

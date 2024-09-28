@@ -1,5 +1,8 @@
 import { useSelector, useDispatch } from "react-redux";
-import { setCredentials } from "../../redux/features/auth/authSlice";
+import {
+  removeCredentials,
+  setCredentials,
+} from "../../redux/features/auth/authSlice";
 
 import { FaDownload, FaTrash } from "react-icons/fa";
 import Input from "../../components/Input";
@@ -8,17 +11,21 @@ import LinkButton from "../../components/LinkButton";
 import { useRef, useState } from "react";
 import {
   useEditCurrentUserMutation,
-  useGetCurrentUserQuery,
+  useDeleteCurrentUserMutation,
 } from "../../redux/api/usersApiSlice";
 import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
+import Overlay from "../../components/Overlay";
+import { useNavigate } from "react-router-dom";
 
 // TODO: Check the expirationTime in the Profile component. If the expirationTime is less than the current time, dispatch the removeCredentials action to remove the user credentials from the state and local storage. This will log out the user automatically when the token expires.
 // TODO: Get the current expirationTime and set it again
+// TODO: Send a notification when the user change the email
 
 function Profile() {
   const { userInfo, expirationTime } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const nameRef = useRef(null);
   const emailRef = useRef(null);
@@ -33,12 +40,21 @@ function Profile() {
     mediaPath: userInfo.mediaPath,
     media: null,
   });
+
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [image, setImage] = useState(
     userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : "/img/avatar.png",
   );
 
-  const [edit, { isLoading: editLoading, error, isSuccess }] =
-    useEditCurrentUserMutation();
+  const [
+    edit,
+    { isLoading: editLoading, error: editError, isSuccess: editSuccess },
+  ] = useEditCurrentUserMutation();
+  const [
+    deleteCurrentUser,
+    { isLoading: deleteLoading, error: deleteError, isSuccess: deleteSuccess },
+  ] = useDeleteCurrentUserMutation();
 
   const fileChangeHandler = async (e) => {
     const media = e.target.files[0];
@@ -58,7 +74,7 @@ function Profile() {
     setUser({ ...user, [name]: value });
   };
 
-  const editUser = async (e) => {
+  const editUserHandler = async (e) => {
     e.preventDefault();
     if (user.password !== user.confirmPassword) {
       return toast.error("Passwords do not match");
@@ -74,18 +90,48 @@ function Profile() {
 
       const editedUser = await edit(productData).unwrap();
       dispatch(setCredentials({ user: editedUser, remember: true }));
-      isSuccess && toast.success("User updated successfully");
+      editSuccess && toast.success("User updated successfully");
 
       setImage(`/api/${editedUser.mediaPath}`);
 
       setUser({ ...editedUser, password: "", confirmPassword: "" });
 
-      if (error) {
-        toast.error(error.data.message);
+      if (editError) {
+        toast.error(editError?.data?.message || err.message);
       } else {
-        toast.success(data.message);
+        toast.success(editedUser.message);
       }
-    } catch (err) {}
+    } catch (err) {
+      toast.error(err?.data?.message || err.message);
+    }
+  };
+
+  const deleteCurrentUserHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const deleteUser = await deleteCurrentUser().unwrap();
+      dispatch(removeCredentials());
+      deleteSuccess && toast.success(deleteUser.message);
+
+      setUser({
+        name: userInfo.name,
+        email: userInfo.email,
+        password: "",
+        confirmPassword: "",
+        role: userInfo.role,
+        mediaPath: userInfo.mediaPath,
+        media: null,
+      });
+
+      if (deleteError) {
+        toast.error(deleteError);
+      } else {
+        toast.success(deleteUser.message);
+        navigate("/");
+      }
+    } catch (err) {
+      toast.error(err?.data?.message || err.message);
+    }
   };
 
   const deletePreview = () => {
@@ -96,13 +142,13 @@ function Profile() {
   console.log("user", user);
 
   return (
-    <div className="flex h-full flex-grow items-center justify-center w-full md:w-auto">
+    <div className="flex h-full w-full flex-grow items-center justify-center md:w-auto">
       <form
         type="multipart/form-data"
-        onSubmit={editUser}
-        className="flex flex-grow flex-col md:flex-row md:items-start justify-center rounded-lg bg-white p-6 shadow-lg"
+        onSubmit={editUserHandler}
+        className="flex flex-grow flex-col justify-center rounded-lg bg-white p-6 shadow-lg md:flex-row md:items-start"
       >
-        <div className="flex w-full md:w-[50%] flex-col justify-center items-center md:items-start mb-4">
+        <div className="mb-4 flex w-full flex-col items-center justify-center md:w-[50%] md:items-start">
           <div
             className={`group relative mb-4 h-32 w-32 overflow-hidden rounded-full bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
             style={{ backgroundImage: `url(${image})` }}
@@ -182,10 +228,33 @@ function Profile() {
             <Button extraClasses="bg-green-500 w-full">
               {editLoading && <Spinner />}Save
             </Button>
-            <LinkButton extraClasses="bg-red-500 w-full">Delete</LinkButton>
+            <LinkButton
+              extraClasses="bg-red-500 w-full"
+              onClick={() => setIsDeleting(true)}
+            >
+              Delete
+            </LinkButton>
           </div>
         </div>
+
       </form>
+      {/* Show the popup for deleting */}
+      {isDeleting && (
+          <Overlay
+            isOpen={isDeleting}
+            onClose={() => setIsDeleting(!isDeleting)}
+            title="Delete User"
+            submitText="Yes"
+            submitColor="red"
+            cancelText="No"
+            onSubmit={deleteCurrentUserHandler}
+            extraClasses={"w-96 md:mx-4 h-auto"}
+          >
+            <p className="py-4">
+              Are you sure you want to delete your profile?
+            </p>
+          </Overlay>
+        )}
     </div>
   );
 }

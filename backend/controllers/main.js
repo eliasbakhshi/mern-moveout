@@ -30,7 +30,7 @@ export const getBox = async (req, res) => {
   const sortedItems = box.items.sort((a, b) => b.createdAt - a.createdAt);
   box.items = sortedItems;
 
-  return res.status(200).json({ box });
+  return res.status(200).json({ ...box._doc });
 };
 export const createBox = async (req, res) => {
   const { name, labelNum } = req.body;
@@ -122,7 +122,7 @@ export const createItem = async (req, res) => {
     // get the file path
     mediaPath = `${process.env.UPLOADS_PATH}/${media.filename}`;
     // get the file mediaType
-    const mediaType = media.mimetype;
+    mediaType = media.mimetype;
     // if the file mediaType is not an image or an audio file, return an error
     if (
       mediaType !== "image/png" &&
@@ -133,12 +133,16 @@ export const createItem = async (req, res) => {
     ) {
       return res.status(400).json({ message: "Please provide a valid file" });
     }
+    mediaType = mediaType.split("/")[0];
   }
 
   const theBox = await Box.findById(boxId);
   if (!theBox) {
     return res.status(400).json({ message: "Box not found" });
   }
+
+  console.log("222", mediaType);
+
 
   theBox.items.push({
     mediaType,
@@ -163,7 +167,7 @@ export const updateItem = async (req, res) => {
     return res.status(422).json({ message: err.array()[0].msg });
   }
 
-  if (description === "" && !media) {
+  if (description === "" && !media && mediaPath === "") {
     // if there is no description and no media, return an error
     return res
       .status(400)

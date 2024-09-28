@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './../node_modules/react-h5-audio-player/src/styles.scss';
+
+/* For the audio player */
+.rhap_volume-bar, .rhap_progress-bar  {
+    background-color: #9e9e9e;
+}
+.rhap_download-progress {
+    background-color: #868686;
+}
+
+
+
+#root {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    min-height: 100vh;
+}
