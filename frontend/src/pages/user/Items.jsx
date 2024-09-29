@@ -1,6 +1,6 @@
 import Button from "../../components/Button";
-import { useState } from "react";
-import { FaDownload, FaTrash, FaPen } from "react-icons/fa";
+import { useState} from "react";
+import { FaDownload, FaTrash } from "react-icons/fa";
 import {
   useCreateItemMutation,
   useDeleteItemMutation,
@@ -12,13 +12,20 @@ import { toast } from "react-toastify";
 import Loading from "../../components/Loading";
 import Overlay from "../../components/Overlay";
 import LinkButton from "../../components/LinkButton";
-import { LuTrash } from "react-icons/lu";
-import { CiEdit } from "react-icons/ci";
-import AudioPlayer from "react-h5-audio-player";
+import { useSelector } from "react-redux";
+import ItemList from "../../components/ItemList";
 
 // TODO: Add sort by type or name or date
 // TODO: Make a filter for the media type
 // TODO: Reset all the inputs after the submission or close or cancel
+// TODO: Add a loading spinner when the user submit the form
+// TODO: Check tha several toasts are not shown on the top of each other
+// TODO: Add xss protection for the inputs
+// TODO: Add pagination
+// TODO: Add comments to all functions
+// TODO: Check if the user is logged in before showing the page
+// TODO: Check if user is the owner of the box before showing the buttons for the edit and delete and add and show label
+
 function Items() {
   const [image, setImage] = useState("");
   const { boxId } = useParams();
@@ -40,7 +47,10 @@ function Items() {
     data: box,
     isLoading: boxLoading,
     refetch: refetchBox,
+    error: boxError,
   } = useGetBoxQuery(boxId);
+
+  const { userInfo } = useSelector((state) => state.auth);
 
   const [isOpenModal, setIsOpenModal] = useState(false);
 
@@ -130,7 +140,7 @@ function Items() {
   const showModal = (itemId = "", mode = "create") => {
     if (mode === "edit") {
       // Find the box information for editing
-      const item = box.items.find((box) => box._id === itemId);
+      const item = box?.items.find((item) => item._id === itemId);
       setInputs({
         ...inputs,
         description: item.description,
@@ -139,7 +149,7 @@ function Items() {
         boxId,
         mediaPath: item.mediaPath,
       });
-      item.mediaPath && setImage(`/api/${item.mediaPath}`);
+      item.mediaPath ? setImage(`/api/${item.mediaPath}`) : setImage("");
     } else if (mode === "create") {
       setInputs({
         itemId: "",
@@ -166,10 +176,6 @@ function Items() {
     ) {
       return toast.error("Please give a description or upload a file.");
     }
-
-    console.log("inputs.description", inputs.description);
-    console.log("inputs.mediaPath", inputs.mediaPath);
-    console.log("inputs.media", inputs.media);
 
     const productData = new FormData();
     productData.append("boxId", inputs.boxId);
@@ -206,114 +212,20 @@ function Items() {
 
   return boxLoading ? (
     <Loading />
-  ) : box ? (
+  ) : box?.items ? (
     <>
-      <div className="container my-2 flex w-full items-center px-4 xl:px-0">
-        <Button extraClasses="mr-5" onClick={() => showModal("", "create")}>
-          Add New Item
-        </Button>
-        <LinkButton extraClasses="" href={`/labels/${boxId}`}>
-          Show label
-        </LinkButton>
-      </div>
+      {userInfo && userInfo.role !== "" && (
+        <div className="container my-2 flex w-full items-center px-4 xl:px-0">
+          <Button extraClasses="mr-5" onClick={() => showModal("", "create")}>
+            Add New Item
+          </Button>
+          <LinkButton extraClasses="" href={`/labels/${boxId}`}>
+            Show label
+          </LinkButton>
+        </div>
+      )}
 
-      <div className="container flex w-full flex-row flex-wrap gap-x-[10%] gap-y-5 px-4 py-5 md:gap-y-10 xl:px-0">
-        {Array.isArray(box?.items) &&
-          box.items.map((e) =>
-            e.mediaType && e.mediaType === "image" ? (
-              <div
-                key={e._id}
-                className="relative flex h-60 min-h-28 w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg md:w-[calc(80%/3)]"
-              >
-                <CiEdit
-                  size="2rem"
-                  onClick={() => showModal(e._id, "edit")}
-                  className="absolute left-1 top-1 rounded-md bg-gray-50/50 p-2 text-black transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
-                />
-                <LuTrash
-                  size="2rem"
-                  id={e._id}
-                  className="absolute right-1 top-1 rounded-md bg-gray-50/50 p-2 text-red-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
-                  onClick={() => showModal(e._id, "delete")}
-                />
-                <div
-                  className="h-full w-full overflow-hidden rounded-md bg-cover bg-center bg-no-repeat text-white"
-                  style={{ backgroundImage: `url('/api/${e.mediaPath}')` }}
-                ></div>
-                {e.description && (
-                  <p className="p-4 font-light leading-normal text-slate-600">
-                    {e.description}
-                  </p>
-                )}
-              </div>
-            ) : e.mediaType && e.mediaType === "audio" ? (
-              <div
-                key={e._id}
-                className="relative flex h-60 min-h-28 w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg md:w-[calc(80%/3)]"
-              >
-                <CiEdit
-                  size="2rem"
-                  onClick={() => showModal(e._id, "edit")}
-                  className="absolute left-1 top-1 z-20 rounded-md bg-gray-50/50 p-2 text-black transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
-                />
-                <LuTrash
-                  size="2rem"
-                  id={e._id}
-                  className="absolute right-1 top-1 z-20 rounded-md bg-gray-50/50 p-2 text-red-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
-                  onClick={() => showModal(e._id, "delete")}
-                />
-                <div
-                  className="relative h-full w-full overflow-hidden rounded-md bg-cover bg-center bg-no-repeat text-white"
-                  style={{ backgroundImage: `url('/img/audio_box.png')` }}
-                >
-                  <AudioPlayer
-                    src={`/api/${e.mediaPath}`}
-                    onPlay={(e) => console.log("onPlay")}
-                    customAdditionalControls={[]}
-                    className="absolute bottom-0 h-full w-full"
-                    customVolumeControls={[]}
-                    autoPlayAfterSrcChange={false}
-                    style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.8)",
-                      paddingTop: "2.5rem",
-                    }}
-                  />
-                </div>
-                {e.description && (
-                  <p className="p-4 font-light leading-normal text-slate-600">
-                    {e.description}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div
-                key={e._id}
-                className="relative flex h-60 min-h-28 w-full min-w-28 flex-col items-center justify-center rounded-lg bg-white bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg md:w-[calc(80%/3)]"
-              >
-                <CiEdit
-                  size="2rem"
-                  onClick={() => showModal(e._id, "edit")}
-                  className="absolute left-1 top-1 z-20 rounded-md bg-gray-50/50 p-2 text-black transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
-                />
-                <LuTrash
-                  size="2rem"
-                  id={e._id}
-                  className="absolute right-1 top-1 z-20 rounded-md bg-gray-50/50 p-2 text-red-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner"
-                  onClick={() => showModal(e._id, "delete")}
-                />
-                <div
-                  className="h-full w-full overflow-hidden rounded-md bg-cover bg-center bg-no-repeat text-white"
-                  style={{ backgroundImage: `url('/img/text_box.png')` }}
-                ></div>
-                {e.description && (
-                  <p className="p-4 font-light leading-normal text-slate-600">
-                    {e.description}
-                  </p>
-                )}
-              </div>
-            ),
-          )}
-      </div>
+      <ItemList items={box.items} showModal={showModal} />
 
       {/* Show the popup for creating */}
       {isOpenModal && inputs.mode === "create" && (
@@ -459,7 +371,7 @@ function Items() {
     <>
       <div className="container flex flex-col items-center justify-center py-10">
         <p className="text-lg font-semibold text-red-500">
-          The box does not exist.
+          {boxError?.data?.message}
         </p>
       </div>
     </>

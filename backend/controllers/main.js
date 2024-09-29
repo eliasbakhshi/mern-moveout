@@ -8,7 +8,7 @@ import transporter from "../config/nodemailer.js";
 const __dirname = path.resolve();
 
 export const home = (req, res) => {
-  return res.status(200).json({ message: "Welcome to the MERN Store API" });
+  return res.status(200).json({ message: "Welcome to the Move out API" });
 };
 
 export const getBoxes = async (req, res) => {
@@ -23,7 +23,13 @@ export const getBoxes = async (req, res) => {
 };
 export const getBox = async (req, res) => {
   const { boxId } = req.params;
-  const box = await Box.findOne({ user: req.user._id, _id: boxId });
+  let query = { _id: boxId };
+  console.log(boxId)
+
+  if (req.user.role !== "admin") query = { ...query, user: req.user._id };
+
+  const box = await Box.findOne(query);
+
   if (!box) {
     return res.status(400).json({ message: "No box found." });
   }
@@ -34,8 +40,8 @@ export const getBox = async (req, res) => {
   return res.status(200).json({ ...box._doc });
 };
 export const createBox = async (req, res) => {
-  const { name, labelNum } = req.body;
-  if (!name || !labelNum) {
+  const { name, labelNum, isPrivate } = req.body;
+  if (!name || !labelNum || isPrivate === undefined) {
     return res
       .status(400)
       .json({ message: "Please provide a name and a label" });
@@ -45,6 +51,7 @@ export const createBox = async (req, res) => {
     name,
     labelNum,
     user: req.user._id,
+    isPrivate,
   });
 
   const newBox = await box.save();
@@ -52,8 +59,8 @@ export const createBox = async (req, res) => {
   return res.status(201).json({ id: newBox._id, message: "Box created." });
 };
 export const updateBox = async (req, res) => {
-  const { name, labelNum, boxId } = req.body;
-  if (!name || !labelNum || !boxId) {
+  const { name, labelNum, boxId, isPrivate } = req.body;
+  if (!name || !labelNum || !boxId || isPrivate === undefined) {
     return res.status(400).json({
       message: "Please provide a name, a label, and a box ID",
     });
@@ -67,6 +74,7 @@ export const updateBox = async (req, res) => {
 
   box.name = name;
   box.labelNum = labelNum;
+  box.isPrivate = isPrivate;
 
   await box.save();
 
@@ -89,14 +97,23 @@ export const deleteBox = async (req, res) => {
 };
 export const getBoxItems = async (req, res) => {
   const { boxId } = req.params;
-  const box = await Box.findOne({ user: req.user._id, _id: boxId }).sort({
-    createdAt: 1,
-  });
+  const query = { _id: boxId };
+  console.log(boxId);
+  // query = { ...query,user: req.user._id };
+
+  const box = await Box.findOne(query);
   if (!box) {
-    return res.status(400).json({ message: "Box not found" });
+    return res.status(400).json({ message: "No box found." });
   }
+
+  if (box.isPrivate) {
+    return res.status(400).json({ message: "Box is private." });
+  }
+
   const sortedItems = box.items.sort((a, b) => b.createdAt - a.createdAt);
-  return res.status(200).json({ items: sortedItems });
+  box.items = sortedItems;
+
+  return res.status(200).json([...box.items]);
 };
 export const getBoxItem = async (req, res) => {};
 export const createItem = async (req, res) => {
@@ -141,8 +158,6 @@ export const createItem = async (req, res) => {
   if (!theBox) {
     return res.status(400).json({ message: "Box not found" });
   }
-
-  console.log("222", mediaType);
 
   theBox.items.push({
     mediaType,

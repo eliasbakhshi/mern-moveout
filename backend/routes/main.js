@@ -58,8 +58,6 @@ router.delete(
 
 router.get(
   "/boxes/:boxId/items",
-  validateToken,
-  checkAccess("user"),
   asyncHandler(getBoxItems),
 );
 router.get(

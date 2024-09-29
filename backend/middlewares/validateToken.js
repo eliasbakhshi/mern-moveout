@@ -4,7 +4,7 @@ import asyncHandler from "express-async-handler";
 
 const validateToken = asyncHandler(async (req, res, next) => {
   let token = req.cookies.JWTMERNMoveOut;
-  if (!token) {
+  if (!token) { 
     return res
       .status(401)
       .json({ message: "You need to be logged in to access this route" });

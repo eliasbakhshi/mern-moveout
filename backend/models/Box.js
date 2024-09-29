@@ -29,6 +29,10 @@ const boxSchema = new Schema({
     ref: "User",
     required: true,
   },
+  isPrivate: {
+    type: Boolean,
+    required: true
+  },
   items: [itemSchema], // Use the itemSchema for the items array
 }, { timestamps: true });
 

@@ -17,6 +17,7 @@ import { LuTrash } from "react-icons/lu";
 import { CiEdit } from "react-icons/ci";
 
 // TODO: Check the create and edit button in the popup is default selected when the user press enter
+// TODO: Add pagination
 
 function Boxes() {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ function Boxes() {
     mode: "create",
     name: "",
     labelNum: 1,
+    isPrivate: false,
   });
   const [isOpenModal, setIsOpenModal] = useState(false);
 
@@ -44,6 +46,7 @@ function Boxes() {
       const productData = new FormData();
       productData.append("name", inputs.name);
       productData.append("labelNum", inputs.labelNum);
+      productData.append("isPrivate", inputs.isPrivate);
 
       const { data, error } = await createBox(productData);
       setInputs({
@@ -51,6 +54,7 @@ function Boxes() {
         mode: "create",
         name: "",
         labelNum: 1,
+        isPrivate: false,
       });
       if (error) {
         toast.error(error.data.message);
@@ -111,6 +115,7 @@ function Boxes() {
         mode: "create",
         name: "",
         labelNum: 1,
+        isPrivate: false,
       });
     } else {
       setInputs({ ...inputs, boxId, mode });
@@ -126,6 +131,7 @@ function Boxes() {
       productData.append("boxId", inputs.boxId);
       productData.append("name", inputs.name);
       productData.append("labelNum", inputs.labelNum);
+      productData.append("isPrivate", inputs.isPrivate);
 
       const { data, error } = await updateBox(productData);
       setInputs({
@@ -133,6 +139,7 @@ function Boxes() {
         mode: "create",
         name: "",
         labelNum: 1,
+        isPrivate: false,
       });
       if (error) {
         toast.error(error.data.message);
@@ -150,6 +157,8 @@ function Boxes() {
       );
     }
   };
+
+  console.log(inputs);
 
   return (
     <>
@@ -204,8 +213,8 @@ function Boxes() {
           cancelText="Cancel"
           onSubmit={createBoxHandler}
         >
-          <div className="container flex w-full flex-col py-5 xl:px-0">
-            <div className="row-span-row-1 container col-span-1 mb-5 flex h-full flex-grow flex-col gap-x-[5%] gap-y-5 md:col-span-12 md:row-span-5 md:flex-row lg:gap-x-[10%] xl:px-0">
+          <div className="container flex w-full flex-grow flex-col justify-between py-5 xl:px-0">
+            <div className="container mb-5 flex flex-grow flex-col gap-x-[5%] gap-y-5 md:flex-row lg:gap-x-[10%] xl:px-0">
               <div
                 onClick={() => setInputs({ ...inputs, labelNum: 1 })}
                 className={`relative flex min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:h-[10%] md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56 ${inputs.labelNum === 1 ? "border-2 border-blue-500" : ""}`}
@@ -255,15 +264,31 @@ function Boxes() {
                 />
               </div>
             </div>
-            <Input
-              required={true}
-              minLength={1}
-              name="name"
-              type="text"
-              placeholder="Box Name"
-              onInput={(e) => setInputs({ ...inputs, name: e.target.value })}
-              extraClasses="col-span-1 md:col-span-12 row-span-1"
-            />
+            <div className="container mt-3 flex flex-col md:mt-0 md:flex-row">
+              <Input
+                required={true}
+                minLength={1}
+                name="name"
+                type="text"
+                placeholder="Box Name"
+                onInput={(e) => setInputs({ ...inputs, name: e.target.value })}
+                extraClasses=""
+              />
+              <div className="my-4 flex items-center md:pl-5">
+                <span className="mr-2 text-sm text-gray-700">Private</span>
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    className="peer sr-only"
+                    checked={inputs.toggleOption}
+                    onChange={(e) =>
+                      setInputs({ ...inputs, isPrivate: e.target.checked })
+                    }
+                  />
+                  <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
+                </label>
+              </div>
+            </div>
           </div>
         </Overlay>
       )}
@@ -279,7 +304,7 @@ function Boxes() {
           onSubmit={editBoxHandler}
         >
           <div className="container flex w-full flex-col py-5 xl:px-0">
-            <div className="row-span-row-1 container col-span-1 mb-5 flex h-full flex-grow flex-col gap-x-[5%] gap-y-5 md:col-span-12 md:row-span-5 md:flex-row lg:gap-x-[10%] xl:px-0">
+            <div className="container mb-5 flex flex-grow flex-col gap-x-[5%] gap-y-5 md:flex-row lg:gap-x-[10%] xl:px-0">
               <div
                 onClick={() => setInputs({ ...inputs, labelNum: 1 })}
                 className={`relative flex min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:h-[10%] md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56 ${inputs.labelNum === 1 ? "border-2 border-blue-500" : ""}`}
@@ -329,16 +354,32 @@ function Boxes() {
                 />
               </div>
             </div>
-            <Input
-              required={true}
-              minLength={1}
-              name="name"
-              type="text"
-              value={inputs.name}
-              placeholder="Box Name"
-              onInput={(e) => setInputs({ ...inputs, name: e.target.value })}
-              extraClasses="col-span-1 md:col-span-12 row-span-1"
-            />
+            <div className="container mt-3 flex flex-col md:mt-0 md:flex-row">
+              <Input
+                required={true}
+                minLength={1}
+                name="name"
+                type="text"
+                value={inputs.name}
+                placeholder="Box Name"
+                onInput={(e) => setInputs({ ...inputs, name: e.target.value })}
+                extraClasses=""
+              />
+              <div className="my-4 flex items-center md:pl-5">
+                <span className="mr-2 text-sm text-gray-700">Private</span>
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    className="peer sr-only"
+                    checked={inputs.isPrivate}
+                    onChange={(e) =>
+                      setInputs({ ...inputs, isPrivate: e.target.checked })
+                    }
+                  />
+                  <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
+                </label>
+              </div>
+            </div>
           </div>
         </Overlay>
       )}

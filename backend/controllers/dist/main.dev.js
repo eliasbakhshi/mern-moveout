@@ -19,6 +19,14 @@ var _nodemailer = _interopRequireDefault(require("../config/nodemailer.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -29,7 +37,7 @@ var _dirname = _path["default"].resolve();
 
 var home = function home(req, res) {
   return res.status(200).json({
-    message: "Welcome to the MERN Store API"
+    message: "Welcome to the Move out API"
   });
 };
 
@@ -79,23 +87,27 @@ var getBoxes = function getBoxes(req, res) {
 exports.getBoxes = getBoxes;
 
 var getBox = function getBox(req, res) {
-  var boxId, box, sortedItems;
+  var boxId, query, box, sortedItems;
   return regeneratorRuntime.async(function getBox$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
           boxId = req.params.boxId;
-          _context2.next = 3;
-          return regeneratorRuntime.awrap(_Box["default"].findOne({
-            user: req.user._id,
+          query = {
             _id: boxId
-          }));
+          };
+          console.log(boxId);
+          if (req.user.role !== "admin") query = _objectSpread({}, query, {
+            user: req.user._id
+          });
+          _context2.next = 6;
+          return regeneratorRuntime.awrap(_Box["default"].findOne(query));
 
-        case 3:
+        case 6:
           box = _context2.sent;
 
           if (box) {
-            _context2.next = 6;
+            _context2.next = 9;
             break;
           }
 
@@ -103,14 +115,14 @@ var getBox = function getBox(req, res) {
             message: "No box found."
           }));
 
-        case 6:
+        case 9:
           sortedItems = box.items.sort(function (a, b) {
             return b.createdAt - a.createdAt;
           });
           box.items = sortedItems;
           return _context2.abrupt("return", res.status(200).json(_objectSpread({}, box._doc)));
 
-        case 9:
+        case 12:
         case "end":
           return _context2.stop();
       }
@@ -121,15 +133,15 @@ var getBox = function getBox(req, res) {
 exports.getBox = getBox;
 
 var createBox = function createBox(req, res) {
-  var _req$body, name, labelNum, box, newBox;
+  var _req$body, name, labelNum, isPrivate, box, newBox;
 
   return regeneratorRuntime.async(function createBox$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
-          _req$body = req.body, name = _req$body.name, labelNum = _req$body.labelNum;
+          _req$body = req.body, name = _req$body.name, labelNum = _req$body.labelNum, isPrivate = _req$body.isPrivate;
 
-          if (!(!name || !labelNum)) {
+          if (!(!name || !labelNum || isPrivate === undefined)) {
             _context3.next = 3;
             break;
           }
@@ -142,7 +154,8 @@ var createBox = function createBox(req, res) {
           box = new _Box["default"]({
             name: name,
             labelNum: labelNum,
-            user: req.user._id
+            user: req.user._id,
+            isPrivate: isPrivate
           });
           _context3.next = 6;
           return regeneratorRuntime.awrap(box.save());
@@ -165,15 +178,15 @@ var createBox = function createBox(req, res) {
 exports.createBox = createBox;
 
 var updateBox = function updateBox(req, res) {
-  var _req$body2, name, labelNum, boxId, box;
+  var _req$body2, name, labelNum, boxId, isPrivate, box;
 
   return regeneratorRuntime.async(function updateBox$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          _req$body2 = req.body, name = _req$body2.name, labelNum = _req$body2.labelNum, boxId = _req$body2.boxId;
+          _req$body2 = req.body, name = _req$body2.name, labelNum = _req$body2.labelNum, boxId = _req$body2.boxId, isPrivate = _req$body2.isPrivate;
 
-          if (!(!name || !labelNum || !boxId)) {
+          if (!(!name || !labelNum || !boxId || isPrivate === undefined)) {
             _context4.next = 3;
             break;
           }
@@ -204,15 +217,16 @@ var updateBox = function updateBox(req, res) {
         case 8:
           box.name = name;
           box.labelNum = labelNum;
-          _context4.next = 12;
+          box.isPrivate = isPrivate;
+          _context4.next = 13;
           return regeneratorRuntime.awrap(box.save());
 
-        case 12:
+        case 13:
           return _context4.abrupt("return", res.status(200).json({
             message: "Box updated successfully."
           }));
 
-        case 13:
+        case 14:
         case "end":
           return _context4.stop();
       }
@@ -274,41 +288,50 @@ var deleteBox = function deleteBox(req, res) {
 exports.deleteBox = deleteBox;
 
 var getBoxItems = function getBoxItems(req, res) {
-  var boxId, box, sortedItems;
+  var boxId, query, box, sortedItems;
   return regeneratorRuntime.async(function getBoxItems$(_context6) {
     while (1) {
       switch (_context6.prev = _context6.next) {
         case 0:
           boxId = req.params.boxId;
-          _context6.next = 3;
-          return regeneratorRuntime.awrap(_Box["default"].findOne({
-            user: req.user._id,
+          query = {
             _id: boxId
-          }).sort({
-            createdAt: 1
-          }));
+          };
+          console.log(boxId); // query = { ...query,user: req.user._id };
 
-        case 3:
+          _context6.next = 5;
+          return regeneratorRuntime.awrap(_Box["default"].findOne(query));
+
+        case 5:
           box = _context6.sent;
 
           if (box) {
-            _context6.next = 6;
+            _context6.next = 8;
             break;
           }
 
           return _context6.abrupt("return", res.status(400).json({
-            message: "Box not found"
-          }));
-
-        case 6:
-          sortedItems = box.items.sort(function (a, b) {
-            return b.createdAt - a.createdAt;
-          });
-          return _context6.abrupt("return", res.status(200).json({
-            items: sortedItems
+            message: "No box found."
           }));
 
         case 8:
+          if (!box.isPrivate) {
+            _context6.next = 10;
+            break;
+          }
+
+          return _context6.abrupt("return", res.status(400).json({
+            message: "Box is private."
+          }));
+
+        case 10:
+          sortedItems = box.items.sort(function (a, b) {
+            return b.createdAt - a.createdAt;
+          });
+          box.items = sortedItems;
+          return _context6.abrupt("return", res.status(200).json(_toConsumableArray(box.items)));
+
+        case 13:
         case "end":
           return _context6.stop();
       }
@@ -405,21 +428,20 @@ var createItem = function createItem(req, res) {
           }));
 
         case 19:
-          console.log("222", mediaType);
           theBox.items.push({
             mediaType: mediaType,
             description: description,
             mediaPath: mediaPath
           });
-          _context8.next = 23;
+          _context8.next = 22;
           return regeneratorRuntime.awrap(theBox.save());
 
-        case 23:
+        case 22:
           return _context8.abrupt("return", res.status(201).json({
             message: "Item added to the box"
           }));
 
-        case 24:
+        case 23:
         case "end":
           return _context8.stop();
       }

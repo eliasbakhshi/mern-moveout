@@ -13,7 +13,6 @@ import UserRoutes from "./pages/user/UserRoutes";
 import Profile from "./pages/user/Profile.jsx";
 import Items from "./pages/user/Items.jsx";
 import Boxes from "./pages/user/Boxes.jsx";
-import BoxDetails from "./pages/user/BoxDetails.jsx";
 import Labels from "./pages/user/Labels.jsx";
 import AdminRoutes from "./pages/admin/AdminRoutes";
 import UserList from "./pages/admin/UserList.jsx";
@@ -22,6 +21,7 @@ import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 import SendVerificationEmail from "./pages/auth/sendVerificationEmail.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import Contact from "./pages/Contact.jsx";
+import BoxDetails from "./pages/BoxDetails.jsx";
 
 // TODO: Add a loading page then user is navigating between pages
 // TODO: Add ResetPassword page
@@ -40,7 +40,7 @@ const router = createBrowserRouter(
       />
       <Route path="reset-password" element={<ResetPassword />} />
       <Route path="reset-password/:token" element={<ResetPassword />} />
-      <Route path="boxes/:id" element={<BoxDetails />} />
+      <Route path="boxes/:boxId" element={<BoxDetails />} />
       <Route path="contact" element={<Contact />} />
 
       {/* Registered users */}

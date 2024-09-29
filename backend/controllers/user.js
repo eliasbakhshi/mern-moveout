@@ -94,6 +94,7 @@ export const login = async (req, res, next) => {
   // Create and set a token
   createSetToken(res, user._id, remember);
   return res.status(200).json({
+    id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
