@@ -39,21 +39,7 @@ export const usersApi = apiSlice.injectEndpoints({
         invalidatesTags: ["User"],
       }),
     }),
-    editCurrentUser: builder.mutation({
-      query: (info) => ({
-        url: "/api/users",
-        method: "PUT",
-        body: info,
-        invalidatesTags: ["User"],
-      }),
-    }),
-    getCurrentUser: builder.query({
-      query: (id) => ({
-        url: "/api/user/" + id,
-        method: "GET",
-        invalidatesTags: ["User"],
-      }),
-    }),
+
     sendEmailResetPassword: builder.mutation({
       query: (email) => ({
         url: "/api/reset-password/",
@@ -77,11 +63,40 @@ export const usersApi = apiSlice.injectEndpoints({
         invalidatesTags: ["User"],
       }),
     }),
+    editCurrentUser: builder.mutation({
+      query: (info) => ({
+        url: "/api/users",
+        method: "PUT",
+        body: info,
+        invalidatesTags: ["User"],
+      }),
+    }),
+    getCurrentUser: builder.query({
+      query: (id) => ({
+        url: "/api/user/" + id,
+        method: "GET",
+        invalidatesTags: ["User"],
+      }),
+    }),
     deleteCurrentUser: builder.mutation({
       query: () => ({
         url: "/api/users/delete-current/",
         method: "DELETE",
         providesTags: ["User"],
+      }),
+    }),
+    getUsersEmailAndName: builder.query({
+      query: () => ({
+        url: "/api/users/get-name-email",
+        method: "GET",
+      }),
+    }),
+    shareBox: builder.mutation({
+      query: (info) => ({
+        url: "/api/users/share-box/",
+        method: "POST",
+        body: info,
+        invalidatesTags: ["User"],
       }),
     }),
   }),
@@ -93,10 +108,12 @@ export const {
   useLogoutMutation,
   useVerifyEmailQuery,
   useSendVerificationEmailMutation,
-  useEditCurrentUserMutation,
-  useGetCurrentUserQuery,
   useSendEmailResetPasswordMutation,
   useResetPasswordMutation,
   useCheckTokenResetPasswordQuery,
+  useEditCurrentUserMutation,
+  useGetCurrentUserQuery,
   useDeleteCurrentUserMutation,
+  useGetUsersEmailAndNameQuery,
+  useShareBoxMutation,
 } = usersApi;

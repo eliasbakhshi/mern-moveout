@@ -1,9 +1,11 @@
-import { Console } from "console";
 import Box from "../models/Box.js";
 import { validationResult } from "express-validator";
 import fs from "fs";
 import path from "path";
 import transporter from "../config/nodemailer.js";
+import ShortUniqueId from "short-unique-id";
+
+const uid = new ShortUniqueId({ length: 6, dictionary: "number" });
 
 const __dirname = path.resolve();
 
@@ -21,10 +23,10 @@ export const getBoxes = async (req, res) => {
   const sortedItems = boxes.sort((a, b) => b.createdAt - a.createdAt);
   return res.status(200).json({ boxes: sortedItems });
 };
+
 export const getBox = async (req, res) => {
   const { boxId } = req.params;
   let query = { _id: boxId };
-  console.log(boxId)
 
   if (req.user.role !== "admin") query = { ...query, user: req.user._id };
 
@@ -39,8 +41,10 @@ export const getBox = async (req, res) => {
 
   return res.status(200).json({ ...box._doc });
 };
+
 export const createBox = async (req, res) => {
   const { name, labelNum, isPrivate } = req.body;
+  const privateCode = uid.randomUUID(6);
   if (!name || !labelNum || isPrivate === undefined) {
     return res
       .status(400)
@@ -52,14 +56,23 @@ export const createBox = async (req, res) => {
     labelNum,
     user: req.user._id,
     isPrivate,
+    privateCode: isPrivate ? privateCode : undefined,
   });
 
   const newBox = await box.save();
 
+  // Add new box to the user's boxes
+  req.user.boxes.push(newBox._id);
+  await req.user.save();
+
   return res.status(201).json({ id: newBox._id, message: "Box created." });
 };
+
 export const updateBox = async (req, res) => {
   const { name, labelNum, boxId, isPrivate } = req.body;
+
+  console.log(req.body);
+
   if (!name || !labelNum || !boxId || isPrivate === undefined) {
     return res.status(400).json({
       message: "Please provide a name, a label, and a box ID",
@@ -75,11 +88,18 @@ export const updateBox = async (req, res) => {
   box.name = name;
   box.labelNum = labelNum;
   box.isPrivate = isPrivate;
+  box.privateCode = isPrivate == "true" ? uid.randomUUID(6) : undefined;
+
+  // if (isPrivate) {
+  //   // if the box is private, generate a private code with old code if there is one
+  //   box.privateCode = box.privateCode || uid.randomUUID(6);
+  // }
 
   await box.save();
 
   return res.status(200).json({ message: "Box updated successfully." });
 };
+
 export const deleteBox = async (req, res) => {
   const { boxId } = req.params;
 
@@ -93,13 +113,73 @@ export const deleteBox = async (req, res) => {
     return res.status(400).json({ message: "Box not found" });
   }
 
+  // Remove the box from the user's boxes
+  req.user.boxes = req.user.boxes.filter(
+    (boxId) => boxId.toString() !== box._id.toString(),
+  );
+  await req.user.save();
+
   return res.status(200).json({ message: "Box deleted successfully." });
 };
+
+// Public stuff
+export const showBoxById = async (req, res) => {
+  const { boxId } = req.params;
+
+  const box = await Box.findOne({ _id: boxId });
+
+  if (!box) {
+    return res.status(400).json({ message: "No box found." });
+  }
+
+  const sortedItems = box.items.sort((a, b) => b.createdAt - a.createdAt);
+  box.items = sortedItems;
+
+  return res.status(200).json({ ...box._doc });
+};
+
+export const sendContactMessage = async (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res
+      .status(400)
+      .json({ message: "Please provide a name, email, and message" });
+  }
+
+  // send the email
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: process.env.ADMIN_EMAIL,
+      subject: `Hello Elias! New message from ${name}`,
+      text: `${name} wants to contact you.`,
+      html: `
+
+      <h1>Hello Elias!</h1>
+      <h3>This message is from ${process.env.BASE_URL}</h3>
+      <p>
+      <b>Name:</b> ${name} <br />
+      <b>Email:</b> ${email} <br />
+      <b>Message:</b> ${message}
+      </p>`,
+    });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
+  }
+
+  return res.status(200).json({ message: "Message sent successfully." });
+};
+
 export const getBoxItems = async (req, res) => {
   const { boxId } = req.params;
+  const { privateCode } = req.query;
+
   const query = { _id: boxId };
-  console.log(boxId);
-  // query = { ...query,user: req.user._id };
 
   const box = await Box.findOne(query);
   if (!box) {
@@ -107,7 +187,13 @@ export const getBoxItems = async (req, res) => {
   }
 
   if (box.isPrivate) {
-    return res.status(400).json({ message: "Box is private." });
+    if (privateCode !== "" && privateCode !== box.privateCode.toString()) {
+      return res
+        .status(400)
+        .json({ message: "Please enter the right private code." });
+    } else if (privateCode === "") {
+      return res.status(400).json({ message: "Box is private." });
+    }
   }
 
   const sortedItems = box.items.sort((a, b) => b.createdAt - a.createdAt);
@@ -115,7 +201,10 @@ export const getBoxItems = async (req, res) => {
 
   return res.status(200).json([...box.items]);
 };
+
 export const getBoxItem = async (req, res) => {};
+
+// Items
 export const createItem = async (req, res) => {
   // get the files
   const { boxId, description } = req.body;
@@ -275,43 +364,6 @@ export const deleteItem = async (req, res) => {
   return res.status(200).json({ message: "Item deleted successfully." });
 };
 
-export const sendContactMessage = async (req, res) => {
-  const { name, email, message } = req.body;
-
-  if (!name || !email || !message) {
-    return res
-      .status(400)
-      .json({ message: "Please provide a name, email, and message" });
-  }
-
-  // send the email
-  try {
-    // Send the email
-    await transporter.sendMail({
-      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
-      to: process.env.ADMIN_EMAIL,
-      subject: `Hello Elias! New message from ${name}`,
-      text: `${name} wants to contact you.`,
-      html: `
-
-      <h1>Hello Elias!</h1>
-      <h3>This message is from ${process.env.BASE_URL}</h3>
-      <p>
-      <b>Name:</b> ${name} <br />
-      <b>Email:</b> ${email} <br />
-      <b>Message:</b> ${message}
-      </p>`,
-    });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ message: "Email address rejected because domain not found." });
-  }
-
-  return res.status(200).json({ message: "Message sent successfully." });
-};
-
 export default {
   home,
   getBoxes,
@@ -319,8 +371,13 @@ export default {
   createBox,
   updateBox,
   deleteBox,
+
+  // Public stuff
+  showBoxById,
   getBoxItems,
   getBoxItem,
+
+  // Items
   createItem,
   updateItem,
   deleteItem,

@@ -40,11 +40,28 @@ export const mainApi = apiSlice.injectEndpoints({
       }),
     }),
 
+    // public stuff
+    showBox: builder.query({
+      query: (boxId) => ({
+        url: "/api/boxes/" + boxId + "/show",
+        method: "GET",
+        providesTags: ["Box"],
+      }),
+    }),
+    sendContactMessage: builder.mutation({
+      query: (info) => ({
+        url: "/api/contact",
+        method: "POST",
+        body: info,
+      }),
+    }),
+
     // Items
     getItems: builder.query({
-      query: (boxId) => ({
+      query: ({ boxId, privateCode }) => ({
         url: `/api/boxes/${boxId}/items/`,
         method: "GET",
+        params: { privateCode },
         providesTags: ["Box"],
       }),
     }),
@@ -78,15 +95,6 @@ export const mainApi = apiSlice.injectEndpoints({
         invalidatesTags: ["Box"],
       }),
     }),
-
-    // public stuff
-    sendContactMessage: builder.mutation({
-      query: (info) => ({
-        url: "/api/contact",
-        method: "POST",
-        body: info,
-      }),
-    }),
   }),
 });
 
@@ -96,10 +104,13 @@ export const {
   useCreateBoxMutation,
   useUpdateBoxMutation,
   useDeleteBoxMutation,
+  // public stuff
+  useShowBoxQuery,
+  useSendContactMessageMutation,
+  // Items
   useGetItemsQuery,
   useGetItemQuery,
   useCreateItemMutation,
   useUpdateItemMutation,
   useDeleteItemMutation,
-  useSendContactMessageMutation,
 } = mainApi;

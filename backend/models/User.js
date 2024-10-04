@@ -23,6 +23,12 @@ const userSchema = new Schema(
     mediaPath: {
       type: String,
     },
+    boxes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Box",
+      },
+    ],
     emailVerified: {
       type: Boolean,
       default: false,

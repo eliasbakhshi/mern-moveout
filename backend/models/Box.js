@@ -33,6 +33,10 @@ const boxSchema = new Schema({
     type: Boolean,
     required: true
   },
+  privateCode: {
+    type: Number,
+    required: false,
+  },
   items: [itemSchema], // Use the itemSchema for the items array
 }, { timestamps: true });
 

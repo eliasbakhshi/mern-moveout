@@ -17,7 +17,7 @@ function Labels() {
     <Loading />
   ) : (
     <div className="flex h-full w-full flex-grow items-center justify-center bg-[url('/img/login-bg.jpg')]">
-      <Label id={label._id} name={label.name} labelNum={label.labelNum} />
+      <Label label={label} />
     </div>
   );
 }

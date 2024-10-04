@@ -79,9 +79,6 @@ function ResetPassword() {
 
   resetPasswordLoading && <Loading />;
 
-  console.log(token);
-  console.log("user", user);
-
   return      token ? (
         checkTokenResetPasswordLoading ? (
           <Loading />

@@ -6,6 +6,8 @@ import transporter from "../config/nodemailer.js";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import Box from "../models/Box.js";
+import ShortUniqueId from "short-unique-id";
 
 const __dirname = path.resolve();
 
@@ -60,13 +62,15 @@ export const register = async (req, res) => {
   } catch (error) {
     // Delete the user if the email is not sent
     await user.deleteOne();
-    return res.status(500).json({ message: "Email address rejected because domain not found." });
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
   }
 
   return res.status(201).json({ message: "User created successfully." });
 };
 
-export const login = async (req, res, next) => {
+export const login = async (req, res) => {
   let { email, password, remember } = req.body;
   email = email.trim().toLowerCase();
   if (!email || !password) {
@@ -102,116 +106,10 @@ export const login = async (req, res, next) => {
   });
 };
 
-export const logout = (req, res, next) => {
+export const logout = (req, res) => {
   // Clear the cookie
   res.clearCookie("JWTMERNMoveOut");
   return res.status(200).json({ message: "Logged out." });
-};
-
-export const getCurrentUser = async (req, res) => {
-  const users = await User.findById({ _id: req.user._id });
-
-  if (!users) {
-    return res.status(404).json({ message: "User not found." });
-  }
-  return res.status(200).json(users);
-};
-
-export const updateCurrentUser = async (req, res) => {
-  let { name, email, password, mediaPath } = req.body;
-  email = email.trim().toLowerCase();
-  const media = req.file;
-  let mediaType = undefined,
-    newMediaPath = undefined;
-
-  // Return the errors if there are any
-  const err = validationResult(req);
-  if (!err.isEmpty()) {
-    return res.status(422).json({ message: err.array()[0].msg });
-  }
-
-  // Find the user
-  const user = await User.findById({ _id: req.user._id });
-
-  if (!user) {
-    return res.status(404).json({ message: "User not found." });
-  }
-
-  // if there is a file, check if it is an image or an audio file
-  if (media) {
-    // get the file path
-    newMediaPath = `${process.env.UPLOADS_PATH}/${media.filename}`;
-    // get the file mediaType
-    mediaType = media.mimetype;
-    // if the file mediaType is not an image or an audio file, return an error
-    if (
-      mediaType !== "image/png" &&
-      mediaType !== "image/jpg" &&
-      mediaType !== "image/jpeg"
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Valid files are .jpg,.jpeg,.png" });
-    }
-    mediaType = mediaType.split("/")[0];
-  }
-
-  try {
-    if (user.mediaPath && newMediaPath) {
-      // if there is a new media, remove the media in the uploads folder
-      fs.unlinkSync(path.join(__dirname, user.mediaPath));
-    } else if (user.mediaPath && !mediaPath) {
-      // if there is no media, remove the media in the uploads folder
-      fs.unlinkSync(path.join(__dirname, user.mediaPath));
-    }
-  } catch (error) {
-    console.log(error);
-  }
-  if (newMediaPath) {
-    // if there is a new media, update the media path and media type
-    user.mediaPath = newMediaPath;
-  } else if (!mediaPath) {
-    // if there is no media , remove the media path and media type
-    user.mediaPath = undefined;
-  }
-
-  // Update the user
-  user.name = name || user.name;
-  user.email = email || user.email;
-  user.password = password ? await bcrypt.hash(password, 10) : user.password;
-
-  const updatedUser = await user.save();
-
-  createSetToken(res, user._id);
-
-  return res.status(200).json({
-    name: updatedUser.name,
-    email: updatedUser.email,
-    role: updatedUser.role,
-    mediaPath: updatedUser.mediaPath,
-  });
-};
-
-export const deleteCurrentUser = async (req, res) => {
-  const users = await User.findOne({ _id: req.user._id });
-
-  if (!users) {
-    return res.status(404).json({ message: "User not found." });
-  }
-
-  // remove the media in the uploads folder
-  try {
-    if (users.mediaPath) {
-      fs.unlinkSync(path.join(__dirname, users.mediaPath));
-    }
-  } catch (error) {
-    console.log(error);
-  }
-
-  // Delete the user
-  await users.deleteOne();
-
-  return res.status(200).json({ message: "User deleted successfully." });
 };
 
 export const verifyEmail = async (req, res) => {
@@ -380,16 +278,179 @@ export const updateUserPasswordById = async (req, res) => {
   return res.status(200).json({ message: "Password has been updated." });
 };
 
+export const getCurrentUser = async (req, res) => {
+  const users = await User.findById({ _id: req.user._id });
+
+  if (!users) {
+    return res.status(404).json({ message: "User not found." });
+  }
+  return res.status(200).json(users);
+};
+
+export const updateCurrentUser = async (req, res) => {
+  let { name, email, password, mediaPath } = req.body;
+  email = email.trim().toLowerCase();
+  const media = req.file;
+  let mediaType = undefined,
+    newMediaPath = undefined;
+
+  // Return the errors if there are any
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
+
+  // Find the user
+  const user = await User.findById({ _id: req.user._id });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // if there is a file, check if it is an image or an audio file
+  if (media) {
+    // get the file path
+    newMediaPath = `${process.env.UPLOADS_PATH}/${media.filename}`;
+    // get the file mediaType
+    mediaType = media.mimetype;
+    // if the file mediaType is not an image or an audio file, return an error
+    if (
+      mediaType !== "image/png" &&
+      mediaType !== "image/jpg" &&
+      mediaType !== "image/jpeg"
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Valid files are .jpg,.jpeg,.png" });
+    }
+    mediaType = mediaType.split("/")[0];
+  }
+
+  try {
+    if (user.mediaPath && newMediaPath) {
+      // if there is a new media, remove the media in the uploads folder
+      fs.unlinkSync(path.join(__dirname, user.mediaPath));
+    } else if (user.mediaPath && !mediaPath) {
+      // if there is no media, remove the media in the uploads folder
+      fs.unlinkSync(path.join(__dirname, user.mediaPath));
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  if (newMediaPath) {
+    // if there is a new media, update the media path and media type
+    user.mediaPath = newMediaPath;
+  } else if (!mediaPath) {
+    // if there is no media , remove the media path and media type
+    user.mediaPath = undefined;
+  }
+
+  // Update the user
+  user.name = name || user.name;
+  user.email = email || user.email;
+  user.password = password ? await bcrypt.hash(password, 10) : user.password;
+
+  const updatedUser = await user.save();
+
+  createSetToken(res, user._id);
+
+  return res.status(200).json({
+    name: updatedUser.name,
+    email: updatedUser.email,
+    role: updatedUser.role,
+    mediaPath: updatedUser.mediaPath,
+  });
+};
+
+export const deleteCurrentUser = async (req, res) => {
+  const users = await User.findOne({ _id: req.user._id });
+
+  if (!users) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // remove the media in the uploads folder
+  try {
+    if (users.mediaPath) {
+      fs.unlinkSync(path.join(__dirname, users.mediaPath));
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+  // Delete the user
+  await users.deleteOne();
+
+  return res.status(200).json({ message: "User deleted successfully." });
+};
+
+export const getNamesAndEmails = async (req, res) => {
+  // Find the email and name of all users
+  const users = await User.find({}, { email: 1, name: 1, _id: 0 });
+
+  if (!users) {
+    return res.status(404).json({ message: "No email and name exists" });
+  }
+
+  return res.status(200).json(users);
+};
+
+export const shareBox = async (req, res) => {
+  const { boxId, email } = req.body;
+  const uid = new ShortUniqueId({ length: 6, dictionary: "number" });
+
+  // show the error if there is any
+  if (!boxId || !email) {
+    return res.status(400).json({ message: "Box ID and email are required." });
+  }
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
+
+  // Find the user
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "User not found." });
+  }
+
+  // Find the box
+  const box = await Box.findOne({ _id: boxId });
+  if (!box) {
+    return res.status(400).json({ message: "Box not found." });
+  }
+
+  console.log(box)
+
+  // duplicate the box
+  const newBox = await Box.create({
+    name: box.name,
+    description: box.description,
+    items: box.items,
+    labelNum: box.labelNum,
+    isPrivate: box.isPrivate,
+    privateCode: box.privateCode ? uid.randomUUID(6) : undefined,
+    user: user._id,
+  });
+
+  // Add the box to the user's box list
+  user.boxes.push(newBox._id);
+  await user.save();
+  return res.status(200).json({ message: "Box shared successfully." });
+};
+
 export default {
   register,
   login,
   logout,
   verifyEmail,
   sendVerificationEmail,
-  getCurrentUser,
-  updateCurrentUser,
-  deleteCurrentUser,
   sendResetPasswordEmail,
   verifyTokenResetPassword,
   updateUserPasswordById,
+  getCurrentUser,
+  updateCurrentUser,
+  deleteCurrentUser,
+  getNamesAndEmails,
+  shareBox,
 };

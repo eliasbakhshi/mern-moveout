@@ -25,12 +25,15 @@ router.get("/boxes", _validateToken["default"], (0, _checkAccess["default"])("us
 router.get("/boxes/:boxId", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.getBox));
 router.post("/boxes", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("name").trim().isString().notEmpty(), (0, _expressValidator.body)("label").trim().isString().notEmpty(), (0, _expressAsyncHandler["default"])(_main.createBox));
 router.put("/boxes", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("name").trim().isString().notEmpty(), (0, _expressValidator.body)("label").trim().isString().notEmpty(), (0, _expressAsyncHandler["default"])(_main.updateBox));
-router["delete"]("/boxes/:boxId", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.deleteBox));
+router["delete"]("/boxes/:boxId", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.deleteBox)); // Public stuff
+
+router.get("/boxes/:boxId/show", (0, _expressAsyncHandler["default"])(_main.showBoxById));
+router.post("/contact", (0, _expressAsyncHandler["default"])(_main.sendContactMessage)); // Items
+
 router.get("/boxes/:boxId/items", (0, _expressAsyncHandler["default"])(_main.getBoxItems));
 router.get("/boxes/:boxId/items/:itemId", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.getBoxItem));
 router.post("/boxes/items", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("description").optional().trim().isString(), (0, _expressValidator.body)("mediaPath").optional().trim().isString(), (0, _expressAsyncHandler["default"])(_main.createItem));
 router.put("/boxes/items", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("description").optional().trim().isString(), (0, _expressValidator.body)("mediaPath").optional().trim().isString(), (0, _expressAsyncHandler["default"])(_main.updateItem));
 router["delete"]("/boxes/items/:itemId", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.deleteItem));
-router.post("/contact", (0, _expressAsyncHandler["default"])(_main.sendContactMessage));
 var _default = router;
 exports["default"] = _default;

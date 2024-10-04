@@ -3,9 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports["default"] = exports.sendContactMessage = exports.deleteItem = exports.updateItem = exports.createItem = exports.getBoxItem = exports.getBoxItems = exports.deleteBox = exports.updateBox = exports.createBox = exports.getBox = exports.getBoxes = exports.home = void 0;
-
-var _console = require("console");
+exports["default"] = exports.deleteItem = exports.updateItem = exports.createItem = exports.getBoxItem = exports.getBoxItems = exports.sendContactMessage = exports.showBoxById = exports.deleteBox = exports.updateBox = exports.createBox = exports.getBox = exports.getBoxes = exports.home = void 0;
 
 var _Box = _interopRequireDefault(require("../models/Box.js"));
 
@@ -16,6 +14,8 @@ var _fs = _interopRequireDefault(require("fs"));
 var _path = _interopRequireDefault(require("path"));
 
 var _nodemailer = _interopRequireDefault(require("../config/nodemailer.js"));
+
+var _shortUniqueId = _interopRequireDefault(require("short-unique-id"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -32,6 +32,11 @@ function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (O
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var uid = new _shortUniqueId["default"]({
+  length: 6,
+  dictionary: "number"
+});
 
 var _dirname = _path["default"].resolve();
 
@@ -96,18 +101,17 @@ var getBox = function getBox(req, res) {
           query = {
             _id: boxId
           };
-          console.log(boxId);
           if (req.user.role !== "admin") query = _objectSpread({}, query, {
             user: req.user._id
           });
-          _context2.next = 6;
+          _context2.next = 5;
           return regeneratorRuntime.awrap(_Box["default"].findOne(query));
 
-        case 6:
+        case 5:
           box = _context2.sent;
 
           if (box) {
-            _context2.next = 9;
+            _context2.next = 8;
             break;
           }
 
@@ -115,14 +119,14 @@ var getBox = function getBox(req, res) {
             message: "No box found."
           }));
 
-        case 9:
+        case 8:
           sortedItems = box.items.sort(function (a, b) {
             return b.createdAt - a.createdAt;
           });
           box.items = sortedItems;
           return _context2.abrupt("return", res.status(200).json(_objectSpread({}, box._doc)));
 
-        case 12:
+        case 11:
         case "end":
           return _context2.stop();
       }
@@ -133,16 +137,17 @@ var getBox = function getBox(req, res) {
 exports.getBox = getBox;
 
 var createBox = function createBox(req, res) {
-  var _req$body, name, labelNum, isPrivate, box, newBox;
+  var _req$body, name, labelNum, isPrivate, privateCode, box, newBox;
 
   return regeneratorRuntime.async(function createBox$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
           _req$body = req.body, name = _req$body.name, labelNum = _req$body.labelNum, isPrivate = _req$body.isPrivate;
+          privateCode = uid.randomUUID(6);
 
           if (!(!name || !labelNum || isPrivate === undefined)) {
-            _context3.next = 3;
+            _context3.next = 4;
             break;
           }
 
@@ -150,24 +155,31 @@ var createBox = function createBox(req, res) {
             message: "Please provide a name and a label"
           }));
 
-        case 3:
+        case 4:
           box = new _Box["default"]({
             name: name,
             labelNum: labelNum,
             user: req.user._id,
-            isPrivate: isPrivate
+            isPrivate: isPrivate,
+            privateCode: isPrivate ? privateCode : undefined
           });
-          _context3.next = 6;
+          _context3.next = 7;
           return regeneratorRuntime.awrap(box.save());
 
-        case 6:
+        case 7:
           newBox = _context3.sent;
+          // Add new box to the user's boxes
+          req.user.boxes.push(newBox._id);
+          _context3.next = 11;
+          return regeneratorRuntime.awrap(req.user.save());
+
+        case 11:
           return _context3.abrupt("return", res.status(201).json({
             id: newBox._id,
             message: "Box created."
           }));
 
-        case 8:
+        case 12:
         case "end":
           return _context3.stop();
       }
@@ -185,9 +197,10 @@ var updateBox = function updateBox(req, res) {
       switch (_context4.prev = _context4.next) {
         case 0:
           _req$body2 = req.body, name = _req$body2.name, labelNum = _req$body2.labelNum, boxId = _req$body2.boxId, isPrivate = _req$body2.isPrivate;
+          console.log(req.body);
 
           if (!(!name || !labelNum || !boxId || isPrivate === undefined)) {
-            _context4.next = 3;
+            _context4.next = 4;
             break;
           }
 
@@ -195,18 +208,18 @@ var updateBox = function updateBox(req, res) {
             message: "Please provide a name, a label, and a box ID"
           }));
 
-        case 3:
-          _context4.next = 5;
+        case 4:
+          _context4.next = 6;
           return regeneratorRuntime.awrap(_Box["default"].findOne({
             user: req.user._id,
             _id: boxId
           }));
 
-        case 5:
+        case 6:
           box = _context4.sent;
 
           if (box) {
-            _context4.next = 8;
+            _context4.next = 9;
             break;
           }
 
@@ -214,19 +227,24 @@ var updateBox = function updateBox(req, res) {
             message: "Box not found"
           }));
 
-        case 8:
+        case 9:
           box.name = name;
           box.labelNum = labelNum;
           box.isPrivate = isPrivate;
-          _context4.next = 13;
+          box.privateCode = isPrivate == "true" ? uid.randomUUID(6) : undefined; // if (isPrivate) {
+          //   // if the box is private, generate a private code with old code if there is one
+          //   box.privateCode = box.privateCode || uid.randomUUID(6);
+          // }
+
+          _context4.next = 15;
           return regeneratorRuntime.awrap(box.save());
 
-        case 13:
+        case 15:
           return _context4.abrupt("return", res.status(200).json({
             message: "Box updated successfully."
           }));
 
-        case 14:
+        case 16:
         case "end":
           return _context4.stop();
       }
@@ -273,40 +291,46 @@ var deleteBox = function deleteBox(req, res) {
           }));
 
         case 8:
+          // Remove the box from the user's boxes
+          req.user.boxes = req.user.boxes.filter(function (boxId) {
+            return boxId.toString() !== box._id.toString();
+          });
+          _context5.next = 11;
+          return regeneratorRuntime.awrap(req.user.save());
+
+        case 11:
           return _context5.abrupt("return", res.status(200).json({
             message: "Box deleted successfully."
           }));
 
-        case 9:
+        case 12:
         case "end":
           return _context5.stop();
       }
     }
   });
-};
+}; // Public stuff
+
 
 exports.deleteBox = deleteBox;
 
-var getBoxItems = function getBoxItems(req, res) {
-  var boxId, query, box, sortedItems;
-  return regeneratorRuntime.async(function getBoxItems$(_context6) {
+var showBoxById = function showBoxById(req, res) {
+  var boxId, box, sortedItems;
+  return regeneratorRuntime.async(function showBoxById$(_context6) {
     while (1) {
       switch (_context6.prev = _context6.next) {
         case 0:
           boxId = req.params.boxId;
-          query = {
+          _context6.next = 3;
+          return regeneratorRuntime.awrap(_Box["default"].findOne({
             _id: boxId
-          };
-          console.log(boxId); // query = { ...query,user: req.user._id };
+          }));
 
-          _context6.next = 5;
-          return regeneratorRuntime.awrap(_Box["default"].findOne(query));
-
-        case 5:
+        case 3:
           box = _context6.sent;
 
           if (box) {
-            _context6.next = 8;
+            _context6.next = 6;
             break;
           }
 
@@ -314,26 +338,140 @@ var getBoxItems = function getBoxItems(req, res) {
             message: "No box found."
           }));
 
-        case 8:
-          if (!box.isPrivate) {
-            _context6.next = 10;
-            break;
-          }
-
-          return _context6.abrupt("return", res.status(400).json({
-            message: "Box is private."
-          }));
-
-        case 10:
+        case 6:
           sortedItems = box.items.sort(function (a, b) {
             return b.createdAt - a.createdAt;
           });
           box.items = sortedItems;
-          return _context6.abrupt("return", res.status(200).json(_toConsumableArray(box.items)));
+          return _context6.abrupt("return", res.status(200).json(_objectSpread({}, box._doc)));
+
+        case 9:
+        case "end":
+          return _context6.stop();
+      }
+    }
+  });
+};
+
+exports.showBoxById = showBoxById;
+
+var sendContactMessage = function sendContactMessage(req, res) {
+  var _req$body3, name, email, message;
+
+  return regeneratorRuntime.async(function sendContactMessage$(_context7) {
+    while (1) {
+      switch (_context7.prev = _context7.next) {
+        case 0:
+          _req$body3 = req.body, name = _req$body3.name, email = _req$body3.email, message = _req$body3.message;
+
+          if (!(!name || !email || !message)) {
+            _context7.next = 3;
+            break;
+          }
+
+          return _context7.abrupt("return", res.status(400).json({
+            message: "Please provide a name, email, and message"
+          }));
+
+        case 3:
+          _context7.prev = 3;
+          _context7.next = 6;
+          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
+            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
+            to: process.env.ADMIN_EMAIL,
+            subject: "Hello Elias! New message from ".concat(name),
+            text: "".concat(name, " wants to contact you."),
+            html: "\n\n      <h1>Hello Elias!</h1>\n      <h3>This message is from ".concat(process.env.BASE_URL, "</h3>\n      <p>\n      <b>Name:</b> ").concat(name, " <br />\n      <b>Email:</b> ").concat(email, " <br />\n      <b>Message:</b> ").concat(message, "\n      </p>")
+          }));
+
+        case 6:
+          _context7.next = 12;
+          break;
+
+        case 8:
+          _context7.prev = 8;
+          _context7.t0 = _context7["catch"](3);
+          console.log(_context7.t0);
+          return _context7.abrupt("return", res.status(500).json({
+            message: "Email address rejected because domain not found."
+          }));
+
+        case 12:
+          return _context7.abrupt("return", res.status(200).json({
+            message: "Message sent successfully."
+          }));
 
         case 13:
         case "end":
-          return _context6.stop();
+          return _context7.stop();
+      }
+    }
+  }, null, null, [[3, 8]]);
+};
+
+exports.sendContactMessage = sendContactMessage;
+
+var getBoxItems = function getBoxItems(req, res) {
+  var boxId, privateCode, query, box, sortedItems;
+  return regeneratorRuntime.async(function getBoxItems$(_context8) {
+    while (1) {
+      switch (_context8.prev = _context8.next) {
+        case 0:
+          boxId = req.params.boxId;
+          privateCode = req.query.privateCode;
+          query = {
+            _id: boxId
+          };
+          _context8.next = 5;
+          return regeneratorRuntime.awrap(_Box["default"].findOne(query));
+
+        case 5:
+          box = _context8.sent;
+
+          if (box) {
+            _context8.next = 8;
+            break;
+          }
+
+          return _context8.abrupt("return", res.status(400).json({
+            message: "No box found."
+          }));
+
+        case 8:
+          if (!box.isPrivate) {
+            _context8.next = 15;
+            break;
+          }
+
+          if (!(privateCode !== "" && privateCode !== box.privateCode.toString())) {
+            _context8.next = 13;
+            break;
+          }
+
+          return _context8.abrupt("return", res.status(400).json({
+            message: "Please enter the right private code."
+          }));
+
+        case 13:
+          if (!(privateCode === "")) {
+            _context8.next = 15;
+            break;
+          }
+
+          return _context8.abrupt("return", res.status(400).json({
+            message: "Box is private."
+          }));
+
+        case 15:
+          sortedItems = box.items.sort(function (a, b) {
+            return b.createdAt - a.createdAt;
+          });
+          box.items = sortedItems;
+          return _context8.abrupt("return", res.status(200).json(_toConsumableArray(box.items)));
+
+        case 18:
+        case "end":
+          return _context8.stop();
       }
     }
   });
@@ -342,55 +480,56 @@ var getBoxItems = function getBoxItems(req, res) {
 exports.getBoxItems = getBoxItems;
 
 var getBoxItem = function getBoxItem(req, res) {
-  return regeneratorRuntime.async(function getBoxItem$(_context7) {
+  return regeneratorRuntime.async(function getBoxItem$(_context9) {
     while (1) {
-      switch (_context7.prev = _context7.next) {
+      switch (_context9.prev = _context9.next) {
         case 0:
         case "end":
-          return _context7.stop();
+          return _context9.stop();
       }
     }
   });
-};
+}; // Items
+
 
 exports.getBoxItem = getBoxItem;
 
 var createItem = function createItem(req, res) {
-  var _req$body3, boxId, description, media, mediaType, mediaPath, err, theBox;
+  var _req$body4, boxId, description, media, mediaType, mediaPath, err, theBox;
 
-  return regeneratorRuntime.async(function createItem$(_context8) {
+  return regeneratorRuntime.async(function createItem$(_context10) {
     while (1) {
-      switch (_context8.prev = _context8.next) {
+      switch (_context10.prev = _context10.next) {
         case 0:
           // get the files
-          _req$body3 = req.body, boxId = _req$body3.boxId, description = _req$body3.description;
+          _req$body4 = req.body, boxId = _req$body4.boxId, description = _req$body4.description;
           media = req.file;
           mediaType = undefined, mediaPath = undefined; // Return the errors if there are any
 
           err = (0, _expressValidator.validationResult)(req);
 
           if (err.isEmpty()) {
-            _context8.next = 6;
+            _context10.next = 6;
             break;
           }
 
-          return _context8.abrupt("return", res.status(422).json({
+          return _context10.abrupt("return", res.status(422).json({
             message: err.array()[0].msg
           }));
 
         case 6:
           if (!(description === "" && !media)) {
-            _context8.next = 8;
+            _context10.next = 8;
             break;
           }
 
-          return _context8.abrupt("return", res.status(400).json({
+          return _context10.abrupt("return", res.status(400).json({
             message: "Please give a description or upload a file."
           }));
 
         case 8:
           if (!media) {
-            _context8.next = 14;
+            _context10.next = 14;
             break;
           }
 
@@ -400,11 +539,11 @@ var createItem = function createItem(req, res) {
           mediaType = media.mimetype; // if the file mediaType is not an image or an audio file, return an error
 
           if (!(mediaType !== "image/png" && mediaType !== "image/jpg" && mediaType !== "image/jpeg" && mediaType !== "audio/mpeg" && mediaType !== "audio/wav")) {
-            _context8.next = 13;
+            _context10.next = 13;
             break;
           }
 
-          return _context8.abrupt("return", res.status(400).json({
+          return _context10.abrupt("return", res.status(400).json({
             message: "Please provide a valid file"
           }));
 
@@ -412,18 +551,18 @@ var createItem = function createItem(req, res) {
           mediaType = mediaType.split("/")[0];
 
         case 14:
-          _context8.next = 16;
+          _context10.next = 16;
           return regeneratorRuntime.awrap(_Box["default"].findById(boxId));
 
         case 16:
-          theBox = _context8.sent;
+          theBox = _context10.sent;
 
           if (theBox) {
-            _context8.next = 19;
+            _context10.next = 19;
             break;
           }
 
-          return _context8.abrupt("return", res.status(400).json({
+          return _context10.abrupt("return", res.status(400).json({
             message: "Box not found"
           }));
 
@@ -433,17 +572,17 @@ var createItem = function createItem(req, res) {
             description: description,
             mediaPath: mediaPath
           });
-          _context8.next = 22;
+          _context10.next = 22;
           return regeneratorRuntime.awrap(theBox.save());
 
         case 22:
-          return _context8.abrupt("return", res.status(201).json({
+          return _context10.abrupt("return", res.status(201).json({
             message: "Item added to the box"
           }));
 
         case 23:
         case "end":
-          return _context8.stop();
+          return _context10.stop();
       }
     }
   });
@@ -452,40 +591,40 @@ var createItem = function createItem(req, res) {
 exports.createItem = createItem;
 
 var updateItem = function updateItem(req, res) {
-  var _req$body4, itemId, description, mediaPath, media, mediaType, newMediaPath, err, box;
+  var _req$body5, itemId, description, mediaPath, media, mediaType, newMediaPath, err, box;
 
-  return regeneratorRuntime.async(function updateItem$(_context9) {
+  return regeneratorRuntime.async(function updateItem$(_context11) {
     while (1) {
-      switch (_context9.prev = _context9.next) {
+      switch (_context11.prev = _context11.next) {
         case 0:
-          _req$body4 = req.body, itemId = _req$body4.itemId, description = _req$body4.description, mediaPath = _req$body4.mediaPath;
+          _req$body5 = req.body, itemId = _req$body5.itemId, description = _req$body5.description, mediaPath = _req$body5.mediaPath;
           media = req.file;
           mediaType = undefined, newMediaPath = undefined; // Return the errors if there are any
 
           err = (0, _expressValidator.validationResult)(req);
 
           if (err.isEmpty()) {
-            _context9.next = 6;
+            _context11.next = 6;
             break;
           }
 
-          return _context9.abrupt("return", res.status(422).json({
+          return _context11.abrupt("return", res.status(422).json({
             message: err.array()[0].msg
           }));
 
         case 6:
           if (!(description === "" && !media && mediaPath === "")) {
-            _context9.next = 8;
+            _context11.next = 8;
             break;
           }
 
-          return _context9.abrupt("return", res.status(400).json({
+          return _context11.abrupt("return", res.status(400).json({
             message: "Please give a description or upload a file."
           }));
 
         case 8:
           if (!media) {
-            _context9.next = 14;
+            _context11.next = 14;
             break;
           }
 
@@ -493,11 +632,11 @@ var updateItem = function updateItem(req, res) {
           mediaType = media.mimetype; // if the file mediaType is not an image or an audio file, return an error
 
           if (!(mediaType !== "image/png" && mediaType !== "image/jpg" && mediaType !== "image/jpeg" && mediaType !== "audio/mpeg" && mediaType !== "audio/wav")) {
-            _context9.next = 13;
+            _context11.next = 13;
             break;
           }
 
-          return _context9.abrupt("return", res.status(400).json({
+          return _context11.abrupt("return", res.status(400).json({
             message: "Please provide a valid file"
           }));
 
@@ -505,21 +644,21 @@ var updateItem = function updateItem(req, res) {
           mediaType = mediaType.split("/")[0];
 
         case 14:
-          _context9.next = 16;
+          _context11.next = 16;
           return regeneratorRuntime.awrap(_Box["default"].findOne({
             user: req.user._id,
             "items._id": itemId
           }));
 
         case 16:
-          box = _context9.sent;
+          box = _context11.sent;
 
           if (box) {
-            _context9.next = 19;
+            _context11.next = 19;
             break;
           }
 
-          return _context9.abrupt("return", res.status(400).json({
+          return _context11.abrupt("return", res.status(400).json({
             message: "Item not found"
           }));
 
@@ -554,17 +693,17 @@ var updateItem = function updateItem(req, res) {
 
             return item;
           });
-          _context9.next = 22;
+          _context11.next = 22;
           return regeneratorRuntime.awrap(box.save());
 
         case 22:
-          return _context9.abrupt("return", res.status(200).json({
+          return _context11.abrupt("return", res.status(200).json({
             message: "Item updated successfully."
           }));
 
         case 23:
         case "end":
-          return _context9.stop();
+          return _context11.stop();
       }
     }
   });
@@ -574,37 +713,37 @@ exports.updateItem = updateItem;
 
 var deleteItem = function deleteItem(req, res) {
   var itemId, box;
-  return regeneratorRuntime.async(function deleteItem$(_context10) {
+  return regeneratorRuntime.async(function deleteItem$(_context12) {
     while (1) {
-      switch (_context10.prev = _context10.next) {
+      switch (_context12.prev = _context12.next) {
         case 0:
           itemId = req.params.itemId;
 
           if (itemId) {
-            _context10.next = 3;
+            _context12.next = 3;
             break;
           }
 
-          return _context10.abrupt("return", res.status(400).json({
+          return _context12.abrupt("return", res.status(400).json({
             message: "Please provide an item ID"
           }));
 
         case 3:
-          _context10.next = 5;
+          _context12.next = 5;
           return regeneratorRuntime.awrap(_Box["default"].findOne({
             user: req.user._id,
             "items._id": itemId
           }));
 
         case 5:
-          box = _context10.sent;
+          box = _context12.sent;
 
           if (box) {
-            _context10.next = 8;
+            _context12.next = 8;
             break;
           }
 
-          return _context10.abrupt("return", res.status(400).json({
+          return _context12.abrupt("return", res.status(400).json({
             message: "Item not found"
           }));
 
@@ -619,79 +758,23 @@ var deleteItem = function deleteItem(req, res) {
               return item;
             }
           });
-          _context10.next = 11;
+          _context12.next = 11;
           return regeneratorRuntime.awrap(box.save());
 
         case 11:
-          return _context10.abrupt("return", res.status(200).json({
+          return _context12.abrupt("return", res.status(200).json({
             message: "Item deleted successfully."
           }));
 
         case 12:
         case "end":
-          return _context10.stop();
+          return _context12.stop();
       }
     }
   });
 };
 
 exports.deleteItem = deleteItem;
-
-var sendContactMessage = function sendContactMessage(req, res) {
-  var _req$body5, name, email, message;
-
-  return regeneratorRuntime.async(function sendContactMessage$(_context11) {
-    while (1) {
-      switch (_context11.prev = _context11.next) {
-        case 0:
-          _req$body5 = req.body, name = _req$body5.name, email = _req$body5.email, message = _req$body5.message;
-
-          if (!(!name || !email || !message)) {
-            _context11.next = 3;
-            break;
-          }
-
-          return _context11.abrupt("return", res.status(400).json({
-            message: "Please provide a name, email, and message"
-          }));
-
-        case 3:
-          _context11.prev = 3;
-          _context11.next = 6;
-          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
-            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
-            to: process.env.ADMIN_EMAIL,
-            subject: "Hello Elias! New message from ".concat(name),
-            text: "".concat(name, " wants to contact you."),
-            html: "\n\n      <h1>Hello Elias!</h1>\n      <h3>This message is from ".concat(process.env.BASE_URL, "</h3>\n      <p>\n      <b>Name:</b> ").concat(name, " <br />\n      <b>Email:</b> ").concat(email, " <br />\n      <b>Message:</b> ").concat(message, "\n      </p>")
-          }));
-
-        case 6:
-          _context11.next = 12;
-          break;
-
-        case 8:
-          _context11.prev = 8;
-          _context11.t0 = _context11["catch"](3);
-          console.log(_context11.t0);
-          return _context11.abrupt("return", res.status(500).json({
-            message: "Email address rejected because domain not found."
-          }));
-
-        case 12:
-          return _context11.abrupt("return", res.status(200).json({
-            message: "Message sent successfully."
-          }));
-
-        case 13:
-        case "end":
-          return _context11.stop();
-      }
-    }
-  }, null, null, [[3, 8]]);
-};
-
-exports.sendContactMessage = sendContactMessage;
 var _default = {
   home: home,
   getBoxes: getBoxes,
@@ -699,8 +782,11 @@ var _default = {
   createBox: createBox,
   updateBox: updateBox,
   deleteBox: deleteBox,
+  // Public stuff
+  showBoxById: showBoxById,
   getBoxItems: getBoxItems,
   getBoxItem: getBoxItem,
+  // Items
   createItem: createItem,
   updateItem: updateItem,
   deleteItem: deleteItem,

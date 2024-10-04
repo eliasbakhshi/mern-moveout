@@ -42,6 +42,10 @@ var boxSchema = new _mongoose.Schema({
     type: Boolean,
     required: true
   },
+  privateCode: {
+    type: Number,
+    required: false
+  },
   items: [itemSchema] // Use the itemSchema for the items array
 
 }, {

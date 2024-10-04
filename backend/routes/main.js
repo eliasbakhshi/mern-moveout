@@ -6,12 +6,13 @@ import {
   createBox,
   updateBox,
   deleteBox,
+  showBoxById,
+  sendContactMessage,
   getBoxItems,
   getBoxItem,
   createItem,
   updateItem,
   deleteItem,
-  sendContactMessage,
 } from "../controllers/main.js";
 import asyncHandler from "express-async-handler";
 import validateToken from "../middlewares/validateToken.js";
@@ -21,18 +22,21 @@ import { body } from "express-validator";
 const router = Router();
 
 router.get("/", asyncHandler(home));
+
 router.get(
   "/boxes",
   validateToken,
   checkAccess("user"),
   asyncHandler(getBoxes),
 );
+
 router.get(
   "/boxes/:boxId",
   validateToken,
   checkAccess("user"),
   asyncHandler(getBox),
 );
+
 router.post(
   "/boxes",
   validateToken,
@@ -41,6 +45,7 @@ router.post(
   body("label").trim().isString().notEmpty(),
   asyncHandler(createBox),
 );
+
 router.put(
   "/boxes",
   validateToken,
@@ -49,6 +54,7 @@ router.put(
   body("label").trim().isString().notEmpty(),
   asyncHandler(updateBox),
 );
+
 router.delete(
   "/boxes/:boxId",
   validateToken,
@@ -56,16 +62,24 @@ router.delete(
   asyncHandler(deleteBox),
 );
 
+// Public stuff
+router.get("/boxes/:boxId/show", asyncHandler(showBoxById));
+
+router.post("/contact", asyncHandler(sendContactMessage));
+
+// Items
 router.get(
   "/boxes/:boxId/items",
   asyncHandler(getBoxItems),
 );
+
 router.get(
   "/boxes/:boxId/items/:itemId",
   validateToken,
   checkAccess("user"),
   asyncHandler(getBoxItem),
 );
+
 router.post(
   "/boxes/items",
   validateToken,
@@ -74,6 +88,7 @@ router.post(
   body("mediaPath").optional().trim().isString(),
   asyncHandler(createItem),
 );
+
 router.put(
   "/boxes/items",
   validateToken,
@@ -82,12 +97,12 @@ router.put(
   body("mediaPath").optional().trim().isString(),
   asyncHandler(updateItem),
 );
+
 router.delete(
   "/boxes/items/:itemId",
   validateToken,
   checkAccess("user"),
   asyncHandler(deleteItem),
 );
-router.post("/contact", asyncHandler(sendContactMessage));
 
 export default router;

@@ -1,5 +1,5 @@
 import Button from "../../components/Button";
-import { useState} from "react";
+import { useState } from "react";
 import { FaDownload, FaTrash } from "react-icons/fa";
 import {
   useCreateItemMutation,
@@ -7,6 +7,10 @@ import {
   useUpdateItemMutation,
   useGetBoxQuery,
 } from "../../redux/api/mainApiSlice";
+import {
+  useGetUsersEmailAndNameQuery,
+  useShareBoxMutation,
+} from "../../redux/api/usersApiSlice";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loading from "../../components/Loading";
@@ -25,6 +29,11 @@ import ItemList from "../../components/ItemList";
 // TODO: Add comments to all functions
 // TODO: Check if the user is logged in before showing the page
 // TODO: Check if user is the owner of the box before showing the buttons for the edit and delete and add and show label
+// TODO: Add a search bar for the items
+// TODO: Add a filter for the items
+// TODO: Add a button for the user to go back to the boxes page
+// TODO: Add sharing the label with other users
+// TODO: Change the popup titles with the name of the box or items
 
 function Items() {
   const [image, setImage] = useState("");
@@ -34,7 +43,7 @@ function Items() {
     description: "",
     media: "",
     boxId,
-    mode: "create",
+    mode: "",
     mediaPath: "",
   });
 
@@ -43,16 +52,24 @@ function Items() {
   const [createItem] = useCreateItemMutation();
   const [updateItem] = useUpdateItemMutation();
   const [deleteItem] = useDeleteItemMutation();
+  const [shareBox] = useShareBoxMutation();
   const {
     data: box,
     isLoading: boxLoading,
     refetch: refetchBox,
     error: boxError,
   } = useGetBoxQuery(boxId);
+  const {
+    data: emailsNames,
+    isLoading: emailsNamesLoading,
+    refetch: refetchEmailsNames,
+    error: emailsNamesError,
+  } = useGetUsersEmailAndNameQuery();
 
   const { userInfo } = useSelector((state) => state.auth);
 
   const [isOpenModal, setIsOpenModal] = useState(false);
+  const [isShowingUsers, setIsShowingUsers] = useState(false);
 
   const fileChangeHandler = async (e) => {
     const media = e.target.files[0];
@@ -80,7 +97,7 @@ function Items() {
   };
   const deletePreview = () => {
     setImage("");
-    setInputs({ ...inputs, media: "", mediaPath: "" });
+    setInputs({ ...inputs, media: "", mediaPath: "", mode: "delete" });
   };
 
   const createItemHandler = async (e) => {
@@ -105,7 +122,7 @@ function Items() {
         description: "",
         media: "",
         boxId,
-        mode: "create",
+        mode: "",
         mediaPath: "",
       });
       setIsOpenModal(false);
@@ -160,7 +177,7 @@ function Items() {
         mediaPath: "",
       });
       setImage("");
-    } else {
+    } else if (mode === "delete") {
       setInputs({ ...inputs, itemId, mode });
     }
     setIsOpenModal(true);
@@ -194,7 +211,7 @@ function Items() {
 
       setInputs({
         itemId: "",
-        mode: "create",
+        mode: "",
         name: "",
         labelNum: 1,
         mediaPath: "",
@@ -210,28 +227,104 @@ function Items() {
     }
   };
 
+  const showUsers = () => {
+    setIsOpenModal(true);
+    setIsShowingUsers(true);
+  };
+
+  const onCloseOverlay = () => {
+    setIsOpenModal(false);
+    setIsShowingUsers(false);
+
+    setInputs({ ...inputs, mode: "" });
+  };
+
+  const shareBoxHandler = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    if (email === "") {
+      return toast.error("Please select an email.");
+    }
+
+    try {
+      const { data, error } = await shareBox({ boxId, email });
+      if (error) {
+        toast.error(error.data.message);
+      } else {
+        toast.success(data.message);
+        setIsOpenModal(false);
+        setIsShowingUsers(false);
+      }
+    } catch (err) {
+      toast.error(
+        err?.data?.message ||
+          "An error occurred. Please contact the administration.",
+      );
+    }
+  };
+
   return boxLoading ? (
     <Loading />
   ) : box?.items ? (
     <>
       {userInfo && userInfo.role !== "" && (
-        <div className="container my-2 flex w-full items-center px-4 xl:px-0">
+        <div className="container my-2 flex w-full flex-col items-start gap-y-4 px-4 md:flex-row md:items-center xl:px-0">
           <Button extraClasses="mr-5" onClick={() => showModal("", "create")}>
             Add New Item
           </Button>
-          <LinkButton extraClasses="" href={`/labels/${boxId}`}>
+          <LinkButton extraClasses="mr-5" href={`/labels/${boxId}`}>
             Show label
           </LinkButton>
+          <Button extraClasses="mr-5" onClick={showUsers}>
+            Share Box
+          </Button>
         </div>
       )}
-
+      {/* Show the list of the items */}
       <ItemList items={box.items} showModal={showModal} />
+
+      {/* Show the popup for sharing the label with users. */}
+      {isShowingUsers && (
+        <Overlay
+          isOpen={isOpenModal}
+          onClose={onCloseOverlay}
+          setIsOpen={setIsOpenModal}
+          extraClasses={"w-96"}
+          title={`Share ${box.name}`}
+          submitText="Share"
+          cancelText="Cancel"
+          onSubmit={shareBoxHandler}
+        >
+          <div className="container flex flex-col gap-5 py-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Share the box with other users.
+            </p>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="email" className="text-sm text-gray-500">
+                Email
+              </label>
+              <select
+                name="email"
+                id="email"
+                className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-800"
+              >
+                <option value="">Select an email</option>
+                {emailsNames?.map((email, index) => (
+                  <option key={index} value={email.email}>
+                    {email.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </Overlay>
+      )}
 
       {/* Show the popup for creating */}
       {isOpenModal && inputs.mode === "create" && (
         <Overlay
           isOpen={isOpenModal}
-          onClose={() => setIsOpenModal(!isOpenModal)}
+          onClose={onCloseOverlay}
           setIsOpen={setIsOpenModal}
           extraClasses={"w-full"}
           title="Add Item"
@@ -294,7 +387,7 @@ function Items() {
       {isOpenModal && inputs.mode === "edit" && (
         <Overlay
           isOpen={isOpenModal}
-          onClose={() => setIsOpenModal(!isOpenModal)}
+          onClose={onCloseOverlay}
           setIsOpen={setIsOpenModal}
           extraClasses={"w-full"}
           title="Edit Item"
@@ -355,7 +448,7 @@ function Items() {
       {isOpenModal && inputs.mode === "delete" && (
         <Overlay
           isOpen={isOpenModal}
-          onClose={() => setIsOpenModal(!isOpenModal)}
+          onClose={onCloseOverlay}
           title="Delete Item"
           submitText="Yes"
           submitColor="red"

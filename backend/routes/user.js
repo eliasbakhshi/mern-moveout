@@ -12,6 +12,8 @@ import {
   deleteCurrentUser,
   verifyTokenResetPassword,
   updateUserPasswordById,
+  getNamesAndEmails,
+  shareBox,
 } from "../controllers/user.js";
 import { body } from "express-validator";
 import User from "../models/User.js";
@@ -31,6 +33,7 @@ router.post(
     .isAlphanumeric(),
   asyncHandler(login),
 );
+
 router.post(
   "/register",
   body("email")
@@ -57,6 +60,41 @@ router.post(
   }),
   asyncHandler(register),
 );
+
+router.post("/logout", asyncHandler(logout));
+
+router.put("/verify-email", asyncHandler(verifyEmail));
+
+router.post(
+  "/verify-email",
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(sendVerificationEmail),
+);
+
+router.post(
+  "/reset-password",
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(sendResetPasswordEmail),
+);
+router.get("/reset-password/:token", asyncHandler(verifyTokenResetPassword));
+
+router.put(
+  "/reset-password",
+  body(
+    "password",
+    "The password must be alphanumeric and at least 6 characters long.",
+  )
+    .isLength({ min: 6, max: 100 })
+    .isAlphanumeric(),
+  body("confirmPassword").custom((value, { req }) => {
+    if (value && value !== req.body.password) {
+      throw new Error("The passwords do not match.");
+    }
+    return true;
+  }),
+  asyncHandler(updateUserPasswordById),
+);
+
 router.put(
   "/users",
   validateToken,
@@ -79,35 +117,6 @@ router.put(
     }),
   asyncHandler(updateCurrentUser),
 );
-router.post("/logout", asyncHandler(logout));
-router.put("/verify-email", asyncHandler(verifyEmail));
-router.post(
-  "/verify-email",
-  body("email").trim().isEmail().withMessage("The email is not valid."),
-  asyncHandler(sendVerificationEmail),
-);
-router.post(
-  "/reset-password",
-  body("email").trim().isEmail().withMessage("The email is not valid."),
-  asyncHandler(sendResetPasswordEmail),
-);
-router.get("/reset-password/:token", asyncHandler(verifyTokenResetPassword));
-router.put(
-  "/reset-password",
-  body(
-    "password",
-    "The password must be alphanumeric and at least 6 characters long.",
-  )
-    .isLength({ min: 6, max: 100 })
-    .isAlphanumeric(),
-  body("confirmPassword").custom((value, { req }) => {
-    if (value && value !== req.body.password) {
-      throw new Error("The passwords do not match.");
-    }
-    return true;
-  }),
-  asyncHandler(updateUserPasswordById),
-);
 
 router.get(
   "/users/current",
@@ -121,6 +130,20 @@ router.delete(
   validateToken,
   checkAccess("user"),
   asyncHandler(deleteCurrentUser),
+);
+
+router.get(
+  "/users/get-name-email",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(getNamesAndEmails),
+);
+router.post(
+  "/users/share-box",
+  validateToken,
+  checkAccess("user"),
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(shareBox),
 );
 
 export default router;
