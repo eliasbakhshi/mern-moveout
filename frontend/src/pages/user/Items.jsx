@@ -59,12 +59,7 @@ function Items() {
     refetch: refetchBox,
     error: boxError,
   } = useGetBoxQuery(boxId);
-  const {
-    data: emailsNames,
-    isLoading: emailsNamesLoading,
-    refetch: refetchEmailsNames,
-    error: emailsNamesError,
-  } = useGetUsersEmailAndNameQuery();
+  const { data: emailsAndNames } = useGetUsersEmailAndNameQuery();
 
   const { userInfo } = useSelector((state) => state.auth);
 
@@ -309,7 +304,7 @@ function Items() {
                 className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-800"
               >
                 <option value="">Select an email</option>
-                {emailsNames?.map((email, index) => (
+                {emailsAndNames?.map((email, index) => (
                   <option key={index} value={email.email}>
                     {email.email}
                   </option>

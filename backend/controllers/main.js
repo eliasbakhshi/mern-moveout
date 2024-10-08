@@ -374,6 +374,7 @@ export default {
 
   // Public stuff
   showBoxById,
+  sendContactMessage,
   getBoxItems,
   getBoxItem,
 
@@ -381,5 +382,4 @@ export default {
   createItem,
   updateItem,
   deleteItem,
-  sendContactMessage,
 };

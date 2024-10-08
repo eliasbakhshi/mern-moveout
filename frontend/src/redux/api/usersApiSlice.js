@@ -9,6 +9,13 @@ export const usersApi = apiSlice.injectEndpoints({
         body: credentials,
       }),
     }),
+    loginWithGoogle: builder.mutation({
+      query: (credentials) => ({
+        url: "/api/login-with-google",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
     register: builder.mutation({
       query: (credentials) => ({
         url: "/api/register",
@@ -99,11 +106,31 @@ export const usersApi = apiSlice.injectEndpoints({
         invalidatesTags: ["User"],
       }),
     }),
+    shareLabel: builder.mutation({
+      query: (info) => ({
+        url: "/api/users/share-label/",
+        method: "POST",
+        body: info,
+        invalidatesTags: ["User"],
+      }),
+    }),
+    getUserFromGoogle: builder.query({
+      query: (user) => ({
+        url: `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`,
+        method: "GET",
+        invalidatesTags: ["User"],
+        headers: {
+          Authorization: `Bearer ${user.access_token}`,
+          Accept: "application/json",
+        },
+      }),
+    }),
   }),
 });
 
 export const {
   useLoginMutation,
+  useLoginWithGoogleMutation,
   useRegisterMutation,
   useLogoutMutation,
   useVerifyEmailQuery,
@@ -116,4 +143,6 @@ export const {
   useDeleteCurrentUserMutation,
   useGetUsersEmailAndNameQuery,
   useShareBoxMutation,
+  useShareLabelMutation,
+  useGetUserFromGoogleQuery,
 } = usersApi;

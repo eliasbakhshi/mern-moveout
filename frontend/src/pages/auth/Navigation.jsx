@@ -12,16 +12,13 @@ import { BsPersonPlus } from "react-icons/bs";
 import Loading from "../../components/Loading";
 import { Link, useNavigate } from "react-router-dom";
 
-
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [logout, { isLoading: logoutLoading }] = useLogoutMutation();
 
-  const { userInfo } = useSelector((state) => state.auth);
-
-  logoutLoading && <Loading />;
+  let { userInfo } = useSelector((state) => state.auth);
 
   const logoutHandler = async () => {
     try {
@@ -33,8 +30,14 @@ const Login = () => {
     }
   };
 
+  if (!userInfo?.mediaPath?.includes("googleusercontent")) {
+    userInfo = { ...userInfo, mediaPath: `/api/${userInfo?.mediaPath}` };
+  }
+
+  logoutLoading && <Loading />;
+
   return (
-    <Navbar fluid className="fixed left-0 top-0 w-full z-50">
+    <Navbar fluid className="fixed left-0 top-0 z-50 w-full">
       <Navbar.Brand
         onClick={() => navigate("/")}
         className="hover:cursor-pointer"
@@ -51,7 +54,7 @@ const Login = () => {
             inline
             label={
               <Avatar
-                img={userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : ""}
+                img={userInfo.mediaPath ? `${userInfo.mediaPath}` : ""}
                 alt="User"
                 rounded
                 size="sm"
@@ -62,7 +65,7 @@ const Login = () => {
           >
             <Dropdown.Item onClick={() => navigate("/profile")}>
               <Avatar
-                img={userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : ""}
+                img={userInfo.mediaPath ? `${userInfo.mediaPath}` : ""}
                 alt="User"
                 rounded
                 color="red"

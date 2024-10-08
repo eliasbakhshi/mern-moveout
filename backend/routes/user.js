@@ -1,8 +1,9 @@
 import { Router } from "express";
 import asyncHandler from "express-async-handler";
 import {
-  login,
   register,
+  login,
+  loginWithGoogle,
   logout,
   verifyEmail,
   sendVerificationEmail,
@@ -14,6 +15,7 @@ import {
   updateUserPasswordById,
   getNamesAndEmails,
   shareBox,
+  shareLabel,
 } from "../controllers/user.js";
 import { body } from "express-validator";
 import User from "../models/User.js";
@@ -21,18 +23,6 @@ import validateToken from "../middlewares/validateToken.js";
 import checkAccess from "../middlewares/checkAccess.js";
 
 const router = Router();
-
-router.post(
-  "/login",
-  body("email").trim().isEmail().withMessage("The email is not valid."),
-  body(
-    "password",
-    "The password must be alphanumeric and at least 6 characters long.",
-  )
-    .isLength({ min: 6, max: 100 })
-    .isAlphanumeric(),
-  asyncHandler(login),
-);
 
 router.post(
   "/register",
@@ -59,6 +49,24 @@ router.post(
     return true;
   }),
   asyncHandler(register),
+);
+
+router.post(
+  "/login",
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  body(
+    "password",
+    "The password must be alphanumeric and at least 6 characters long.",
+  )
+    .isLength({ min: 6, max: 100 })
+    .isAlphanumeric(),
+  asyncHandler(login),
+);
+
+router.post(
+  "/login-with-google",
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(loginWithGoogle),
 );
 
 router.post("/logout", asyncHandler(logout));
@@ -138,12 +146,21 @@ router.get(
   checkAccess("user"),
   asyncHandler(getNamesAndEmails),
 );
+
 router.post(
   "/users/share-box",
   validateToken,
   checkAccess("user"),
   body("email").trim().isEmail().withMessage("The email is not valid."),
   asyncHandler(shareBox),
+);
+
+router.post(
+  "/users/share-label",
+  validateToken,
+  checkAccess("user"),
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(shareLabel),
 );
 
 export default router;

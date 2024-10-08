@@ -1,5 +1,9 @@
 import { useRef, useEffect, useState } from "react";
-import { useLoginMutation } from "../../redux/api/usersApiSlice";
+import {
+  useLoginMutation,
+  useGetUserFromGoogleQuery,
+  useLoginWithGoogleMutation,
+} from "../../redux/api/usersApiSlice";
 import { setCredentials } from "../../redux/features/auth/authSlice";
 import { toast } from "react-toastify";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -10,6 +14,9 @@ import Button from "../../components/Button";
 import Input from "../../components/Input";
 import LinkButton from "../../components/LinkButton";
 import ReCAPTCHA from "react-google-recaptcha";
+import { googleLogout, useGoogleLogin } from "@react-oauth/google";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { FcGoogle } from "react-icons/fc";
 
 // TODO: Make a focus for login button when the user press enter
 
@@ -20,12 +27,18 @@ function Login() {
   const reCaptchaRef = useRef(null);
 
   const [verify, setVerify] = useState(false);
+  const [token, setToken] = useState();
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { search } = useLocation();
 
   const [login, { isLoading: loginLoading }] = useLoginMutation();
+  const [loginWithGoogle, { isLoading: loginWithGoogleLoading }] =
+    useLoginWithGoogleMutation();
+  const { data: getUserFromGoogle, isLoading: getUserFromGoogleLoading } =
+    useGetUserFromGoogleQuery(token || skipToken);
+
   const { userInfo } = useSelector((state) => state.auth);
   const sp = new URLSearchParams(search);
   const redirect = sp.get("redirect") || "/";
@@ -55,15 +68,43 @@ function Login() {
     } catch (err) {
       if (err?.data?.message.includes("verify")) {
         setVerify(true);
-        toast.error("Verify your email first to login");
+        return toast.error("Verify your email first to login");
       } else {
-        toast.error(
+        return toast.error(
           err?.data?.message ||
             "An error occurred. Please contact the administration.",
         );
       }
     }
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: (res) => setToken(res),
+    onError: (error) => console.log("Login Failed:", error),
+  });
+
+  useEffect(() => {
+    const loginWithGoogleAsync = async () => {
+      if (getUserFromGoogle) {
+        try {
+          const { data: user, error } =
+            await loginWithGoogle(getUserFromGoogle);
+          console.log("user 2222222", user);
+          if (error) {
+            return toast.error(error?.data?.message);
+          }
+          dispatch(setCredentials({ user }));
+          navigate("/");
+        } catch (err) {
+          return toast.error(err?.data?.message || "Failed to login with Google.");
+        }
+      }
+    };
+
+    loginWithGoogleAsync();
+  }, [getUserFromGoogle]);
+
+  console.log("getUserFromGoogle", getUserFromGoogle);
 
   loginLoading && <Loading />;
 
@@ -121,6 +162,15 @@ function Login() {
             Verify email
           </LinkButton>
         )}
+        <Button
+          onClick={googleLogin}
+          disabled={getUserFromGoogleLoading || loginWithGoogleLoading}
+          extraClasses="mt-3 flex justify-center items-center"
+        >
+          {getUserFromGoogleLoading || (loginWithGoogleLoading && <Spinner />)}
+          <FcGoogle className="mr-3" />
+          continue with google
+        </Button>
       </form>
       <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-center bg-no-repeat md:block"></div>
     </section>

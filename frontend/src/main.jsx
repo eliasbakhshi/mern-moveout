@@ -22,6 +22,7 @@ import SendVerificationEmail from "./pages/auth/sendVerificationEmail.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import Contact from "./pages/Contact.jsx";
 import BoxDetails from "./pages/BoxDetails.jsx";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // TODO: Add a loading page then user is navigating between pages
 // TODO: Add ResetPassword page
@@ -62,8 +63,10 @@ const router = createBrowserRouter(
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Provider store={store}>
-      <RouterProvider router={router} />
-    </Provider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
+    </GoogleOAuthProvider>
   </StrictMode>,
 );

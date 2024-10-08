@@ -29,6 +29,10 @@ const userSchema = new Schema(
         ref: "Box",
       },
     ],
+    active: {
+      type: Boolean,
+      default: true,
+    },
     emailVerified: {
       type: Boolean,
       default: false,

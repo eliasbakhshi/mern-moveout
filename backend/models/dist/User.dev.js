@@ -33,6 +33,10 @@ var userSchema = new _mongoose.Schema({
     type: _mongoose.Schema.Types.ObjectId,
     ref: "Box"
   }],
+  active: {
+    type: Boolean,
+    "default": true
+  },
   emailVerified: {
     type: Boolean,
     "default": false

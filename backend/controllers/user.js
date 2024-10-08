@@ -45,10 +45,10 @@ export const register = async (req, res) => {
     "utf8",
   );
   emailTemplate = emailTemplate.replace(
-    "**email_link**",
+    /(\*\*email_link\*\*)/g,
     `${process.env.BASE_URL}/verify-email/${emailVerificationToken}`,
   );
-  emailTemplate = emailTemplate.replace("**name**", name);
+  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, name);
 
   try {
     // Send the email
@@ -97,6 +97,41 @@ export const login = async (req, res) => {
   }
   // Create and set a token
   createSetToken(res, user._id, remember);
+  return res.status(200).json({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    mediaPath: user.mediaPath,
+  });
+};
+
+export const loginWithGoogle = async (req, res) => {
+  let { email, name, picture } = req.body;
+  email = email.trim().toLowerCase();
+  if (!email || !name) {
+    return res.status(400).json({ message: "Please provide a name and an email" });
+  }
+  // Validate the email and password
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
+  // Check if the user exists
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "You need to register first to be able to login with Google." });
+  }
+  // Verify the user 
+  user.emailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationTokenExpiresAt = undefined;
+  user.name = user.name || name;
+  user.mediaPath = user.mediaPath || picture;
+  await user.save();
+
+  // Create and set a token
+  createSetToken(res, user._id);
   return res.status(200).json({
     id: user._id,
     name: user.name,
@@ -170,10 +205,10 @@ export const sendVerificationEmail = async (req, res) => {
     "utf8",
   );
   emailTemplate = emailTemplate.replace(
-    "**email_link**",
+    /(\*\*email_link\*\*)/g,
     `${process.env.BASE_URL}/verify-email/${emailVerificationToken}`,
   );
-  emailTemplate = emailTemplate.replace("**name**", user.name);
+  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
   // Send the email
   await transporter.sendMail({
     from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
@@ -221,10 +256,10 @@ export const sendResetPasswordEmail = async (req, res) => {
     "utf8",
   );
   emailTemplate = emailTemplate.replace(
-    "**email_link**",
+    /(\*\*email_link\*\*)/g,
     `${process.env.BASE_URL}/reset-password/${resetPasswordToken}`,
   );
-  emailTemplate = emailTemplate.replace("**name**", user.name);
+  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
   // Send the email
   await transporter.sendMail({
     from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
@@ -386,7 +421,10 @@ export const deleteCurrentUser = async (req, res) => {
 
 export const getNamesAndEmails = async (req, res) => {
   // Find the email and name of all users
-  const users = await User.find({}, { email: 1, name: 1, _id: 0 });
+  const users = await User.find(
+    { email: { $ne: req.user.email } },
+    { email: 1, name: 1, _id: 0 },
+  );
 
   if (!users) {
     return res.status(404).json({ message: "No email and name exists" });
@@ -420,8 +458,6 @@ export const shareBox = async (req, res) => {
     return res.status(400).json({ message: "Box not found." });
   }
 
-  console.log(box)
-
   // duplicate the box
   const newBox = await Box.create({
     name: box.name,
@@ -436,12 +472,110 @@ export const shareBox = async (req, res) => {
   // Add the box to the user's box list
   user.boxes.push(newBox._id);
   await user.save();
+
+  // Get the email template for sharing a box
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") + "/backend/views/template-share-box-or-label.html",
+    "utf8",
+  );
+  emailTemplate = emailTemplate.replace(
+    /(\*\*email_link\*\*)/g,
+    `${process.env.BASE_URL}/boxes/${newBox._id}/items`,
+  );
+  emailTemplate = emailTemplate.replace(/(\*\*name_from\*\*)/g, req.user.name);
+  emailTemplate = emailTemplate.replace(/(\*\*name_to\*\*)/g, user.name);
+  emailTemplate = emailTemplate.replace(/(\*\*shared_object\*\*)/g, "box");
+
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "A box has been shared with you.",
+      text: `${user.name} has shared a box with you. You can click on the link below to view the box.`,
+      html: emailTemplate,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
+  }
+
   return res.status(200).json({ message: "Box shared successfully." });
+};
+
+export const shareLabel = async (req, res) => {
+  const { labelId, email } = req.body;
+  const uid = new ShortUniqueId({ length: 6, dictionary: "number" });
+
+  // show the error if there is any
+  if (!labelId || !email) {
+    return res.status(400).json({ message: "Box ID and email are required." });
+  }
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
+
+  // Find the user
+  const user = await User.findOne({ email }, { name: 1 });
+  if (!user) {
+    return res.status(400).json({ message: "User not found." });
+  }
+
+  // // Find the box
+  // const box = await Box.findOne({ _id: labelId });
+  // if (!box) {
+  //   return res.status(400).json({ message: "Box not found." });
+  // }
+  // // duplicate the box
+  // const newBox = await Box.create({
+  //   name: box.name,
+  //   description: box.description,
+  //   items: box.items,
+  //   labelNum: box.labelNum,
+  //   isPrivate: box.isPrivate,
+  //   privateCode: box.privateCode ? uid.randomUUID(6) : undefined,
+  //   user: user._id,
+  // });
+  // // Add the box to the user's box list
+  // user.boxes.push(newBox._id);
+  // await user.save();
+
+  // Get the email template for sharing a box
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") + "/backend/views/template-share-box-or-label.html",
+    "utf8",
+  );
+  emailTemplate = emailTemplate.replace(
+    /(\*\*email_link\*\*)/g,
+    `${process.env.BASE_URL}/boxes/${labelId}`,
+  );
+  emailTemplate = emailTemplate.replace(/(\*\*name_from\*\*)/g, req.user.name);
+  emailTemplate = emailTemplate.replace(/(\*\*name_to\*\*)/g, user.name);
+  emailTemplate = emailTemplate.replace(/(\*\*shared_object\*\*)/g, "label");
+
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "A label has been shared with you.",
+      text: `${user.name} has shared a label with you. You can click on the link below to view the label.`,
+      html: emailTemplate,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
+  }
+  return res.status(200).json({ message: "Label shared successfully." });
 };
 
 export default {
   register,
   login,
+  loginWithGoogle,
   logout,
   verifyEmail,
   sendVerificationEmail,
@@ -453,4 +587,5 @@ export default {
   deleteCurrentUser,
   getNamesAndEmails,
   shareBox,
+  shareLabel,
 };

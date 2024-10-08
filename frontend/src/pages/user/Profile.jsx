@@ -3,12 +3,11 @@ import {
   removeCredentials,
   setCredentials,
 } from "../../redux/features/auth/authSlice";
-
 import { FaDownload, FaTrash } from "react-icons/fa";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
 import LinkButton from "../../components/LinkButton";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   useEditCurrentUserMutation,
   useDeleteCurrentUserMutation,
@@ -21,16 +20,18 @@ import { useNavigate } from "react-router-dom";
 // TODO: Check the expirationTime in the Profile component. If the expirationTime is less than the current time, dispatch the removeCredentials action to remove the user credentials from the state and local storage. This will log out the user automatically when the token expires.
 // TODO: Get the current expirationTime and set it again
 // TODO: Send a notification when the user change the email
+// TODO: User removes a profile picture and save it again and then upload a new one but it is not updated in the UI
+
 
 function Profile() {
-  const { userInfo, expirationTime } = useSelector((state) => state.auth);
+  const { userInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const nameRef = useRef(null);
-  const emailRef = useRef(null);
-  const passwordRef = useRef(null);
-  const confirmPasswordRef = useRef(null);
+  // const nameRef = useRef(null);
+  // const emailRef = useRef(null);
+  // const passwordRef = useRef(null);
+  // const confirmPasswordRef = useRef(null);
   const [user, setUser] = useState({
     name: userInfo.name,
     email: userInfo.email,
@@ -44,12 +45,16 @@ function Profile() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [image, setImage] = useState(
-    userInfo.mediaPath ? `/api/${userInfo.mediaPath}` : "/img/avatar.png",
+    userInfo.mediaPath ? `${userInfo.mediaPath}` : "/img/avatar.png",
   );
 
   const [
-    edit,
-    { isLoading: editLoading, error: editError, isSuccess: editSuccess },
+    editCurrentUser,
+    {
+      isLoading: editCurrentUserLoading,
+      error: editCurrentUserError,
+      isSuccess: editCurrentUserSuccess,
+    },
   ] = useEditCurrentUserMutation();
   const [
     deleteCurrentUser,
@@ -68,6 +73,13 @@ function Profile() {
     setImage(URL.createObjectURL(media));
     setUser({ ...user, media });
   };
+
+// Check if the user is logged in before showing the profile page
+  useEffect(() => {
+    if (!userInfo) {
+      navigate("/login");
+    }
+  }, [userInfo]);
 
   const changeHandler = (e) => {
     const { value, name } = e.target;
@@ -88,16 +100,24 @@ function Profile() {
       productData.append("media", user.media);
       productData.append("mediaPath", user.mediaPath);
 
-      const editedUser = await edit(productData).unwrap();
-      dispatch(setCredentials({ user: editedUser, remember: true }));
-      editSuccess && toast.success("User updated successfully");
+      console.log("productData 2222", user);
 
-      setImage(`/api/${editedUser.mediaPath}`);
+      const editedUser = await editCurrentUser(productData).unwrap();
+      console.log("editedUser", editedUser);
+      dispatch(setCredentials({ user: editedUser, remember: true }));
+      editCurrentUserSuccess && toast.success("User updated successfully");
+
+      console.log("editedUser. mediaPath", editedUser?.mediaPath);
+      if (editedUser?.mediaPath?.includes("googleusercontent")) {
+        setImage(`${editedUser.mediaPath}`);
+      } else {
+        setImage(`/api${editedUser?.mediaPath}`);
+      }
 
       setUser({ ...editedUser, password: "", confirmPassword: "" });
 
-      if (editError) {
-        toast.error(editError?.data?.message || err.message);
+      if (editCurrentUserError) {
+        toast.error(editCurrentUserError?.data?.message || err.message);
       } else {
         toast.success(editedUser.message);
       }
@@ -139,7 +159,16 @@ function Profile() {
     setUser({ ...user, media: "", mediaPath: "" });
   };
 
-  console.log("user", user);
+  useEffect(() => {
+    if (user?.mediaPath?.includes("googleusercontent")) {
+      setImage(`${userInfo?.mediaPath}`);
+    } else {
+      setUser({ ...user, mediaPath: `/api${userInfo?.mediaPath}` });
+      setImage(`/api${userInfo?.mediaPath}`);
+    }
+  }, [userInfo]);
+
+  // console.log("user", user);
 
   return (
     <div className="flex h-full w-full flex-grow items-center justify-center md:w-auto">
@@ -226,7 +255,7 @@ function Profile() {
           />
           <div className="mt-5 flex w-full flex-col space-y-3">
             <Button extraClasses="bg-green-500 w-full">
-              {editLoading && <Spinner />}Save
+              {editCurrentUserLoading && <Spinner />}Save
             </Button>
             <LinkButton
               extraClasses="bg-red-500 w-full"
@@ -236,25 +265,22 @@ function Profile() {
             </LinkButton>
           </div>
         </div>
-
       </form>
       {/* Show the popup for deleting */}
       {isDeleting && (
-          <Overlay
-            isOpen={isDeleting}
-            onClose={() => setIsDeleting(!isDeleting)}
-            title="Delete User"
-            submitText="Yes"
-            submitColor="red"
-            cancelText="No"
-            onSubmit={deleteCurrentUserHandler}
-            extraClasses={"w-96 md:mx-4 h-auto"}
-          >
-            <p className="py-4">
-              Are you sure you want to delete your profile?
-            </p>
-          </Overlay>
-        )}
+        <Overlay
+          isOpen={isDeleting}
+          onClose={() => setIsDeleting(!isDeleting)}
+          title="Delete User"
+          submitText="Yes"
+          submitColor="red"
+          cancelText="No"
+          onSubmit={deleteCurrentUserHandler}
+          extraClasses={"w-96 md:mx-4 h-auto"}
+        >
+          <p className="py-4">Are you sure you want to delete your profile?</p>
+        </Overlay>
+      )}
     </div>
   );
 }
