@@ -110,7 +110,9 @@ export const loginWithGoogle = async (req, res) => {
   let { email, name, picture } = req.body;
   email = email.trim().toLowerCase();
   if (!email || !name) {
-    return res.status(400).json({ message: "Please provide a name and an email" });
+    return res
+      .status(400)
+      .json({ message: "Please provide a name and an email" });
   }
   // Validate the email and password
   const err = validationResult(req);
@@ -120,9 +122,11 @@ export const loginWithGoogle = async (req, res) => {
   // Check if the user exists
   const user = await User.findOne({ email });
   if (!user) {
-    return res.status(400).json({ message: "You need to register first to be able to login with Google." });
+    return res.status(400).json({
+      message: "You need to register first to be able to login with Google.",
+    });
   }
-  // Verify the user 
+  // Verify the user
   user.emailVerified = true;
   user.emailVerificationToken = undefined;
   user.emailVerificationTokenExpiresAt = undefined;
@@ -523,25 +527,6 @@ export const shareLabel = async (req, res) => {
     return res.status(400).json({ message: "User not found." });
   }
 
-  // // Find the box
-  // const box = await Box.findOne({ _id: labelId });
-  // if (!box) {
-  //   return res.status(400).json({ message: "Box not found." });
-  // }
-  // // duplicate the box
-  // const newBox = await Box.create({
-  //   name: box.name,
-  //   description: box.description,
-  //   items: box.items,
-  //   labelNum: box.labelNum,
-  //   isPrivate: box.isPrivate,
-  //   privateCode: box.privateCode ? uid.randomUUID(6) : undefined,
-  //   user: user._id,
-  // });
-  // // Add the box to the user's box list
-  // user.boxes.push(newBox._id);
-  // await user.save();
-
   // Get the email template for sharing a box
   let emailTemplate = fs.readFileSync(
     path.resolve(".") + "/backend/views/template-share-box-or-label.html",
@@ -572,6 +557,48 @@ export const shareLabel = async (req, res) => {
   return res.status(200).json({ message: "Label shared successfully." });
 };
 
+export const deactivateCurrentUser = async (req, res) => {
+  // Find the user
+  const user = await User.findOne({ _id: req.user._id });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // Deactivate the user
+  user.isActive = false;
+  await user.save();
+
+  const { name, email, role, isActive } = user;
+  return res
+    .status(200)
+    .json({
+      message: "User deactivated successfully.",
+      user: { name, email, role, isActive },
+    });
+};
+
+export const reactivateCurrentUser = async (req, res) => {
+  // Find the user
+  const user = await User.findOne({ _id: req.user._id });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+
+  // Deactivate the user
+  user.isActive = true;
+  await user.save();
+
+  const { name, email, role, isActive } = user;
+
+  return res.status(200).json({
+    message: "User reactivated successfully.",
+    user: { name, email, role, isActive },
+  });
+};
+
 export default {
   register,
   login,
@@ -588,4 +615,6 @@ export default {
   getNamesAndEmails,
   shareBox,
   shareLabel,
+  deactivateCurrentUser,
+  reactivateCurrentUser,
 };

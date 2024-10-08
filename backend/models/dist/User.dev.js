@@ -33,9 +33,17 @@ var userSchema = new _mongoose.Schema({
     type: _mongoose.Schema.Types.ObjectId,
     ref: "Box"
   }],
-  active: {
+  lastActive: {
+    type: Date,
+    "default": Date.now
+  },
+  isActive: {
     type: Boolean,
     "default": true
+  },
+  reminderSent: {
+    type: Boolean,
+    "default": false
   },
   emailVerified: {
     type: Boolean,

@@ -18,6 +18,7 @@ import { CiEdit } from "react-icons/ci";
 
 // TODO: Check the create and edit button in the popup is default selected when the user press enter
 // TODO: Add pagination
+// TODO: boxes array is not connected to box array in the database in the user model
 
 function Boxes() {
   const navigate = useNavigate();

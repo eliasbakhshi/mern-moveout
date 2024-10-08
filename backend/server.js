@@ -12,6 +12,7 @@ import multer from "multer";
 import "./utils/env.js";
 import bodyParser from "body-parser";
 import ShortUniqueId from "short-unique-id";
+import updateLastActive from "./middlewares/updateLastActive.js";
 
 // Create __dirname equivalent
 const __dirname = path.resolve();
@@ -28,7 +29,6 @@ const imgProducts = path.join(__dirname, process.env.UPLOADS_PATH);
 if (!fs.existsSync(imgProducts)) {
   fs.mkdirSync(imgProducts);
 }
-
 
 app.use("/uploads", express.static(imgProducts));
 
@@ -50,7 +50,8 @@ const fileStorage = multer.diskStorage({
 // Filter the files that are allowed to be uploaded
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpe?g|png|webp|mp3|wav/;
-  const mimeTypes = /image\/jpe?g|image\/png|image\/webp|audio\/mpeg|audio\/wav/;
+  const mimeTypes =
+    /image\/jpe?g|image\/png|image\/webp|audio\/mpeg|audio\/wav/;
 
   const extname = path.extname(file.originalname).toLowerCase();
   const mimetype = file.mimetype.toLowerCase();
@@ -87,7 +88,8 @@ app.use(
   }),
 );
 
-
+// Update last active middleware
+app.use(updateLastActive);
 
 // Routes
 app.use("", mainRouter);

@@ -80,7 +80,7 @@ export const usersApi = apiSlice.injectEndpoints({
     }),
     getCurrentUser: builder.query({
       query: (id) => ({
-        url: "/api/user/" + id,
+        url: "/api/users/" + id,
         method: "GET",
         invalidatesTags: ["User"],
       }),
@@ -125,6 +125,20 @@ export const usersApi = apiSlice.injectEndpoints({
         },
       }),
     }),
+    deactivateCurrentUser: builder.mutation({
+      query: (email) => ({
+        url: `/api/users/deactivate-current`,
+        method: "PUT",
+        invalidatesTags: ["User"],
+      }),
+    }),
+    reactivateCurrentUser: builder.mutation({
+      query: (email) => ({
+        url: `/api/users/reactivate-current`,
+        method: "PUT",
+        invalidatesTags: ["User"],
+      }),
+    }),
   }),
 });
 
@@ -145,4 +159,6 @@ export const {
   useShareBoxMutation,
   useShareLabelMutation,
   useGetUserFromGoogleQuery,
+  useDeactivateCurrentUserMutation,
+  useReactivateCurrentUserMutation,
 } = usersApi;

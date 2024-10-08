@@ -29,9 +29,17 @@ const userSchema = new Schema(
         ref: "Box",
       },
     ],
-    active: {
+    lastActive: {
+      type: Date,
+      default: Date.now,
+    },
+    isActive: {
       type: Boolean,
       default: true,
+    },
+    reminderSent: {
+      type: Boolean,
+      default: false,
     },
     emailVerified: {
       type: Boolean,

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports["default"] = exports.shareLabel = exports.shareBox = exports.getNamesAndEmails = exports.deleteCurrentUser = exports.updateCurrentUser = exports.getCurrentUser = exports.updateUserPasswordById = exports.verifyTokenResetPassword = exports.sendResetPasswordEmail = exports.sendVerificationEmail = exports.verifyEmail = exports.logout = exports.loginWithGoogle = exports.login = exports.register = void 0;
+exports["default"] = exports.reactivateCurrentUser = exports.deactivateCurrentUser = exports.shareLabel = exports.shareBox = exports.getNamesAndEmails = exports.deleteCurrentUser = exports.updateCurrentUser = exports.getCurrentUser = exports.updateUserPasswordById = exports.verifyTokenResetPassword = exports.sendResetPasswordEmail = exports.sendVerificationEmail = exports.verifyEmail = exports.logout = exports.loginWithGoogle = exports.login = exports.register = void 0;
 
 var _User = _interopRequireDefault(require("../models/User.js"));
 
@@ -280,7 +280,7 @@ var loginWithGoogle = function loginWithGoogle(req, res) {
           }));
 
         case 12:
-          // Verify the user 
+          // Verify the user
           user.emailVerified = true;
           user.emailVerificationToken = undefined;
           user.emailVerificationTokenExpiresAt = undefined;
@@ -1136,24 +1136,6 @@ var shareLabel = function shareLabel(req, res) {
           }));
 
         case 12:
-          // // Find the box
-          // const box = await Box.findOne({ _id: labelId });
-          // if (!box) {
-          //   return res.status(400).json({ message: "Box not found." });
-          // }
-          // // duplicate the box
-          // const newBox = await Box.create({
-          //   name: box.name,
-          //   description: box.description,
-          //   items: box.items,
-          //   labelNum: box.labelNum,
-          //   isPrivate: box.isPrivate,
-          //   privateCode: box.privateCode ? uid.randomUUID(6) : undefined,
-          //   user: user._id,
-          // });
-          // // Add the box to the user's box list
-          // user.boxes.push(newBox._id);
-          // await user.save();
           // Get the email template for sharing a box
           emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-share-box-or-label.html", "utf8");
           emailTemplate = emailTemplate.replace(/(\*\*email_link\*\*)/g, "".concat(process.env.BASE_URL, "/boxes/").concat(labelId));
@@ -1195,6 +1177,108 @@ var shareLabel = function shareLabel(req, res) {
 };
 
 exports.shareLabel = shareLabel;
+
+var deactivateCurrentUser = function deactivateCurrentUser(req, res) {
+  var user, name, email, role, isActive;
+  return regeneratorRuntime.async(function deactivateCurrentUser$(_context15) {
+    while (1) {
+      switch (_context15.prev = _context15.next) {
+        case 0:
+          _context15.next = 2;
+          return regeneratorRuntime.awrap(_User["default"].findOne({
+            _id: req.user._id
+          }));
+
+        case 2:
+          user = _context15.sent;
+
+          if (user) {
+            _context15.next = 5;
+            break;
+          }
+
+          return _context15.abrupt("return", res.status(404).json({
+            message: "User not found."
+          }));
+
+        case 5:
+          // Deactivate the user
+          user.isActive = false;
+          _context15.next = 8;
+          return regeneratorRuntime.awrap(user.save());
+
+        case 8:
+          name = user.name, email = user.email, role = user.role, isActive = user.isActive;
+          return _context15.abrupt("return", res.status(200).json({
+            message: "User deactivated successfully.",
+            user: {
+              name: name,
+              email: email,
+              role: role,
+              isActive: isActive
+            }
+          }));
+
+        case 10:
+        case "end":
+          return _context15.stop();
+      }
+    }
+  });
+};
+
+exports.deactivateCurrentUser = deactivateCurrentUser;
+
+var reactivateCurrentUser = function reactivateCurrentUser(req, res) {
+  var user, name, email, role, isActive;
+  return regeneratorRuntime.async(function reactivateCurrentUser$(_context16) {
+    while (1) {
+      switch (_context16.prev = _context16.next) {
+        case 0:
+          _context16.next = 2;
+          return regeneratorRuntime.awrap(_User["default"].findOne({
+            _id: req.user._id
+          }));
+
+        case 2:
+          user = _context16.sent;
+
+          if (user) {
+            _context16.next = 5;
+            break;
+          }
+
+          return _context16.abrupt("return", res.status(404).json({
+            message: "User not found."
+          }));
+
+        case 5:
+          // Deactivate the user
+          user.isActive = true;
+          _context16.next = 8;
+          return regeneratorRuntime.awrap(user.save());
+
+        case 8:
+          name = user.name, email = user.email, role = user.role, isActive = user.isActive;
+          return _context16.abrupt("return", res.status(200).json({
+            message: "User reactivated successfully.",
+            user: {
+              name: name,
+              email: email,
+              role: role,
+              isActive: isActive
+            }
+          }));
+
+        case 10:
+        case "end":
+          return _context16.stop();
+      }
+    }
+  });
+};
+
+exports.reactivateCurrentUser = reactivateCurrentUser;
 var _default = {
   register: register,
   login: login,
@@ -1210,6 +1294,8 @@ var _default = {
   deleteCurrentUser: deleteCurrentUser,
   getNamesAndEmails: getNamesAndEmails,
   shareBox: shareBox,
-  shareLabel: shareLabel
+  shareLabel: shareLabel,
+  deactivateCurrentUser: deactivateCurrentUser,
+  reactivateCurrentUser: reactivateCurrentUser
 };
 exports["default"] = _default;

@@ -16,6 +16,8 @@ import {
   getNamesAndEmails,
   shareBox,
   shareLabel,
+  deactivateCurrentUser,
+  reactivateCurrentUser,
 } from "../controllers/user.js";
 import { body } from "express-validator";
 import User from "../models/User.js";
@@ -161,6 +163,20 @@ router.post(
   checkAccess("user"),
   body("email").trim().isEmail().withMessage("The email is not valid."),
   asyncHandler(shareLabel),
+);
+
+router.put(
+  "/users/deactivate-current",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(deactivateCurrentUser),
+);
+
+router.put(
+  "/users/reactivate-current",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(reactivateCurrentUser),
 );
 
 export default router;

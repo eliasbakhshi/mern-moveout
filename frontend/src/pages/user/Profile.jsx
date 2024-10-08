@@ -11,6 +11,8 @@ import { useRef, useState, useEffect } from "react";
 import {
   useEditCurrentUserMutation,
   useDeleteCurrentUserMutation,
+  useDeactivateCurrentUserMutation,
+  useReactivateCurrentUserMutation,
 } from "../../redux/api/usersApiSlice";
 import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
@@ -21,7 +23,6 @@ import { useNavigate } from "react-router-dom";
 // TODO: Get the current expirationTime and set it again
 // TODO: Send a notification when the user change the email
 // TODO: User removes a profile picture and save it again and then upload a new one but it is not updated in the UI
-
 
 function Profile() {
   const { userInfo } = useSelector((state) => state.auth);
@@ -60,6 +61,22 @@ function Profile() {
     deleteCurrentUser,
     { isLoading: deleteLoading, error: deleteError, isSuccess: deleteSuccess },
   ] = useDeleteCurrentUserMutation();
+  const [
+    deactivateCurrentUser,
+    {
+      isLoading: deactivateCurrentUserLoading,
+      error: deactivateCurrentUserError,
+      isSuccess: deactivateCurrentUserSuccess,
+    },
+  ] = useDeactivateCurrentUserMutation();
+  const [
+    reactivateCurrentUser,
+    {
+      isLoading: reactivateCurrentUserLoading,
+      error: reactivateCurrentUserError,
+      isSuccess: reactivateCurrentUserSuccess,
+    },
+  ] = useReactivateCurrentUserMutation();
 
   const fileChangeHandler = async (e) => {
     const media = e.target.files[0];
@@ -74,7 +91,7 @@ function Profile() {
     setUser({ ...user, media });
   };
 
-// Check if the user is logged in before showing the profile page
+  // Check if the user is logged in before showing the profile page
   useEffect(() => {
     if (!userInfo) {
       navigate("/login");
@@ -126,6 +143,42 @@ function Profile() {
     }
   };
 
+  const deactivateCurrentUserHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const { user, message } = await deactivateCurrentUser().unwrap();
+      if (deactivateCurrentUserError) {
+        toast.error(deactivateCurrentUserError);
+      } else {
+        toast.success(message);
+        dispatch(setCredentials({ user, remember: true }));
+      }
+    } catch (err) {
+      toast.error(
+        err?.data?.message ||
+          "An error occurred. Please contact the administration.",
+      );
+    }
+  };
+
+  const reactivateCurrentUserHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const { user, message } = await reactivateCurrentUser().unwrap();
+      if (reactivateCurrentUserError) {
+        toast.error(reactivateCurrentUserError);
+      } else {
+        toast.success(message);
+        dispatch(setCredentials({ user, remember: true }));
+      }
+    } catch (err) {
+      console.log("err", err);
+      toast.error(
+        err?.data?.message ||
+          "An error occurred. Please contact the administration.",
+      );
+    }
+  };
   const deleteCurrentUserHandler = async (e) => {
     e.preventDefault();
     try {
@@ -168,7 +221,7 @@ function Profile() {
     }
   }, [userInfo]);
 
-  // console.log("user", user);
+  console.log(userInfo);
 
   return (
     <div className="flex h-full w-full flex-grow items-center justify-center md:w-auto">
@@ -254,12 +307,32 @@ function Profile() {
             onInput={changeHandler}
           />
           <div className="mt-5 flex w-full flex-col space-y-3">
-            <Button extraClasses="bg-green-500 w-full">
+            <Button extraClasses=" w-full">
               {editCurrentUserLoading && <Spinner />}Save
             </Button>
+            {userInfo.isActive ? (
+              <LinkButton
+                extraClasses="bg-gray-700 w-full"
+                onClick={deactivateCurrentUserHandler}
+              >
+                Deactivate
+              </LinkButton>
+            ) : (
+              <LinkButton
+                extraClasses="bg-gray-400 w-full"
+                onClick={reactivateCurrentUserHandler}
+              >
+                Reactivate
+              </LinkButton>
+            )}
             <LinkButton
-              extraClasses="bg-red-500 w-full"
-              onClick={() => setIsDeleting(true)}
+              disabled={!userInfo.isActive}
+              extraClasses={`${userInfo.isActive ? "bg-red-300" : "bg-red-500"} w-full`}
+              onClick={() => {
+                if (!userInfo.isActive) {
+                  setIsDeleting(true);
+                }
+              }}
             >
               Delete
             </LinkButton>
