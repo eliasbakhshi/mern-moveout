@@ -85,10 +85,11 @@ export const usersApi = apiSlice.injectEndpoints({
         invalidatesTags: ["User"],
       }),
     }),
-    deleteCurrentUser: builder.mutation({
-      query: () => ({
-        url: "/api/users/delete-current/",
+    deleteUser: builder.query({
+      query: (token) => ({
+        url: "/api/users/delete",
         method: "DELETE",
+        params: {token},
         providesTags: ["User"],
       }),
     }),
@@ -126,15 +127,22 @@ export const usersApi = apiSlice.injectEndpoints({
       }),
     }),
     deactivateCurrentUser: builder.mutation({
-      query: (email) => ({
+      query: () => ({
         url: `/api/users/deactivate-current`,
         method: "PUT",
         invalidatesTags: ["User"],
       }),
     }),
     reactivateCurrentUser: builder.mutation({
-      query: (email) => ({
+      query: () => ({
         url: `/api/users/reactivate-current`,
+        method: "PUT",
+        invalidatesTags: ["User"],
+      }),
+    }),
+    sendDeleteEmail: builder.mutation({
+      query: () => ({
+        url: `/api/users/send-delete-email`,
         method: "PUT",
         invalidatesTags: ["User"],
       }),
@@ -154,11 +162,12 @@ export const {
   useCheckTokenResetPasswordQuery,
   useEditCurrentUserMutation,
   useGetCurrentUserQuery,
-  useDeleteCurrentUserMutation,
+  useDeleteUserQuery,
   useGetUsersEmailAndNameQuery,
   useShareBoxMutation,
   useShareLabelMutation,
   useGetUserFromGoogleQuery,
   useDeactivateCurrentUserMutation,
   useReactivateCurrentUserMutation,
+  useSendDeleteEmailMutation,
 } = usersApi;

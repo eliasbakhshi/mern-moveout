@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 
-function LinkButton({ href, extraClasses, children, ...rest }) {
+function LinkButton({ href="", extraClasses, children, ...rest }) {
   return (
     <Link
       to={href}

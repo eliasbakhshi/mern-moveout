@@ -103,6 +103,7 @@ export const login = async (req, res) => {
     email: user.email,
     role: user.role,
     mediaPath: user.mediaPath,
+    isActive: user.isActive,
   });
 };
 
@@ -142,6 +143,7 @@ export const loginWithGoogle = async (req, res) => {
     email: user.email,
     role: user.role,
     mediaPath: user.mediaPath,
+    isActive: user.isActive,
   });
 };
 
@@ -346,6 +348,12 @@ export const updateCurrentUser = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
+  // Check if the other users has the email
+  const otherUser = await User.findOne({ _id: { $ne: req.user._id }, email });
+  if (otherUser) {
+    return res.status(400).json({ message: "Email already exists." });
+  }
+
   // if there is a file, check if it is an image or an audio file
   if (media) {
     // get the file path
@@ -398,11 +406,19 @@ export const updateCurrentUser = async (req, res) => {
     email: updatedUser.email,
     role: updatedUser.role,
     mediaPath: updatedUser.mediaPath,
+    isActive: user.isActive,
   });
 };
 
-export const deleteCurrentUser = async (req, res) => {
-  const users = await User.findOne({ _id: req.user._id });
+export const deleteUser = async (req, res) => {
+  const { token } = req.query;
+
+  // Find the user
+  const users = await User.findOne({
+    _id: req.user._id,
+    emailDeleteToken: token,
+    emailDeleteTokenExpiresAt: { $gt: Date.now() },
+  });
 
   if (!users) {
     return res.status(404).json({ message: "User not found." });
@@ -419,8 +435,13 @@ export const deleteCurrentUser = async (req, res) => {
 
   // Delete the user
   await users.deleteOne();
+  // Clear the cookie
+  res.clearCookie("JWTMERNMoveOut");
 
-  return res.status(200).json({ message: "User deleted successfully." });
+  return res.status(200).json({
+    message:
+      "Your account has been successfully deleted. We're sorry to see you go.",
+  });
 };
 
 export const getNamesAndEmails = async (req, res) => {
@@ -569,13 +590,37 @@ export const deactivateCurrentUser = async (req, res) => {
   user.isActive = false;
   await user.save();
 
-  const { name, email, role, isActive } = user;
-  return res
-    .status(200)
-    .json({
-      message: "User deactivated successfully.",
-      user: { name, email, role, isActive },
+  // Get the email template
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") + "/backend/views/template-deactive-reactive-user.html",
+    "utf8",
+  );
+  emailTemplate = emailTemplate.replace(
+    /(\*\*login_link\*\*)/g,
+    `${process.env.BASE_URL}/login`,
+  );
+  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
+
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: "Your account has been deactivated.",
+      html: emailTemplate,
     });
+  } catch (error) {
+    // Delete the user if the email is not sent
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
+  }
+
+  const { name, email, role, isActive, mediaPath } = user;
+  return res.status(200).json({
+    message: "User deactivated successfully.",
+    user: { name, email, role, isActive, mediaPath },
+  });
 };
 
 export const reactivateCurrentUser = async (req, res) => {
@@ -586,16 +631,67 @@ export const reactivateCurrentUser = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-
   // Deactivate the user
   user.isActive = true;
   await user.save();
 
-  const { name, email, role, isActive } = user;
+  const { name, email, role, isActive, mediaPath } = user;
 
   return res.status(200).json({
     message: "User reactivated successfully.",
-    user: { name, email, role, isActive },
+    user: { name, email, role, isActive, mediaPath },
+  });
+};
+
+export const sendDeleteEmail = async (req, res) => {
+  // Find the user
+  const user = await User.findOne({ _id: req.user._id });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  const emailToken = crypto.randomBytes(32).toString("hex");
+  const emailDeleteToken = crypto
+    .createHash("sha256")
+    .update(emailToken)
+    .digest("hex");
+  const emailDeleteTokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+  // update the user
+  user.emailDeleteToken = emailDeleteToken;
+  user.emailDeleteTokenExpiresAt = emailDeleteTokenExpiresAt;
+  await user.save();
+  // Get the email template
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") + "/backend/views/template-email-delete-user.html",
+    "utf8",
+  );
+  emailTemplate = emailTemplate.replace(
+    /(\*\*delete_link\*\*)/g,
+    `${process.env.BASE_URL}/delete-account/${emailDeleteToken}`,
+  );
+  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
+
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: "Verify Your Account Deletion Request",
+      html: emailTemplate,
+    });
+  } catch (error) {
+    // Delete the user if the email is not sent
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
+  }
+
+  const { name, email, role, isActive, mediaPath } = user;
+
+  return res.status(200).json({
+    message: "Delete confirmation email sent successfully.",
+    user: { name, email, role, isActive, mediaPath },
   });
 };
 
@@ -611,10 +707,11 @@ export default {
   updateUserPasswordById,
   getCurrentUser,
   updateCurrentUser,
-  deleteCurrentUser,
+  deleteUser,
   getNamesAndEmails,
   shareBox,
   shareLabel,
   deactivateCurrentUser,
   reactivateCurrentUser,
+  sendDeleteEmail,
 };

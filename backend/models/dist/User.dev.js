@@ -52,10 +52,16 @@ var userSchema = new _mongoose.Schema({
   emailVerificationToken: {
     type: String
   },
+  emailDeleteToken: {
+    type: String
+  },
   resetPasswordToken: {
     type: String
   },
   emailVerificationTokenExpiresAt: {
+    type: String
+  },
+  emailDeleteTokenExpiresAt: {
     type: String
   },
   resetPasswordTokenExpiresAt: {

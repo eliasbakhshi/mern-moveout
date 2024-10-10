@@ -3,19 +3,28 @@
 import cron from "node-cron";
 import User from "../models/User";
 import transporter from "../config/nodemailer";
+import fs from "fs";
+import path from "path";
 
 cron.schedule("0 0 * * *", async () => {
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+  const threeWeeksAgo = new Date();
+  threeWeeksAgo.setDate(threeWeeksAgo.getDate() - 21);
 
   const usersToDeactivate = await User.find({
     lastActive: { $lt: oneMonthAgo },
     isActive: true,
   });
 
-  if (usersToDeactivate.length === 0) return;
+  const usersToRemind = await User.find({
+    lastActive: { $lt: threeWeeksAgo, $gte: oneMonthAgo },
+    isActive: true,
+    reminderSent: false,
+  });
 
-  for (const user of usersToDeactivate) {
+  for (const user of usersToRemind) {
     // Get the email template
     let emailTemplate = fs.readFileSync(
       path.resolve(".") + "/backend/views/template-reminder-inactivity.html",
@@ -31,24 +40,20 @@ cron.schedule("0 0 * * *", async () => {
       // Send the email
       await transporter.sendMail({
         from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
-        to: email,
+        to: user.email,
         subject: "Reminder: Your account will be deactivated soon.",
         html: emailTemplate,
       });
-    } catch (error) {
-      // Delete the user if the email is not sent
-      return res
-        .status(500)
-        .json({ message: "Email address rejected because domain not found." });
-    }
-
-    // Deactivate account if already reminded
-    if (user.reminderSent) {
-      user.isActive = false;
-      await user.save();
-    } else {
       user.reminderSent = true;
       await user.save();
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      continue;
     }
+  }
+
+  for (const user of usersToDeactivate) {
+    user.isActive = false;
+    await user.save();
   }
 });

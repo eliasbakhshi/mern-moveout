@@ -23,6 +23,7 @@ import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import Contact from "./pages/Contact.jsx";
 import BoxDetails from "./pages/BoxDetails.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import DeleteAccount from "./pages/user/DeleteAccount.jsx";
 
 // TODO: Add a loading page then user is navigating between pages
 // TODO: Add ResetPassword page
@@ -43,6 +44,7 @@ const router = createBrowserRouter(
       <Route path="reset-password/:token" element={<ResetPassword />} />
       <Route path="boxes/:boxId" element={<BoxDetails />} />
       <Route path="contact" element={<Contact />} />
+      <Route path="delete-account/:token" element={<DeleteAccount />} />
 
       {/* Registered users */}
       <Route element={<UserRoutes />}>

@@ -31,10 +31,20 @@ const Login = () => {
   };
 
   if (!userInfo?.mediaPath?.includes("googleusercontent")) {
-    userInfo = { ...userInfo, mediaPath: `/api/${userInfo?.mediaPath}` };
+    if (userInfo?.mediaPath) {
+      userInfo = {
+        ...userInfo,
+        mediaPath: userInfo.mediaPath.includes("googleusercontent")
+          ? userInfo.mediaPath
+          : `/api${userInfo.mediaPath}`,
+      };
+    } else {
+      userInfo = { ...userInfo, mediaPath: "/img/avatar.png" };
+    }
   }
 
   logoutLoading && <Loading />;
+
 
   return (
     <Navbar fluid className="fixed left-0 top-0 z-50 w-full">

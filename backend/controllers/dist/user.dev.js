@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports["default"] = exports.reactivateCurrentUser = exports.deactivateCurrentUser = exports.shareLabel = exports.shareBox = exports.getNamesAndEmails = exports.deleteCurrentUser = exports.updateCurrentUser = exports.getCurrentUser = exports.updateUserPasswordById = exports.verifyTokenResetPassword = exports.sendResetPasswordEmail = exports.sendVerificationEmail = exports.verifyEmail = exports.logout = exports.loginWithGoogle = exports.login = exports.register = void 0;
+exports["default"] = exports.sendDeleteEmail = exports.reactivateCurrentUser = exports.deactivateCurrentUser = exports.shareLabel = exports.shareBox = exports.getNamesAndEmails = exports.deleteUser = exports.updateCurrentUser = exports.getCurrentUser = exports.updateUserPasswordById = exports.verifyTokenResetPassword = exports.sendResetPasswordEmail = exports.sendVerificationEmail = exports.verifyEmail = exports.logout = exports.loginWithGoogle = exports.login = exports.register = void 0;
 
 var _User = _interopRequireDefault(require("../models/User.js"));
 
@@ -216,7 +216,8 @@ var login = function login(req, res) {
             name: user.name,
             email: user.email,
             role: user.role,
-            mediaPath: user.mediaPath
+            mediaPath: user.mediaPath,
+            isActive: user.isActive
           }));
 
         case 21:
@@ -297,7 +298,8 @@ var loginWithGoogle = function loginWithGoogle(req, res) {
             name: user.name,
             email: user.email,
             role: user.role,
-            mediaPath: user.mediaPath
+            mediaPath: user.mediaPath,
+            isActive: user.isActive
           }));
 
         case 21:
@@ -726,7 +728,7 @@ var getCurrentUser = function getCurrentUser(req, res) {
 exports.getCurrentUser = getCurrentUser;
 
 var updateCurrentUser = function updateCurrentUser(req, res) {
-  var _req$body5, name, email, password, mediaPath, media, mediaType, newMediaPath, err, user, updatedUser;
+  var _req$body5, name, email, password, mediaPath, media, mediaType, newMediaPath, err, user, otherUser, updatedUser;
 
   return regeneratorRuntime.async(function updateCurrentUser$(_context10) {
     while (1) {
@@ -767,8 +769,29 @@ var updateCurrentUser = function updateCurrentUser(req, res) {
           }));
 
         case 12:
+          _context10.next = 14;
+          return regeneratorRuntime.awrap(_User["default"].findOne({
+            _id: {
+              $ne: req.user._id
+            },
+            email: email
+          }));
+
+        case 14:
+          otherUser = _context10.sent;
+
+          if (!otherUser) {
+            _context10.next = 17;
+            break;
+          }
+
+          return _context10.abrupt("return", res.status(400).json({
+            message: "Email already exists."
+          }));
+
+        case 17:
           if (!media) {
-            _context10.next = 18;
+            _context10.next = 23;
             break;
           }
 
@@ -778,7 +801,7 @@ var updateCurrentUser = function updateCurrentUser(req, res) {
           mediaType = media.mimetype; // if the file mediaType is not an image or an audio file, return an error
 
           if (!(mediaType !== "image/png" && mediaType !== "image/jpg" && mediaType !== "image/jpeg")) {
-            _context10.next = 17;
+            _context10.next = 22;
             break;
           }
 
@@ -786,10 +809,10 @@ var updateCurrentUser = function updateCurrentUser(req, res) {
             message: "Valid files are .jpg,.jpeg,.png"
           }));
 
-        case 17:
+        case 22:
           mediaType = mediaType.split("/")[0];
 
-        case 18:
+        case 23:
           try {
             if (user.mediaPath && newMediaPath) {
               // if there is a new media, remove the media in the uploads folder
@@ -815,37 +838,38 @@ var updateCurrentUser = function updateCurrentUser(req, res) {
           user.email = email || user.email;
 
           if (!password) {
-            _context10.next = 28;
+            _context10.next = 33;
             break;
           }
 
-          _context10.next = 25;
+          _context10.next = 30;
           return regeneratorRuntime.awrap(_bcryptjs["default"].hash(password, 10));
 
-        case 25:
+        case 30:
           _context10.t0 = _context10.sent;
-          _context10.next = 29;
+          _context10.next = 34;
           break;
 
-        case 28:
+        case 33:
           _context10.t0 = user.password;
 
-        case 29:
+        case 34:
           user.password = _context10.t0;
-          _context10.next = 32;
+          _context10.next = 37;
           return regeneratorRuntime.awrap(user.save());
 
-        case 32:
+        case 37:
           updatedUser = _context10.sent;
           (0, _createSetToken["default"])(res, user._id);
           return _context10.abrupt("return", res.status(200).json({
             name: updatedUser.name,
             email: updatedUser.email,
             role: updatedUser.role,
-            mediaPath: updatedUser.mediaPath
+            mediaPath: updatedUser.mediaPath,
+            isActive: user.isActive
           }));
 
-        case 35:
+        case 40:
         case "end":
           return _context10.stop();
       }
@@ -855,22 +879,28 @@ var updateCurrentUser = function updateCurrentUser(req, res) {
 
 exports.updateCurrentUser = updateCurrentUser;
 
-var deleteCurrentUser = function deleteCurrentUser(req, res) {
-  var users;
-  return regeneratorRuntime.async(function deleteCurrentUser$(_context11) {
+var deleteUser = function deleteUser(req, res) {
+  var token, users;
+  return regeneratorRuntime.async(function deleteUser$(_context11) {
     while (1) {
       switch (_context11.prev = _context11.next) {
         case 0:
-          _context11.next = 2;
+          token = req.query.token; // Find the user
+
+          _context11.next = 3;
           return regeneratorRuntime.awrap(_User["default"].findOne({
-            _id: req.user._id
+            _id: req.user._id,
+            emailDeleteToken: token,
+            emailDeleteTokenExpiresAt: {
+              $gt: Date.now()
+            }
           }));
 
-        case 2:
+        case 3:
           users = _context11.sent;
 
           if (users) {
-            _context11.next = 5;
+            _context11.next = 6;
             break;
           }
 
@@ -878,7 +908,7 @@ var deleteCurrentUser = function deleteCurrentUser(req, res) {
             message: "User not found."
           }));
 
-        case 5:
+        case 6:
           // remove the media in the uploads folder
           try {
             if (users.mediaPath) {
@@ -889,15 +919,17 @@ var deleteCurrentUser = function deleteCurrentUser(req, res) {
           } // Delete the user
 
 
-          _context11.next = 8;
+          _context11.next = 9;
           return regeneratorRuntime.awrap(users.deleteOne());
 
-        case 8:
+        case 9:
+          // Clear the cookie
+          res.clearCookie("JWTMERNMoveOut");
           return _context11.abrupt("return", res.status(200).json({
-            message: "User deleted successfully."
+            message: "Your account has been successfully deleted. We're sorry to see you go."
           }));
 
-        case 9:
+        case 11:
         case "end":
           return _context11.stop();
       }
@@ -905,7 +937,7 @@ var deleteCurrentUser = function deleteCurrentUser(req, res) {
   });
 };
 
-exports.deleteCurrentUser = deleteCurrentUser;
+exports.deleteUser = deleteUser;
 
 var getNamesAndEmails = function getNamesAndEmails(req, res) {
   var users;
@@ -1179,7 +1211,7 @@ var shareLabel = function shareLabel(req, res) {
 exports.shareLabel = shareLabel;
 
 var deactivateCurrentUser = function deactivateCurrentUser(req, res) {
-  var user, name, email, role, isActive;
+  var user, emailTemplate, name, email, role, isActive, mediaPath;
   return regeneratorRuntime.async(function deactivateCurrentUser$(_context15) {
     while (1) {
       switch (_context15.prev = _context15.next) {
@@ -1208,29 +1240,55 @@ var deactivateCurrentUser = function deactivateCurrentUser(req, res) {
           return regeneratorRuntime.awrap(user.save());
 
         case 8:
-          name = user.name, email = user.email, role = user.role, isActive = user.isActive;
+          // Get the email template
+          emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-deactive-reactive-user.html", "utf8");
+          emailTemplate = emailTemplate.replace(/(\*\*login_link\*\*)/g, "".concat(process.env.BASE_URL, "/login"));
+          emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
+          _context15.prev = 11;
+          _context15.next = 14;
+          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
+            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
+            to: user.email,
+            subject: "Your account has been deactivated.",
+            html: emailTemplate
+          }));
+
+        case 14:
+          _context15.next = 19;
+          break;
+
+        case 16:
+          _context15.prev = 16;
+          _context15.t0 = _context15["catch"](11);
+          return _context15.abrupt("return", res.status(500).json({
+            message: "Email address rejected because domain not found."
+          }));
+
+        case 19:
+          name = user.name, email = user.email, role = user.role, isActive = user.isActive, mediaPath = user.mediaPath;
           return _context15.abrupt("return", res.status(200).json({
             message: "User deactivated successfully.",
             user: {
               name: name,
               email: email,
               role: role,
-              isActive: isActive
+              isActive: isActive,
+              mediaPath: mediaPath
             }
           }));
 
-        case 10:
+        case 21:
         case "end":
           return _context15.stop();
       }
     }
-  });
+  }, null, null, [[11, 16]]);
 };
 
 exports.deactivateCurrentUser = deactivateCurrentUser;
 
 var reactivateCurrentUser = function reactivateCurrentUser(req, res) {
-  var user, name, email, role, isActive;
+  var user, name, email, role, isActive, mediaPath;
   return regeneratorRuntime.async(function reactivateCurrentUser$(_context16) {
     while (1) {
       switch (_context16.prev = _context16.next) {
@@ -1259,14 +1317,15 @@ var reactivateCurrentUser = function reactivateCurrentUser(req, res) {
           return regeneratorRuntime.awrap(user.save());
 
         case 8:
-          name = user.name, email = user.email, role = user.role, isActive = user.isActive;
+          name = user.name, email = user.email, role = user.role, isActive = user.isActive, mediaPath = user.mediaPath;
           return _context16.abrupt("return", res.status(200).json({
             message: "User reactivated successfully.",
             user: {
               name: name,
               email: email,
               role: role,
-              isActive: isActive
+              isActive: isActive,
+              mediaPath: mediaPath
             }
           }));
 
@@ -1279,6 +1338,88 @@ var reactivateCurrentUser = function reactivateCurrentUser(req, res) {
 };
 
 exports.reactivateCurrentUser = reactivateCurrentUser;
+
+var sendDeleteEmail = function sendDeleteEmail(req, res) {
+  var user, emailToken, emailDeleteToken, emailDeleteTokenExpiresAt, emailTemplate, name, email, role, isActive, mediaPath;
+  return regeneratorRuntime.async(function sendDeleteEmail$(_context17) {
+    while (1) {
+      switch (_context17.prev = _context17.next) {
+        case 0:
+          _context17.next = 2;
+          return regeneratorRuntime.awrap(_User["default"].findOne({
+            _id: req.user._id
+          }));
+
+        case 2:
+          user = _context17.sent;
+
+          if (user) {
+            _context17.next = 5;
+            break;
+          }
+
+          return _context17.abrupt("return", res.status(404).json({
+            message: "User not found."
+          }));
+
+        case 5:
+          emailToken = _crypto["default"].randomBytes(32).toString("hex");
+          emailDeleteToken = _crypto["default"].createHash("sha256").update(emailToken).digest("hex");
+          emailDeleteTokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+          // update the user
+
+          user.emailDeleteToken = emailDeleteToken;
+          user.emailDeleteTokenExpiresAt = emailDeleteTokenExpiresAt;
+          _context17.next = 12;
+          return regeneratorRuntime.awrap(user.save());
+
+        case 12:
+          // Get the email template
+          emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-email-delete-user.html", "utf8");
+          emailTemplate = emailTemplate.replace(/(\*\*delete_link\*\*)/g, "".concat(process.env.BASE_URL, "/delete-account/").concat(emailDeleteToken));
+          emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
+          _context17.prev = 15;
+          _context17.next = 18;
+          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
+            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
+            to: user.email,
+            subject: "Verify Your Account Deletion Request",
+            html: emailTemplate
+          }));
+
+        case 18:
+          _context17.next = 23;
+          break;
+
+        case 20:
+          _context17.prev = 20;
+          _context17.t0 = _context17["catch"](15);
+          return _context17.abrupt("return", res.status(500).json({
+            message: "Email address rejected because domain not found."
+          }));
+
+        case 23:
+          name = user.name, email = user.email, role = user.role, isActive = user.isActive, mediaPath = user.mediaPath;
+          return _context17.abrupt("return", res.status(200).json({
+            message: "Delete confirmation email sent successfully.",
+            user: {
+              name: name,
+              email: email,
+              role: role,
+              isActive: isActive,
+              mediaPath: mediaPath
+            }
+          }));
+
+        case 25:
+        case "end":
+          return _context17.stop();
+      }
+    }
+  }, null, null, [[15, 20]]);
+};
+
+exports.sendDeleteEmail = sendDeleteEmail;
 var _default = {
   register: register,
   login: login,
@@ -1291,11 +1432,12 @@ var _default = {
   updateUserPasswordById: updateUserPasswordById,
   getCurrentUser: getCurrentUser,
   updateCurrentUser: updateCurrentUser,
-  deleteCurrentUser: deleteCurrentUser,
+  deleteUser: deleteUser,
   getNamesAndEmails: getNamesAndEmails,
   shareBox: shareBox,
   shareLabel: shareLabel,
   deactivateCurrentUser: deactivateCurrentUser,
-  reactivateCurrentUser: reactivateCurrentUser
+  reactivateCurrentUser: reactivateCurrentUser,
+  sendDeleteEmail: sendDeleteEmail
 };
 exports["default"] = _default;

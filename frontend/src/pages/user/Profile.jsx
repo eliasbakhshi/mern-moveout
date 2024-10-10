@@ -10,9 +10,10 @@ import LinkButton from "../../components/LinkButton";
 import { useRef, useState, useEffect } from "react";
 import {
   useEditCurrentUserMutation,
-  useDeleteCurrentUserMutation,
+  // useDeleteCurrentUserMutation,
   useDeactivateCurrentUserMutation,
   useReactivateCurrentUserMutation,
+  useSendDeleteEmailMutation,
 } from "../../redux/api/usersApiSlice";
 import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
@@ -22,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 // TODO: Check the expirationTime in the Profile component. If the expirationTime is less than the current time, dispatch the removeCredentials action to remove the user credentials from the state and local storage. This will log out the user automatically when the token expires.
 // TODO: Get the current expirationTime and set it again
 // TODO: Send a notification when the user change the email
-// TODO: User removes a profile picture and save it again and then upload a new one but it is not updated in the UI
+// TODO: Changes saves but no toast shown in the first click on the save button.
 
 function Profile() {
   const { userInfo } = useSelector((state) => state.auth);
@@ -44,10 +45,16 @@ function Profile() {
   });
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [emailSend, setEmailSent] = useState(false);
 
-  const [image, setImage] = useState(
-    userInfo.mediaPath ? `${userInfo.mediaPath}` : "/img/avatar.png",
-  );
+  const [image, setImage] = useState(() => {
+    if (userInfo?.mediaPath) {
+      return userInfo.mediaPath.includes("googleusercontent")
+        ? userInfo.mediaPath
+        : `/api${userInfo.mediaPath}`;
+    }
+    return "/img/avatar.png";
+  });
 
   const [
     editCurrentUser,
@@ -57,10 +64,10 @@ function Profile() {
       isSuccess: editCurrentUserSuccess,
     },
   ] = useEditCurrentUserMutation();
-  const [
-    deleteCurrentUser,
-    { isLoading: deleteLoading, error: deleteError, isSuccess: deleteSuccess },
-  ] = useDeleteCurrentUserMutation();
+  // const [
+  //   deleteCurrentUser,
+  //   { isLoading: deleteLoading, error: deleteError, isSuccess: deleteSuccess },
+  // ] = useDeleteCurrentUserMutation();
   const [
     deactivateCurrentUser,
     {
@@ -77,6 +84,14 @@ function Profile() {
       isSuccess: reactivateCurrentUserSuccess,
     },
   ] = useReactivateCurrentUserMutation();
+  const [
+    sendDeleteEmail,
+    {
+      isLoading: sendDeleteEmailLoading,
+      error: sendDeleteEmailError,
+      isSuccess: sendDeleteEmailSuccess,
+    },
+  ] = useSendDeleteEmailMutation();
 
   const fileChangeHandler = async (e) => {
     const media = e.target.files[0];
@@ -117,18 +132,21 @@ function Profile() {
       productData.append("media", user.media);
       productData.append("mediaPath", user.mediaPath);
 
-      console.log("productData 2222", user);
-
       const editedUser = await editCurrentUser(productData).unwrap();
-      console.log("editedUser", editedUser);
+      if (editCurrentUserError) {
+        toast.error(editCurrentUserError);
+      }
       dispatch(setCredentials({ user: editedUser, remember: true }));
       editCurrentUserSuccess && toast.success("User updated successfully");
 
-      console.log("editedUser. mediaPath", editedUser?.mediaPath);
-      if (editedUser?.mediaPath?.includes("googleusercontent")) {
-        setImage(`${editedUser.mediaPath}`);
+      if (userInfo?.mediaPath) {
+        setImage(
+          userInfo.mediaPath.includes("googleusercontent")
+            ? userInfo.mediaPath
+            : `/api${userInfo.mediaPath}`,
+        );
       } else {
-        setImage(`/api${editedUser?.mediaPath}`);
+        setImage("/img/avatar.png");
       }
 
       setUser({ ...editedUser, password: "", confirmPassword: "" });
@@ -179,31 +197,51 @@ function Profile() {
       );
     }
   };
-  const deleteCurrentUserHandler = async (e) => {
+  // const deleteCurrentUserHandler = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const deleteUser = await deleteCurrentUser().unwrap();
+  //     dispatch(removeCredentials());
+  //     deleteSuccess && toast.success(deleteUser.message);
+
+  //     setUser({
+  //       name: userInfo.name,
+  //       email: userInfo.email,
+  //       password: "",
+  //       confirmPassword: "",
+  //       role: userInfo.role,
+  //       mediaPath: userInfo.mediaPath,
+  //       media: null,
+  //     });
+
+  //     if (deleteError) {
+  //       toast.error(deleteError);
+  //     } else {
+  //       toast.success(deleteUser.message);
+  //       navigate("/");
+  //     }
+  //   } catch (err) {
+  //     toast.error(err?.data?.message || err.message);
+  //   }
+  // };
+
+  const sendDeleteEmailHandler = async (e) => {
     e.preventDefault();
+    setIsDeleting(false);
     try {
-      const deleteUser = await deleteCurrentUser().unwrap();
-      dispatch(removeCredentials());
-      deleteSuccess && toast.success(deleteUser.message);
-
-      setUser({
-        name: userInfo.name,
-        email: userInfo.email,
-        password: "",
-        confirmPassword: "",
-        role: userInfo.role,
-        mediaPath: userInfo.mediaPath,
-        media: null,
-      });
-
-      if (deleteError) {
-        toast.error(deleteError);
+      const { message } = await sendDeleteEmail().unwrap();
+      if (sendDeleteEmailError) {
+        toast.error(sendDeleteEmailError);
       } else {
-        toast.success(deleteUser.message);
-        navigate("/");
+        toast.success(message);
+        setEmailSent(true);
       }
     } catch (err) {
-      toast.error(err?.data?.message || err.message);
+      console.log("err", err);
+      toast.error(
+        err?.data?.message ||
+          "An error occurred. Please contact the administration.",
+      );
     }
   };
 
@@ -213,15 +251,18 @@ function Profile() {
   };
 
   useEffect(() => {
-    if (user?.mediaPath?.includes("googleusercontent")) {
-      setImage(`${userInfo?.mediaPath}`);
+    if (userInfo?.mediaPath) {
+      setImage(
+        userInfo.mediaPath.includes("googleusercontent")
+          ? userInfo.mediaPath
+          : `/api${userInfo.mediaPath}`,
+      );
     } else {
-      setUser({ ...user, mediaPath: `/api${userInfo?.mediaPath}` });
-      setImage(`/api${userInfo?.mediaPath}`);
+      setImage("/img/avatar.png");
     }
   }, [userInfo]);
 
-  console.log(userInfo);
+  // console.log(userInfo);
 
   return (
     <div className="flex h-full w-full flex-grow items-center justify-center md:w-auto">
@@ -240,7 +281,11 @@ function Profile() {
               className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
             >
               <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                <FaDownload size="2rem" className="mb-3 opacity-10" />
+                <FaDownload
+                  size="2rem"
+                  color="white"
+                  className="mb-3 opacity-30"
+                />
               </div>
               <input
                 id="media"
@@ -348,10 +393,23 @@ function Profile() {
           submitText="Yes"
           submitColor="red"
           cancelText="No"
-          onSubmit={deleteCurrentUserHandler}
+          onSubmit={sendDeleteEmailHandler}
           extraClasses={"w-96 md:mx-4 h-auto"}
         >
           <p className="py-4">Are you sure you want to delete your profile?</p>
+        </Overlay>
+      )}
+      {/* Show the popup after the confirmation email has been sent. */}
+      {emailSend && (
+        <Overlay
+          isOpen={emailSend}
+          onClose={() => setEmailSent(!emailSend)}
+          title="Confirmation Email Sent"
+          submitText="Ok"
+          onSubmit={() => setEmailSent(!emailSend)}
+          extraClasses={"w-96 md:mx-4 h-auto"}
+        >
+          <p className="py-4">Please check your email for confirmation.</p>
         </Overlay>
       )}
     </div>

@@ -10,7 +10,7 @@ import {
   sendResetPasswordEmail,
   getCurrentUser,
   updateCurrentUser,
-  deleteCurrentUser,
+  deleteUser,
   verifyTokenResetPassword,
   updateUserPasswordById,
   getNamesAndEmails,
@@ -18,6 +18,7 @@ import {
   shareLabel,
   deactivateCurrentUser,
   reactivateCurrentUser,
+  sendDeleteEmail,
 } from "../controllers/user.js";
 import { body } from "express-validator";
 import User from "../models/User.js";
@@ -135,13 +136,6 @@ router.get(
   asyncHandler(getCurrentUser),
 );
 
-router.delete(
-  "/users/delete-current/",
-  validateToken,
-  checkAccess("user"),
-  asyncHandler(deleteCurrentUser),
-);
-
 router.get(
   "/users/get-name-email",
   validateToken,
@@ -177,6 +171,20 @@ router.put(
   validateToken,
   checkAccess("user"),
   asyncHandler(reactivateCurrentUser),
+);
+
+router.put(
+  "/users/send-delete-email",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(sendDeleteEmail),
+);
+
+router.delete(
+  "/users/delete",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(deleteUser),
 );
 
 export default router;

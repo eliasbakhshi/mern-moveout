@@ -10,6 +10,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 
 // TODO: Make a focus for register button when the user press enter
 // Add reCaptcha to prevent bots from registering and login and contact form submission
+//
 
 function Register() {
   const nameRef = useRef(null);
@@ -54,6 +55,7 @@ function Register() {
       if (registered) {
         toast.success("Registration successful. Check your email to verify.");
         e.target.reset();
+        navigate("/login");
       }
     } catch (err) {
       console.log(err);

@@ -8,7 +8,7 @@ function Overlay({
   title = "",
   submitText = "Yes",
   submitColor = "blue",
-  cancelText = "Cancel",
+  cancelText,
   extraClasses,
   children,
 }) {
@@ -52,12 +52,14 @@ function Overlay({
           >
             {submitText}
           </Button>
-          <Button
+          {cancelText && (
+            <Button
             className="rounded bg-gray-100 px-4 py-2 capitalize text-gray-700 hover:bg-gray-400"
             onClick={hideOverlay}
-          >
+            >
             {cancelText}
           </Button>
+          )}
         </div>
       </form>
     </div>
