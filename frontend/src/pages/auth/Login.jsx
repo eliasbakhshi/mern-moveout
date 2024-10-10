@@ -47,6 +47,10 @@ function Login() {
     if (userInfo?.role) {
       navigate(redirect);
     }
+    if (userInfo?.isActive === false || userInfo?.isActive === undefined) {
+      // Redirect to profile page if the user is inactivated.
+      navigate("/profile");
+    }
   }, [navigate, redirect, userInfo]);
 
   const loginHandler = async (e) => {
@@ -96,7 +100,9 @@ function Login() {
           dispatch(setCredentials({ user }));
           navigate("/");
         } catch (err) {
-          return toast.error(err?.data?.message || "Failed to login with Google.");
+          return toast.error(
+            err?.data?.message || "Failed to login with Google.",
+          );
         }
       }
     };

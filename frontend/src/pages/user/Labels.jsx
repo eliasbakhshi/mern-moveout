@@ -10,8 +10,25 @@ import {
   useShareLabelMutation,
 } from "../../redux/api/usersApiSlice";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useEffect } from "react";
+
 
 function Labels() {
+
+  const { userInfo } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to profile page if the user is inactivated.
+    if (userInfo?.isActive === false || userInfo?.isActive === undefined) {
+      navigate("/profile");
+    }
+  }, [navigate, userInfo]);
+
+
+
   const { labelId } = useParams();
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isShowingUsers, setIsShowingUsers] = useState(false);

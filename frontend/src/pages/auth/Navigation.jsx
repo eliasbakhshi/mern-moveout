@@ -11,6 +11,7 @@ import { PiSignOut, PiSignIn } from "react-icons/pi";
 import { BsPersonPlus } from "react-icons/bs";
 import Loading from "../../components/Loading";
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -44,7 +45,6 @@ const Login = () => {
   }
 
   logoutLoading && <Loading />;
-
 
   return (
     <Navbar fluid className="fixed left-0 top-0 z-50 w-full">

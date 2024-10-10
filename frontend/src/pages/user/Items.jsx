@@ -18,6 +18,9 @@ import Overlay from "../../components/Overlay";
 import LinkButton from "../../components/LinkButton";
 import { useSelector } from "react-redux";
 import ItemList from "../../components/ItemList";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+
 
 // TODO: Add sort by type or name or date
 // TODO: Make a filter for the media type
@@ -36,6 +39,9 @@ import ItemList from "../../components/ItemList";
 // TODO: Change the popup titles with the name of the box or items
 
 function Items() {
+  const { userInfo } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+
   const [image, setImage] = useState("");
   const { boxId } = useParams();
   const [inputs, setInputs] = useState({
@@ -61,10 +67,15 @@ function Items() {
   } = useGetBoxQuery(boxId);
   const { data: emailsAndNames } = useGetUsersEmailAndNameQuery();
 
-  const { userInfo } = useSelector((state) => state.auth);
-
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isShowingUsers, setIsShowingUsers] = useState(false);
+
+  useEffect(() => {
+    // Redirect to profile page if the user is inactivated.
+    if (userInfo?.isActive === false || userInfo?.isActive === undefined) {
+      navigate("/profile");
+    }
+  }, [navigate, userInfo]);
 
   const fileChangeHandler = async (e) => {
     const media = e.target.files[0];

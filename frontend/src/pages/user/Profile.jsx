@@ -20,6 +20,7 @@ import Spinner from "../../components/Spinner";
 import Overlay from "../../components/Overlay";
 import { useNavigate } from "react-router-dom";
 
+
 // TODO: Check the expirationTime in the Profile component. If the expirationTime is less than the current time, dispatch the removeCredentials action to remove the user credentials from the state and local storage. This will log out the user automatically when the token expires.
 // TODO: Get the current expirationTime and set it again
 // TODO: Send a notification when the user change the email
@@ -29,6 +30,13 @@ function Profile() {
   const { userInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to profile page if the user is inactivated.
+    if (userInfo?.isActive === false || userInfo?.isActive === undefined) {
+      navigate("/profile");
+    }
+  }, [navigate, userInfo]);
 
   // const nameRef = useRef(null);
   // const emailRef = useRef(null);

@@ -4,6 +4,7 @@ import Loading from "../../components/Loading";
 import MessageBox from "../../components/MessageBox";
 import { useDispatch } from "react-redux";
 import { removeCredentials } from "../../redux/features/auth/authSlice";
+import { useEffect } from "react";
 
 // TODO: Check if the user is already logged in and redirect to the home page
 
@@ -12,6 +13,15 @@ function DeleteAccount() {
   const dispatch = useDispatch();
 
   const { data, error, isLoading } = useDeleteUserQuery(token);
+
+  useEffect(() => {
+    if (data && !error) {
+      dispatch(removeCredentials());
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("expirationTime");
+    }
+  }, [data, error, dispatch]);
+
 
   return isLoading ? (
     <Loading />
@@ -30,8 +40,9 @@ function DeleteAccount() {
       ) : (
         <>
           {/* Delete the information from the browser */}
+          {/* {dispatch(removeCredentials())}
           {localStorage.removeItem("userInfo")}
-          {localStorage.removeItem("expirationTime")}
+          {localStorage.removeItem("expirationTime")} */}
           <MessageBox
             title="Account Deleted"
             message={data.message}

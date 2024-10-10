@@ -15,12 +15,16 @@ import Overlay from "../../components/Overlay";
 import { QRCodeSVG } from "qrcode.react";
 import { LuTrash } from "react-icons/lu";
 import { CiEdit } from "react-icons/ci";
+import { useSelector } from "react-redux";
+import { useEffect } from "react";
+
 
 // TODO: Check the create and edit button in the popup is default selected when the user press enter
 // TODO: Add pagination
 // TODO: boxes array is not connected to box array in the database in the user model
 
 function Boxes() {
+  const { userInfo } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [createBox] = useCreateBoxMutation();
   const [deleteBox] = useDeleteBoxMutation();
@@ -40,6 +44,13 @@ function Boxes() {
     isPrivate: false,
   });
   const [isOpenModal, setIsOpenModal] = useState(false);
+
+  useEffect(() => {
+    // Redirect to profile page if the user is inactivated.
+    if (userInfo?.isActive === false || userInfo?.isActive === undefined) {
+      navigate("/profile");
+    }
+  }, [navigate, userInfo]);
 
   const createBoxHandler = async (e) => {
     e.preventDefault();
