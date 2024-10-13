@@ -13,8 +13,7 @@ var userSchema = new _mongoose.Schema({
     required: true
   },
   password: {
-    type: String,
-    required: true
+    type: String
   },
   email: {
     type: String,
@@ -33,6 +32,7 @@ var userSchema = new _mongoose.Schema({
     type: _mongoose.Schema.Types.ObjectId,
     ref: "Box"
   }],
+  registeredWith: [String],
   lastActive: {
     type: Date,
     "default": Date.now

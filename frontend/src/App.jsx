@@ -3,8 +3,22 @@ import Navigation from "./pages/auth/Navigation";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Footer from "./components/Footer";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 function App() {
+
+  const { pathname } = useLocation();
+
+
+const location = useLocation();
+
+console.log("Current URL:", location.pathname);
+console.log("Current URL 2 :", pathname);
+
+// useEffect(() => {
+//   console.log("Current URL:", location.pathname);
+// }, [location]);
   return (
     <>
       <ToastContainer />

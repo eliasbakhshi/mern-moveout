@@ -2,6 +2,7 @@ import { Router } from "express";
 import asyncHandler from "express-async-handler";
 import {
   register,
+  registerWithGoogle,
   login,
   loginWithGoogle,
   logout,
@@ -52,6 +53,21 @@ router.post(
     return true;
   }),
   asyncHandler(register),
+);
+
+router.post(
+  "/register-with-google",
+  body("email")
+    .isEmail()
+    .withMessage("The email is not correct.")
+    .custom((value) => {
+      return User.findOne({ email: value }).then((user) => {
+        if (user) {
+          return Promise.reject("The email is already in use.");
+        }
+      });
+    }),
+  asyncHandler(registerWithGoogle),
 );
 
 router.post(

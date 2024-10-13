@@ -8,7 +8,6 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -29,6 +28,7 @@ const userSchema = new Schema(
         ref: "Box",
       },
     ],
+    registeredWith: [String],
     lastActive: {
       type: Date,
       default: Date.now,

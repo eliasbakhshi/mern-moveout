@@ -25,7 +25,7 @@ const Login = () => {
     try {
       await logout().unwrap();
       dispatch(removeCredentials());
-      navigate("/");
+      navigate("/login");
     } catch (err) {
       toast.error(err?.data?.message || err.message);
     }

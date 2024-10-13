@@ -38,6 +38,7 @@ export const register = async (req, res) => {
     password: hashed,
     emailVerificationToken,
     emailVerificationTokenExpiresAt,
+    registeredWith: ["Email"],
   });
   // Get the email template
   let emailTemplate = fs.readFileSync(
@@ -70,8 +71,74 @@ export const register = async (req, res) => {
   return res.status(201).json({ message: "User created successfully." });
 };
 
+export const registerWithGoogle = async (req, res) => {
+  let { name, email, picture: mediaPath } = req.body;
+  email = email.trim().toLowerCase();
+  if (!name || !email || !mediaPath) {
+    return res.status(400).json({ message: "Please fill in all the fields." });
+  }
+
+  // Check if the email already exists
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    return res.status(400).json({ message: "Email already exists." });
+  }
+
+  // Create a new user
+  const user = await User.create({
+    name,
+    email,
+    mediaPath,
+    verified: true,
+    registeredWith: ["Google"],
+  });
+  await user.save();
+
+  // Get the email template
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") + "/backend/views/template-welcome-registration.html",
+    "utf8",
+  );
+  emailTemplate = emailTemplate.replace(
+    /(\*\*website_url\*\*)/g,
+    `${process.env.BASE_URL}`,
+  );
+  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
+
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Welcome to Move out",
+      text: `Thank you ${name} for signing up! We're excited to have you on board.`,
+      html: emailTemplate,
+    });
+  } catch (error) {
+    // Delete the user if the email is not sent
+    await user.deleteOne();
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
+  }
+
+  // Create and set a token
+  createSetToken(res, user._id);
+  return res.status(200).json({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    mediaPath: user.mediaPath,
+    isActive: user.isActive,
+  });
+
+  // return res.status(201).json({ message: "Your account has been created successfully 🎉" });
+};
+
 export const login = async (req, res) => {
   let { email, password, remember } = req.body;
+  console.log(req.body);
   email = email.trim().toLowerCase();
   if (!email || !password) {
     return res.status(400).json({ message: "Please fill in all the fields." });
@@ -86,10 +153,21 @@ export const login = async (req, res) => {
   if (!user) {
     return res.status(400).json({ message: "User not found." });
   }
+
+  // Show message if user has registered with another method
+  if (!user.registeredWith.includes("Email")) {
+    const registeredWith = user.registeredWith.join(", ");
+    return res.status(400).json({
+      message: `You have registered with ${registeredWith}. Please login with ${registeredWith}.`,
+    });
+  }
+
   // Check if the email is verified
   if (!user.emailVerified) {
     return res.status(400).json({ message: "Please verify your email." });
   }
+
+  console.log(password, user.password);
   // Check if the password is correct
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
@@ -127,6 +205,18 @@ export const loginWithGoogle = async (req, res) => {
       message: "You need to register first to be able to login with Google.",
     });
   }
+
+  // Show message if user has registered with another method
+  if (
+    !user.registeredWith.includes("Email") &&
+    !user.registeredWith.includes("Google")
+  ) {
+    const registeredWith = user.registeredWith.join(", ");
+    return res.status(400).json({
+      message: `You have registered with ${registeredWith}. Please login with ${registeredWith}.`,
+    });
+  }
+
   // Verify the user
   user.emailVerified = true;
   user.emailVerificationToken = undefined;
@@ -445,6 +535,12 @@ export const deleteUser = async (req, res) => {
 };
 
 export const getNamesAndEmails = async (req, res) => {
+  // Check if the user is active
+  const user = await User.findOne({ _id: req.user._id, isActive: true });
+  if (!user) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
+
   // Find the email and name of all users
   const users = await User.find(
     { email: { $ne: req.user.email } },
@@ -477,6 +573,11 @@ export const shareBox = async (req, res) => {
     return res.status(400).json({ message: "User not found." });
   }
 
+  // Check if the user is active
+  if (!user.isActive) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
+
   // Find the box
   const box = await Box.findOne({ _id: boxId });
   if (!box) {
@@ -500,7 +601,7 @@ export const shareBox = async (req, res) => {
 
   // Get the email template for sharing a box
   let emailTemplate = fs.readFileSync(
-    path.resolve(".") + "/backend/views/template-share-box-or-label.html",
+    path.resolve(".") + "/backend/views/template-share-label-or-box.html",
     "utf8",
   );
   emailTemplate = emailTemplate.replace(
@@ -510,6 +611,7 @@ export const shareBox = async (req, res) => {
   emailTemplate = emailTemplate.replace(/(\*\*name_from\*\*)/g, req.user.name);
   emailTemplate = emailTemplate.replace(/(\*\*name_to\*\*)/g, user.name);
   emailTemplate = emailTemplate.replace(/(\*\*shared_object\*\*)/g, "box");
+  emailTemplate = emailTemplate.replace(/(\*\*privateCode\*\*)/g, ``);
 
   try {
     // Send the email
@@ -542,15 +644,27 @@ export const shareLabel = async (req, res) => {
     return res.status(422).json({ message: err.array()[0].msg });
   }
 
+  // Find the label
+  const label = await Box.findOne({ _id: labelId });
+
+  if (!label) {
+    return res.status(400).json({ message: "Label not found." });
+  }
+
   // Find the user
-  const user = await User.findOne({ email }, { name: 1 });
+  const user = await User.findOne({ email });
   if (!user) {
     return res.status(400).json({ message: "User not found." });
   }
 
+  // Check if the user is active
+  if (!user.isActive) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
+
   // Get the email template for sharing a box
   let emailTemplate = fs.readFileSync(
-    path.resolve(".") + "/backend/views/template-share-box-or-label.html",
+    path.resolve(".") + "/backend/views/template-share-label-or-box.html",
     "utf8",
   );
   emailTemplate = emailTemplate.replace(
@@ -560,6 +674,10 @@ export const shareLabel = async (req, res) => {
   emailTemplate = emailTemplate.replace(/(\*\*name_from\*\*)/g, req.user.name);
   emailTemplate = emailTemplate.replace(/(\*\*name_to\*\*)/g, user.name);
   emailTemplate = emailTemplate.replace(/(\*\*shared_object\*\*)/g, "label");
+  emailTemplate = emailTemplate.replace(
+    /(\*\*privateCode\*\*)/g,
+    `<p>The private code is: <strong>${label.privateCode}</strong></p> `,
+  );
 
   try {
     // Send the email
@@ -584,6 +702,11 @@ export const deactivateCurrentUser = async (req, res) => {
 
   if (!user) {
     return res.status(404).json({ message: "User not found." });
+  }
+
+  // Check if the user is active
+  if (!user.isActive) {
+    return res.status(400).json({ message: "User is inactive." });
   }
 
   // Deactivate the user
@@ -631,6 +754,11 @@ export const reactivateCurrentUser = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
+  // Check if the user is inactive
+  if (user.isActive) {
+    return res.status(400).json({ message: "User is active." });
+  }
+
   // Deactivate the user
   user.isActive = true;
   await user.save();
@@ -649,6 +777,11 @@ export const sendDeleteEmail = async (req, res) => {
 
   if (!user) {
     return res.status(404).json({ message: "User not found." });
+  }
+
+  // Check if the user is active
+  if (user.isActive) {
+    return res.status(400).json({ message: "User is active." });
   }
 
   const emailToken = crypto.randomBytes(32).toString("hex");
@@ -697,6 +830,7 @@ export const sendDeleteEmail = async (req, res) => {
 
 export default {
   register,
+  registerWithGoogle,
   login,
   loginWithGoogle,
   logout,

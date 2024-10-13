@@ -2,7 +2,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 function Label({ label: l }) {
   // const { _id: id, name, labelNum, privateCode } = label;
-
+  console.log(l);
   return (
     <div className="mx-3 flex w-full flex-col items-center md:mx-0">
       <div
@@ -19,7 +19,7 @@ function Label({ label: l }) {
           title={l.name}
         />
       </div>
-      {l.privateCode && l.privateCode && (
+      {l.isPrivate && l.privateCode && (
         <div className="mt-5 flex items-center">
           <p className="text-lg font-semibold text-gray-700">Private Code: </p>
           <p className="ml-3 text-base text-gray-500">

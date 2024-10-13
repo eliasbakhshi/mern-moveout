@@ -1,12 +1,8 @@
 import { useSelector, useDispatch } from "react-redux";
-import {
-  removeCredentials,
-  setCredentials,
-} from "../../redux/features/auth/authSlice";
-import { FaDownload, FaTrash } from "react-icons/fa";
+import { setCredentials } from "../../redux/features/auth/authSlice";
+import { FaTrash } from "react-icons/fa";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
-import LinkButton from "../../components/LinkButton";
 import { useRef, useState, useEffect } from "react";
 import {
   useEditCurrentUserMutation,
@@ -19,7 +15,6 @@ import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
 import Overlay from "../../components/Overlay";
 import { useNavigate } from "react-router-dom";
-
 
 // TODO: Check the expirationTime in the Profile component. If the expirationTime is less than the current time, dispatch the removeCredentials action to remove the user credentials from the state and local storage. This will log out the user automatically when the token expires.
 // TODO: Get the current expirationTime and set it again
@@ -205,33 +200,12 @@ function Profile() {
       );
     }
   };
-  // const deleteCurrentUserHandler = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const deleteUser = await deleteCurrentUser().unwrap();
-  //     dispatch(removeCredentials());
-  //     deleteSuccess && toast.success(deleteUser.message);
-
-  //     setUser({
-  //       name: userInfo.name,
-  //       email: userInfo.email,
-  //       password: "",
-  //       confirmPassword: "",
-  //       role: userInfo.role,
-  //       mediaPath: userInfo.mediaPath,
-  //       media: null,
-  //     });
-
-  //     if (deleteError) {
-  //       toast.error(deleteError);
-  //     } else {
-  //       toast.success(deleteUser.message);
-  //       navigate("/");
-  //     }
-  //   } catch (err) {
-  //     toast.error(err?.data?.message || err.message);
-  //   }
-  // };
+  const deleteCurrentUserHandler = async (e) => {
+    e.preventDefault();
+    if (!userInfo.isActive) {
+      setIsDeleting(true);
+    }
+  };
 
   const sendDeleteEmailHandler = async (e) => {
     e.preventDefault();
@@ -273,13 +247,14 @@ function Profile() {
   // console.log(userInfo);
 
   return (
-    <div className="flex h-full w-full flex-grow items-center justify-center md:w-auto">
+    // <div className="flex h-full w-full flex-grow items-center justify-center md:w-auto">
+    <div className="flex h-full w-full flex-grow items-center justify-center bg-[url('/img/login-bg.jpg')]">
       <form
         type="multipart/form-data"
         onSubmit={editUserHandler}
-        className="flex flex-grow flex-col justify-center rounded-lg bg-white p-6 shadow-lg md:flex-row md:items-start"
+        className="container mx-5 flex flex-grow flex-col justify-center rounded-lg bg-white/70 p-6 shadow-lg backdrop-blur-md md:flex-row md:items-start xl:mx-0"
       >
-        <div className="mb-4 flex w-full flex-col items-center justify-center md:w-[50%] md:items-start">
+        <div className="mb-4 flex h-full w-full flex-col items-center justify-center md:mt-20 md:w-[50%]">
           <div
             className={`group relative mb-4 h-32 w-32 overflow-hidden rounded-full bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
             style={{ backgroundImage: `url(${image})` }}
@@ -288,13 +263,7 @@ function Profile() {
               htmlFor="media"
               className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
             >
-              <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                <FaDownload
-                  size="2rem"
-                  color="white"
-                  className="mb-3 opacity-30"
-                />
-              </div>
+              <div className="flex flex-col items-center justify-center pb-6 pt-5"></div>
               <input
                 id="media"
                 name="media"
@@ -303,7 +272,7 @@ function Profile() {
                 className="hidden"
                 onChange={fileChangeHandler}
                 onClick={(e) => {
-                  e.value = null;
+                  e.target.value = null;
                   return false;
                 }}
                 value=""
@@ -364,31 +333,27 @@ function Profile() {
               {editCurrentUserLoading && <Spinner />}Save
             </Button>
             {userInfo.isActive ? (
-              <LinkButton
+              <Button
                 extraClasses="bg-gray-700 w-full"
                 onClick={deactivateCurrentUserHandler}
               >
-                Deactivate
-              </LinkButton>
+                {deactivateCurrentUserLoading && <Spinner />}Deactivate
+              </Button>
             ) : (
-              <LinkButton
+              <Button
                 extraClasses="bg-gray-400 w-full"
                 onClick={reactivateCurrentUserHandler}
               >
-                Reactivate
-              </LinkButton>
+                {reactivateCurrentUserLoading && <Spinner />}Reactivate
+              </Button>
             )}
-            <LinkButton
-              disabled={!userInfo.isActive}
+
+            <Button
               extraClasses={`${userInfo.isActive ? "bg-red-300" : "bg-red-500"} w-full`}
-              onClick={() => {
-                if (!userInfo.isActive) {
-                  setIsDeleting(true);
-                }
-              }}
+              onClick={deleteCurrentUserHandler}
             >
-              Delete
-            </LinkButton>
+              {sendDeleteEmailLoading && <Spinner />} Delete
+            </Button>
           </div>
         </div>
       </form>

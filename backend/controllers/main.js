@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import transporter from "../config/nodemailer.js";
 import ShortUniqueId from "short-unique-id";
+import User from "../models/User.js";
 
 const uid = new ShortUniqueId({ length: 6, dictionary: "number" });
 
@@ -14,14 +15,21 @@ export const home = (req, res) => {
 };
 
 export const getBoxes = async (req, res) => {
+  // Check if the user is active
+  const user = await User.findOne({ _id: req.user._id, isActive: true });
+  if (!user) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
+
+  // Get the boxes
   const boxes = await Box.find({ user: req.user._id }).sort({
     createdAt: 1,
   });
+
   if (!boxes) {
     return res.status(400).json({ message: "No box found." });
   }
-  const sortedItems = boxes.sort((a, b) => b.createdAt - a.createdAt);
-  return res.status(200).json({ boxes: sortedItems });
+  return res.status(200).json({ boxes });
 };
 
 export const getBox = async (req, res) => {
@@ -30,7 +38,12 @@ export const getBox = async (req, res) => {
 
   if (req.user.role !== "admin") query = { ...query, user: req.user._id };
 
-  const box = await Box.findOne(query);
+  const box = await Box.findOne(query).populate("user");
+
+  // Check if the user is active
+  if (!box.user.isActive) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
 
   if (!box) {
     return res.status(400).json({ message: "No box found." });
@@ -43,6 +56,11 @@ export const getBox = async (req, res) => {
 };
 
 export const createBox = async (req, res) => {
+  // Check if the user is active
+  const user = await User.findOne({ _id: req.user._id, isActive: true });
+  if (!user) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
   const { name, labelNum, isPrivate } = req.body;
   const privateCode = uid.randomUUID(6);
   if (!name || !labelNum || isPrivate === undefined) {
@@ -71,7 +89,11 @@ export const createBox = async (req, res) => {
 export const updateBox = async (req, res) => {
   const { name, labelNum, boxId, isPrivate } = req.body;
 
-  console.log(req.body);
+  // Check if the user is active
+  const user = await User.findOne({ _id: req.user._id, isActive: true });
+  if (!user) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
 
   if (!name || !labelNum || !boxId || isPrivate === undefined) {
     return res.status(400).json({
@@ -90,11 +112,6 @@ export const updateBox = async (req, res) => {
   box.isPrivate = isPrivate;
   box.privateCode = isPrivate == "true" ? uid.randomUUID(6) : undefined;
 
-  // if (isPrivate) {
-  //   // if the box is private, generate a private code with old code if there is one
-  //   box.privateCode = box.privateCode || uid.randomUUID(6);
-  // }
-
   await box.save();
 
   return res.status(200).json({ message: "Box updated successfully." });
@@ -102,6 +119,12 @@ export const updateBox = async (req, res) => {
 
 export const deleteBox = async (req, res) => {
   const { boxId } = req.params;
+
+  // Check if the user is active
+  const user = await User.findOne({ _id: req.user._id, isActive: true });
+  if (!user) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
 
   if (!boxId) {
     return res.status(400).json({ message: "Please provide an box ID" });
@@ -126,7 +149,12 @@ export const deleteBox = async (req, res) => {
 export const showBoxById = async (req, res) => {
   const { boxId } = req.params;
 
-  const box = await Box.findOne({ _id: boxId });
+  const box = await Box.findOne({ _id: boxId }).populate("user");
+
+  // Check if the user is active
+  if (!box.user.isActive) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
 
   if (!box) {
     return res.status(400).json({ message: "No box found." });
@@ -181,7 +209,13 @@ export const getBoxItems = async (req, res) => {
 
   const query = { _id: boxId };
 
-  const box = await Box.findOne(query);
+  const box = await Box.findOne(query).populate("user");
+
+  // Check if the user is active
+  if (!box.user.isActive) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
+
   if (!box) {
     return res.status(400).json({ message: "No box found." });
   }
@@ -206,6 +240,12 @@ export const getBoxItem = async (req, res) => {};
 
 // Items
 export const createItem = async (req, res) => {
+  // Check if the user is active
+  const user = await User.findOne({ _id: req.user._id, isActive: true });
+  if (!user) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
+
   // get the files
   const { boxId, description } = req.body;
   const media = req.file;
@@ -295,7 +335,15 @@ export const updateItem = async (req, res) => {
     mediaType = mediaType.split("/")[0];
   }
 
-  const box = await Box.findOne({ user: req.user._id, "items._id": itemId });
+  const box = await Box.findOne({
+    user: req.user._id,
+    "items._id": itemId,
+  }).populate("user");
+
+  // Check if the user is active
+  if (!box.user.isActive) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
 
   if (!box) {
     return res.status(400).json({ message: "Item not found" });
@@ -343,7 +391,15 @@ export const deleteItem = async (req, res) => {
     return res.status(400).json({ message: "Please provide an item ID" });
   }
 
-  const box = await Box.findOne({ user: req.user._id, "items._id": itemId });
+  const box = await Box.findOne({
+    user: req.user._id,
+    "items._id": itemId,
+  }).populate("user");
+
+  // Check if the user is active
+  if (!box.user.isActive) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
 
   if (!box) {
     return res.status(400).json({ message: "Item not found" });

@@ -25,9 +25,15 @@ import BoxDetails from "./pages/BoxDetails.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import DeleteAccount from "./pages/user/DeleteAccount.jsx";
 
+
 // TODO: Add a loading page then user is navigating between pages
 // TODO: Add ResetPassword page
 // TODO: use the same template for showing the message in the confirm email and reset password page
+
+
+
+
+
 
 const router = createBrowserRouter(
   createRoutesFromElements(

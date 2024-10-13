@@ -47,10 +47,6 @@ function Login() {
     if (userInfo?.role) {
       navigate(redirect);
     }
-    if (userInfo?.isActive === false || userInfo?.isActive === undefined) {
-      // Redirect to profile page if the user is inactivated.
-      navigate("/profile");
-    }
   }, [navigate, redirect, userInfo]);
 
   const loginHandler = async (e) => {
@@ -175,7 +171,7 @@ function Login() {
         >
           {getUserFromGoogleLoading || (loginWithGoogleLoading && <Spinner />)}
           <FcGoogle className="mr-3" />
-          continue with google
+          Login with google
         </Button>
       </form>
       <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-center bg-no-repeat md:block"></div>

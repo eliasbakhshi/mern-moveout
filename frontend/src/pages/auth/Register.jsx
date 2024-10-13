@@ -1,12 +1,20 @@
-import { useRef, useEffect } from "react";
-import { useRegisterMutation } from "../../redux/api/usersApiSlice";
+import { useRef, useEffect, useState } from "react";
+import {
+  useRegisterMutation,
+  useGetUserFromGoogleQuery,
+  useRegisterWithGoogleMutation,
+} from "../../redux/api/usersApiSlice";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import ReCAPTCHA from "react-google-recaptcha";
+import { googleLogout, useGoogleLogin } from "@react-oauth/google";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { FcGoogle } from "react-icons/fc";
+import { setCredentials } from "../../redux/features/auth/authSlice";
 
 // TODO: Make a focus for register button when the user press enter
 // Add reCaptcha to prevent bots from registering and login and contact form submission
@@ -18,11 +26,18 @@ function Register() {
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
   const reCaptchaRef = useRef(null);
+  const [token, setToken] = useState();
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { search } = useLocation();
 
   const [register, { isLoading: registerLoading }] = useRegisterMutation();
+  const [registerWithGoogle, { isLoading: registerWithGoogleLoading }] =
+    useRegisterWithGoogleMutation();
+  const { data: getUserFromGoogle, isLoading: getUserFromGoogleLoading } =
+    useGetUserFromGoogleQuery(token || skipToken);
+
   const { userInfo } = useSelector((state) => state.auth);
   const sp = new URLSearchParams(search);
   const redirect = sp.get("redirect") || "/";
@@ -32,6 +47,33 @@ function Register() {
       navigate(redirect);
     }
   }, [navigate, redirect, userInfo]);
+  useEffect(() => {
+    const registerWithGoogleAsync = async () => {
+      if (getUserFromGoogle) {
+        try {
+          const { data: user, error } =
+            await registerWithGoogle(getUserFromGoogle);
+          if (error) {
+            return toast.error(error?.data?.message);
+          }
+          dispatch(setCredentials({ user }));
+          navigate("/");
+        } catch (err) {
+          console.log(err);
+          return toast.error(
+            err?.data?.message || "Failed to login with Google.",
+          );
+        }
+      }
+    };
+
+    registerWithGoogleAsync();
+  }, [getUserFromGoogle]);
+
+  const googleRegister = useGoogleLogin({
+    onSuccess: (res) => setToken(res),
+    onError: (error) => console.log("Login Failed:", error),
+  });
 
   const registerHandler = async (e) => {
     e.preventDefault();
@@ -49,7 +91,7 @@ function Register() {
       toast.error("Passwords do not match");
     }
 
-    try {
+    try { 
       const registered = await register({ name, email, password }).unwrap();
       // Handle successful register
       if (registered) {
@@ -117,8 +159,17 @@ function Register() {
         />
 
         <Button disabled={registerLoading} extraClasses={"mt-auto"}>
-          {registerLoading && <Spinner />}
-          Register
+          {registerLoading ? <Spinner /> : "Register"}
+        </Button>
+        <Button
+          onClick={googleRegister}
+          disabled={getUserFromGoogleLoading || registerWithGoogleLoading}
+          extraClasses="mt-3 flex justify-center items-center"
+        >
+          {getUserFromGoogleLoading ||
+            (registerWithGoogleLoading && <Spinner />)}
+          <FcGoogle className="mr-3" />
+          Register with Google
         </Button>
       </form>
       <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-center bg-no-repeat md:block"></div>

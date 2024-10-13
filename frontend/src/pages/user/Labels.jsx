@@ -82,7 +82,7 @@ function Labels() {
   ) : (
     <>
       <div className="flex h-full w-full flex-grow flex-col items-center justify-center bg-[url('/img/login-bg.jpg')]">
-        <div className="my-5 flex w-full flex-col items-start gap-y-4 px-2 md:flex-row md:items-center md:px-4 xl:px-0">
+        <div className="container my-5 flex w-full flex-col items-start gap-y-4 px-2 md:flex-row md:items-center md:px-4 xl:px-0">
           <Button extraClasses="mr-5" onClick={showUsers}>
             Share Label
           </Button>

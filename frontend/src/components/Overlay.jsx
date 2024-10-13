@@ -28,7 +28,7 @@ function Overlay({
       <form
         encType="multipart/form-data"
         onSubmit={onSubmit}
-        className={`container m-4 flex h-[95vh] flex-col overflow-hidden rounded-lg bg-white shadow-lg md:h-auto ${extraClasses}`}
+        className={`container m-4 flex flex-col overflow-hidden rounded-lg bg-white shadow-lg md:h-auto ${extraClasses}`}
       >
         <div
           id="header"

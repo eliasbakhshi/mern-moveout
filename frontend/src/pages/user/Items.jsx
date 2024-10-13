@@ -332,7 +332,7 @@ function Items() {
           isOpen={isOpenModal}
           onClose={onCloseOverlay}
           setIsOpen={setIsOpenModal}
-          extraClasses={"w-full"}
+          extraClasses={"w-full h-[95vh] md:h-auto"}
           title="Add Item"
           submitText="Create"
           cancelText="Cancel"
@@ -395,7 +395,7 @@ function Items() {
           isOpen={isOpenModal}
           onClose={onCloseOverlay}
           setIsOpen={setIsOpenModal}
-          extraClasses={"w-full"}
+          extraClasses={"w-full h-[95vh] md:h-auto"}
           title="Edit Item"
           submitText="Edit"
           cancelText="Cancel"
@@ -460,7 +460,7 @@ function Items() {
           submitColor="red"
           cancelText="No"
           onSubmit={deleteItemHandler}
-          extraClasses={"w-96 md:mx-4 h-auto"}
+          extraClasses={"w-96 md:mx-4"}
         >
           <p className="py-4">Are you sure you want to delete this item?</p>
         </Overlay>

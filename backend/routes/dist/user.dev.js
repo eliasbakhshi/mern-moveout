@@ -42,6 +42,15 @@ router.post("/register", (0, _expressValidator.body)("email").isEmail().withMess
 
   return true;
 }), (0, _expressAsyncHandler["default"])(_user.register));
+router.post("/register-with-google", (0, _expressValidator.body)("email").isEmail().withMessage("The email is not correct.").custom(function (value) {
+  return _User["default"].findOne({
+    email: value
+  }).then(function (user) {
+    if (user) {
+      return Promise.reject("The email is already in use.");
+    }
+  });
+}), (0, _expressAsyncHandler["default"])(_user.registerWithGoogle));
 router.post("/login", (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").isLength({
   min: 6,
   max: 100

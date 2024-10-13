@@ -218,7 +218,7 @@ function Boxes() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          extraClasses={"w-full md:mx-4"}
+          extraClasses={"w-full md:mx-4 h-[95vh] md:h-auto"}
           title="Create Box"
           submitText="Create"
           submitColor="blue"
@@ -309,7 +309,7 @@ function Boxes() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          extraClasses={"w-full md:mx-4"}
+          extraClasses={"w-full md:mx-4 h-[95vh] md:h-auto"}
           title="Edit Box"
           submitText="Edit"
           cancelText="Cancel"
