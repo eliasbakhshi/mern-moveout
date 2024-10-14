@@ -144,6 +144,36 @@ export const deleteBox = async (req, res) => {
 
   return res.status(200).json({ message: "Box deleted successfully." });
 };
+export const changeBoxStatus = async (req, res) => {
+  const { boxId, status } = req.body;
+
+  console.log(req.body);
+
+  // Check if the user is active
+  const user = await User.findOne({ _id: req.user._id, isActive: true });
+  if (!user) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
+
+  if (!boxId || status == undefined) {
+    return res
+      .status(400)
+      .json({ message: "Please provide an box ID and a status" });
+  }
+
+  const box = await Box.findOne({ user: req.user._id, _id: boxId });
+
+  if (!box) {
+    return res.status(400).json({ message: "Box not found" });
+  }
+
+  // Change the status of the box
+  box.isPrivate = status;
+  box.privateCode = status ? uid.randomUUID(6) : undefined;
+  await box.save();
+
+  return res.status(200).json({ message: `Box is ${box.isPrivate ? "private" : "public"} now.` });
+};
 
 // Public stuff
 export const showBoxById = async (req, res) => {
@@ -427,6 +457,7 @@ export default {
   createBox,
   updateBox,
   deleteBox,
+  changeBoxStatus,
 
   // Public stuff
   showBoxById,

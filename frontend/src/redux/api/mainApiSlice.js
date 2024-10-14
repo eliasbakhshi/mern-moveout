@@ -39,6 +39,14 @@ export const mainApi = apiSlice.injectEndpoints({
         invalidatesTags: ["Box"],
       }),
     }),
+    changeBoxStatus: builder.mutation({
+      query: (info) => ({
+        url: "/api/boxes/status",
+        body: info,
+        method: "PUT",
+        invalidatesTags: ["Box"],
+      }),
+    }),
 
     // public stuff
     showBox: builder.query({
@@ -104,6 +112,7 @@ export const {
   useCreateBoxMutation,
   useUpdateBoxMutation,
   useDeleteBoxMutation,
+  useChangeBoxStatusMutation,
   // public stuff
   useShowBoxQuery,
   useSendContactMessageMutation,

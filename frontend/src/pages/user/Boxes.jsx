@@ -5,19 +5,18 @@ import {
   useDeleteBoxMutation,
   useUpdateBoxMutation,
   useGetBoxesQuery,
+  useChangeBoxStatusMutation,
 } from "../../redux/api/mainApiSlice";
 import { toast } from "react-toastify";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { FaPen, FaTrash } from "react-icons/fa";
+import { FaPen, FaTrash, FaLock, FaLockOpen, FaEdit } from "react-icons/fa";
 import Input from "../../components/Input";
-import { createPortal } from "react-dom";
 import Overlay from "../../components/Overlay";
 import { QRCodeSVG } from "qrcode.react";
 import { LuTrash } from "react-icons/lu";
-import { CiEdit } from "react-icons/ci";
+import { CiEdit, CiUnlock } from "react-icons/ci";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
-
 
 // TODO: Check the create and edit button in the popup is default selected when the user press enter
 // TODO: Add pagination
@@ -29,6 +28,7 @@ function Boxes() {
   const [createBox] = useCreateBoxMutation();
   const [deleteBox] = useDeleteBoxMutation();
   const [updateBox] = useUpdateBoxMutation();
+  const [changeBoxStatus] = useChangeBoxStatusMutation();
   const {
     data: boxes,
     isLoading: boxesLoading,
@@ -170,8 +170,70 @@ function Boxes() {
     }
   };
 
-  console.log(inputs);
+  const changeBoxStatusHandler = async (e) => {
+    // Check if user clicks inside of the div or not
+    if (e.target.tagName === "DIV" || e.target.closest("div")) {
+      let boxId, status;
+      if (e.target.tagName === "DIV") {
+        status = e.target.getAttribute("data-status") === "true";
+        boxId = e.target.id;
+      } else {
+        status = e.target.closest("div").getAttribute("data-status") === "true";
+        boxId = e.target.closest("div").id;
+      }
+      if ((!status, !boxId)) {
+        return;
+      }
+      try {
+        const { data, error } = await changeBoxStatus({
+          boxId,
+          status: !status,
+        });
+        if (error) {
+          toast.error(error.data.message);
+        } else {
+          toast.success(data.message);
+        }
+        refetchBoxes();
+      } catch (err) {
+        toast.error(
+          err?.data?.message ||
+            "An error occurred. Please contact the administration.",
+        );
+      }
+    }
+  };
 
+  // const makeBoxPrivateHandler = async (e) => {
+  //   if (e.target === e.currentTarget) {
+  //     console.log(e.target.id);
+  //     try {
+  //       const { data, error } = await makeBoxPrivate(e.target.id);
+  //       // setInputs({
+  //       //   boxId: "",
+  //       //   mode: "create",
+  //       //   name: "",
+  //       //   labelNum: 1,
+  //       //   isPrivate: true,
+  //       // });
+  //       // console.log(data);
+  //       // if (error) {
+  //       //   toast.error(error.data.message);
+  //       // } else {
+  //       //   toast.success(data.message);
+  //       // }
+
+  //       refetchBoxes();
+  //     } catch (err) {
+  //       toast.error(
+  //         err?.data?.message ||
+  //           "An error occurred. Please contact the administration.",
+  //       );
+  //     }
+  //   }
+  // };
+
+console.log(inputs)
   return (
     <>
       <div className="container my-2 flex items-center px-4 xl:px-0">
@@ -182,35 +244,72 @@ function Boxes() {
       <div className="container flex flex-row flex-wrap gap-[5%] gap-y-6 px-4 py-5 lg:gap-x-[10%] xl:px-0">
         {Array.isArray(boxes?.boxes) &&
           boxes.boxes.map((e) => (
-            <div
+            <article
               key={e._id}
-              className={`relative flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:cursor-pointer hover:shadow-lg md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56`}
-              onClick={(event) => navigateToAddItems(e._id, event)}
-              style={{ backgroundImage: `url('/img/label_${e.labelNum}.png')` }}
+              className="flex h-full min-h-[70vw] w-full min-w-28 flex-col items-center justify-center overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:cursor-pointer hover:shadow-lg md:min-h-44 md:w-[calc(90%/3)] lg:min-h-48 lg:w-[calc(80%/3)] xl:min-h-72"
             >
-              <CiEdit
-                size="2rem"
-                onClick={() => showModal(e._id, "edit")}
-                className="absolute left-1 top-1 rounded-md bg-gray-50/50 p-2 text-gray-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner md:h-[2rem] md:w-[2rem] md:p-2"
-              />
-              <LuTrash
-                size="2rem"
-                className="absolute right-1 top-1 rounded-md bg-gray-50/50 p-2 text-red-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner md:h-[2rem] md:w-[2rem] md:p-2"
-                onClick={() => showModal(e._id, "delete")}
-              />
-              <p
-                className="absolute left-10 top-8 flex w-[100px] flex-wrap items-center justify-center text-sm text-black md:left-3 md:top-7 md:w-[85px] xl:left-9 xl:top-6"
+              <div
+                className={`flex h-full w-full flex-grow bg-cover bg-center bg-no-repeat items-center`}
                 onClick={(event) => navigateToAddItems(e._id, event)}
+                style={{
+                  backgroundImage: `url('/img/label_${e.labelNum}.png')`,
+                }}
               >
-                {e.name}
-              </p>
-              <QRCodeSVG
-                value={`/api//boxes/${e._id}/items`}
-                className="absolute bottom-8 left-10 h-28 w-28 md:bottom-5 md:left-6 md:h-14 md:w-14 lg:h-20 lg:w-20 xl:bottom-8 xl:left-8 xl:h-28 xl:w-28"
-                title={e.name}
-                onClick={(event) => navigateToAddItems(e._id, event)}
-              />
-            </div>
+                <div className="flex w-[45%] flex-col items-center">
+                <p
+                  className="flex mb-10 md:mb-4 flex-wrap  text-sm text-black  "
+                  onClick={(event) => navigateToAddItems(e._id, event)}
+                >
+                  {e.name}
+                </p>
+                <QRCodeSVG
+                  value={`/api//boxes/${e._id}/items`}
+                  className="h-24 w-24  md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
+                  title={e.name}
+                  onClick={(event) => navigateToAddItems(e._id, event)}
+                />
+                  </div>
+
+              </div>
+              <div className="flex w-full items-center justify-between">
+                <div
+                  onClick={() => showModal(e._id, "edit")}
+                  className="flex h-[3rem] w-[33%] items-center justify-center bg-gray-50/50 text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                >
+                  <FaEdit size="2rem" className="p-1.5 md:p-2.5 xl:p-1.5" />
+                </div>
+
+                {e.isPrivate ? (
+                  <div
+                    onClick={changeBoxStatusHandler}
+                    id={e._id}
+                    data-status={e.isPrivate}
+                    className="flex h-[3rem] w-[33%] items-center justify-center bg-gray-50/50 text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                  >
+                    <FaLock size="2rem" className="p-1.5 md:p-2.5 xl:p-1.5" />
+                  </div>
+                ) : (
+                  <div
+                    onClick={changeBoxStatusHandler}
+                    id={e._id}
+                    data-status={e.isPrivate}
+                    className="flex h-[3rem] w-[33%] items-center justify-center bg-gray-50/50 text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                  >
+                    <FaLockOpen size="2rem" className="p-1.5 md:p-2.5 xl:p-1.5" />
+                  </div>
+                )}
+                <div
+                  onClick={() => showModal(e._id, "delete")}
+                  data-status={e.isPrivate}
+                  className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner md:h-[2rem] l:h-[3rem]"
+                >
+                  <FaTrash
+                    size="2rem"
+                    className="p-1.5 text-red-700 hover:bg-red-50 md:p-2.5 xl:p-1.5"
+                  />
+                </div>
+              </div>
+            </article>
           ))}
       </div>
       {/* Show the popup for creating */}

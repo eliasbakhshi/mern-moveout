@@ -6,6 +6,7 @@ import {
   createBox,
   updateBox,
   deleteBox,
+  changeBoxStatus,
   showBoxById,
   sendContactMessage,
   getBoxItems,
@@ -60,6 +61,13 @@ router.delete(
   validateToken,
   checkAccess("user"),
   asyncHandler(deleteBox),
+);
+
+router.put(
+  "/boxes/status",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(changeBoxStatus),
 );
 
 // Public stuff
