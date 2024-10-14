@@ -1,18 +1,13 @@
 import multer from "multer";
 import path from "path";
-import fs from "fs";
 import ShortUniqueId from "short-unique-id";
+import User from "../models/User.js";
 
-const uid = new ShortUniqueId({ length: 10 });
+const uid = new ShortUniqueId({ length: 4 });
 
 // Check if the img directory exists, if not, create it
 const __dirname = path.resolve();
-const uploadDir = process.env.UPLOADS_PATH || "uploads";
 const imgProducts = path.join(__dirname, process.env.UPLOADS_PATH);
-
-if (!fs.existsSync(imgProducts)) {
-  fs.mkdirSync(imgProducts);
-}
 
 // Multer storage configuration
 const fileStorage = multer.diskStorage({
@@ -20,10 +15,17 @@ const fileStorage = multer.diskStorage({
     cb(null, imgProducts);
   },
   filename: (req, file, cb) => {
-    // TODO: Choose a file size limit with .env file
+    // Limit the size of the file to 2 MB
+    if (file.size > process.env.MAX_UPLOAD_SIZE) {
+      return cb(
+        new Error(
+          `File is too large. Max size is ${process.env.MAX_UPLOAD_SIZE / 1000000}`,
+        ),
+        false,
+      );
+    }
 
-    // const randomNum = Math.floor(Math.random() * 9000) + 1000;
-    let newName = uid.rnd() + "-" + file.originalname;
+    let newName = req.user._id + "-" + uid.rnd() + "-" + file.originalname;
     newName = newName.replace(/\s/g, "-");
     cb(null, newName);
   },
@@ -46,10 +48,11 @@ const fileFilter = (req, file, cb) => {
 };
 
 // Multer middleware
-const media = multer({
+const getMedia = multer({
   storage: fileStorage,
   fileFilter: fileFilter,
   limits: { fileSize: process.env.MAX_UPLOAD_SIZE },
-}).single("image");
+  // TODO: check if the limited size is applied
+}).single("media");
 
-export default media;
+export default getMedia;

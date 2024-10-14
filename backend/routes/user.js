@@ -25,6 +25,7 @@ import { body } from "express-validator";
 import User from "../models/User.js";
 import validateToken from "../middlewares/validateToken.js";
 import checkAccess from "../middlewares/checkAccess.js";
+import getMedia from "../middlewares/multer.js";
 
 const router = Router();
 
@@ -142,6 +143,7 @@ router.put(
       }
       return true;
     }),
+  getMedia,
   asyncHandler(updateCurrentUser),
 );
 

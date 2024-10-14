@@ -1,4 +1,7 @@
 import User from "../models/User.js";
+import Box from "../models/Box.js";
+import DeletedUser from "../models/DeletedUser.js";
+import DeletedBox from "../models/DeletedBox.js";
 import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
 import createSetToken from "../middlewares/createSetToken.js";
@@ -6,7 +9,6 @@ import transporter from "../config/nodemailer.js";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import Box from "../models/Box.js";
 import ShortUniqueId from "short-unique-id";
 
 const __dirname = path.resolve();
@@ -80,6 +82,13 @@ export const registerWithGoogle = async (req, res) => {
 
   // Check if the email already exists
   const userExists = await User.findOne({ email });
+
+  // // Check if user has registered with Gmail and if yes, login the user
+  // if (userExists && userExists.registeredWith.includes("Google")) {
+  //   createSetToken(res, userExists._id);
+  //   return res.status(200).json({ message: "User logged in successfully." });
+  // }
+
   if (userExists) {
     return res.status(400).json({ message: "Email already exists." });
   }
@@ -504,27 +513,62 @@ export const deleteUser = async (req, res) => {
   const { token } = req.query;
 
   // Find the user
-  const users = await User.findOne({
+  const user = await User.findOne({
     _id: req.user._id,
     emailDeleteToken: token,
     emailDeleteTokenExpiresAt: { $gt: Date.now() },
   });
 
-  if (!users) {
+  if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
 
-  // remove the media in the uploads folder
   try {
-    if (users.mediaPath) {
-      fs.unlinkSync(path.join(__dirname, users.mediaPath));
-    }
+    // Remove all media files that have the user ID as the first part of the filename
+    const mediaFiles = fs.readdirSync(
+      path.join(__dirname, process.env.UPLOADS_PATH),
+    );
+    mediaFiles.forEach((file) => {
+      const [fileUserId] = file.split("-");
+      if (fileUserId === req.user._id.toString()) {
+        const deletedPath = path.join(
+          __dirname,
+          process.env.DELETED_UPLOADS_PATH,
+          file,
+        );
+        fs.renameSync(
+          path.join(__dirname, process.env.UPLOADS_PATH, file),
+          deletedPath,
+        );
+      }
+    });
   } catch (error) {
     console.log(error);
   }
 
-  // Delete the user
-  await users.deleteOne();
+  // Move user to DeletedUser model and delete from User model
+  if (user.emailDeleteToken && user.emailDeleteTokenExpiresAt) {
+    user.emailDeleteToken = undefined;
+    user.emailDeleteTokenExpiresAt = undefined;
+  }
+  await DeletedUser.create(user.toObject());
+  await user.deleteOne();
+
+  // Move user's boxes to DeletedBox collection
+  const userBoxes = await Box.find({ user: req.user._id });
+  for (const box of userBoxes) {
+    box.items.forEach((item) => {
+      if (item.mediaPath) {
+        item.mediaPath = item.mediaPath.replace(
+          process.env.UPLOADS_PATH,
+          process.env.DELETED_UPLOADS_PATH,
+        );
+      }
+    });
+    await DeletedBox.create(box.toObject());
+    await box.deleteOne();
+  }
+
   // Clear the cookie
   res.clearCookie("JWTMERNMoveOut");
 

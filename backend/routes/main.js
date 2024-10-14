@@ -19,6 +19,7 @@ import asyncHandler from "express-async-handler";
 import validateToken from "../middlewares/validateToken.js";
 import checkAccess from "../middlewares/checkAccess.js";
 import { body } from "express-validator";
+import getMedia from "../middlewares/multer.js";
 
 const router = Router();
 
@@ -76,10 +77,7 @@ router.get("/boxes/:boxId/show", asyncHandler(showBoxById));
 router.post("/contact", asyncHandler(sendContactMessage));
 
 // Items
-router.get(
-  "/boxes/:boxId/items",
-  asyncHandler(getBoxItems),
-);
+router.get("/boxes/:boxId/items", asyncHandler(getBoxItems));
 
 router.get(
   "/boxes/:boxId/items/:itemId",
@@ -94,6 +92,7 @@ router.post(
   checkAccess("user"),
   body("description").optional().trim().isString(),
   body("mediaPath").optional().trim().isString(),
+  getMedia,
   asyncHandler(createItem),
 );
 
@@ -103,6 +102,7 @@ router.put(
   checkAccess("user"),
   body("description").optional().trim().isString(),
   body("mediaPath").optional().trim().isString(),
+  getMedia,
   asyncHandler(updateItem),
 );
 

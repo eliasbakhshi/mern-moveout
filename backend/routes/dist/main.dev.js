@@ -17,6 +17,8 @@ var _checkAccess = _interopRequireDefault(require("../middlewares/checkAccess.js
 
 var _expressValidator = require("express-validator");
 
+var _multer = _interopRequireDefault(require("../middlewares/multer.js"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 var router = (0, _express.Router)();
@@ -33,8 +35,8 @@ router.post("/contact", (0, _expressAsyncHandler["default"])(_main.sendContactMe
 
 router.get("/boxes/:boxId/items", (0, _expressAsyncHandler["default"])(_main.getBoxItems));
 router.get("/boxes/:boxId/items/:itemId", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.getBoxItem));
-router.post("/boxes/items", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("description").optional().trim().isString(), (0, _expressValidator.body)("mediaPath").optional().trim().isString(), (0, _expressAsyncHandler["default"])(_main.createItem));
-router.put("/boxes/items", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("description").optional().trim().isString(), (0, _expressValidator.body)("mediaPath").optional().trim().isString(), (0, _expressAsyncHandler["default"])(_main.updateItem));
+router.post("/boxes/items", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("description").optional().trim().isString(), (0, _expressValidator.body)("mediaPath").optional().trim().isString(), _multer["default"], (0, _expressAsyncHandler["default"])(_main.createItem));
+router.put("/boxes/items", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("description").optional().trim().isString(), (0, _expressValidator.body)("mediaPath").optional().trim().isString(), _multer["default"], (0, _expressAsyncHandler["default"])(_main.updateItem));
 router["delete"]("/boxes/items/:itemId", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.deleteItem));
 var _default = router;
 exports["default"] = _default;

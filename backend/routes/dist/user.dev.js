@@ -19,6 +19,8 @@ var _validateToken = _interopRequireDefault(require("../middlewares/validateToke
 
 var _checkAccess = _interopRequireDefault(require("../middlewares/checkAccess.js"));
 
+var _multer = _interopRequireDefault(require("../middlewares/multer.js"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 var router = (0, _express.Router)();
@@ -88,7 +90,7 @@ router.put("/users", _validateToken["default"], (0, _checkAccess["default"])("us
   }
 
   return true;
-}), (0, _expressAsyncHandler["default"])(_user.updateCurrentUser));
+}), _multer["default"], (0, _expressAsyncHandler["default"])(_user.updateCurrentUser));
 router.get("/users/current", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.getCurrentUser));
 router.get("/users/get-name-email", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.getNamesAndEmails));
 router.post("/users/share-box", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressAsyncHandler["default"])(_user.shareBox));

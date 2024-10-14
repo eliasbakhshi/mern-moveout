@@ -55,12 +55,11 @@ function Boxes() {
   const createBoxHandler = async (e) => {
     e.preventDefault();
     try {
-      const productData = new FormData();
-      productData.append("name", inputs.name);
-      productData.append("labelNum", inputs.labelNum);
-      productData.append("isPrivate", inputs.isPrivate);
-
-      const { data, error } = await createBox(productData);
+      const { data, error } = await createBox({
+        name: inputs.name,
+        labelNum: inputs.labelNum,
+        isPrivate: inputs.isPrivate,
+      });
       setInputs({
         boxId: "",
         mode: "create",
@@ -139,13 +138,12 @@ function Boxes() {
     e.preventDefault();
 
     try {
-      const productData = new FormData();
-      productData.append("boxId", inputs.boxId);
-      productData.append("name", inputs.name);
-      productData.append("labelNum", inputs.labelNum);
-      productData.append("isPrivate", inputs.isPrivate);
-
-      const { data, error } = await updateBox(productData);
+      const { data, error } = await updateBox({
+        boxId: inputs.boxId,
+        name: inputs.name,
+        labelNum: inputs.labelNum,
+        isPrivate: inputs.isPrivate,
+      });
       setInputs({
         boxId: "",
         mode: "create",
@@ -233,7 +231,7 @@ function Boxes() {
   //   }
   // };
 
-console.log(inputs)
+  console.log(inputs);
   return (
     <>
       <div className="container my-2 flex items-center px-4 xl:px-0">
@@ -249,27 +247,26 @@ console.log(inputs)
               className="flex h-full min-h-[70vw] w-full min-w-28 flex-col items-center justify-center overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:cursor-pointer hover:shadow-lg md:min-h-44 md:w-[calc(90%/3)] lg:min-h-48 lg:w-[calc(80%/3)] xl:min-h-72"
             >
               <div
-                className={`flex h-full w-full flex-grow bg-cover bg-center bg-no-repeat items-center`}
+                className={`flex h-full w-full flex-grow items-center bg-cover bg-center bg-no-repeat`}
                 onClick={(event) => navigateToAddItems(e._id, event)}
                 style={{
                   backgroundImage: `url('/img/label_${e.labelNum}.png')`,
                 }}
               >
                 <div className="flex w-[45%] flex-col items-center">
-                <p
-                  className="flex mb-10 md:mb-4 flex-wrap  text-sm text-black  "
-                  onClick={(event) => navigateToAddItems(e._id, event)}
-                >
-                  {e.name}
-                </p>
-                <QRCodeSVG
-                  value={`/api//boxes/${e._id}/items`}
-                  className="h-24 w-24  md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
-                  title={e.name}
-                  onClick={(event) => navigateToAddItems(e._id, event)}
-                />
-                  </div>
-
+                  <p
+                    className="mb-10 flex flex-wrap text-sm text-black md:mb-4"
+                    onClick={(event) => navigateToAddItems(e._id, event)}
+                  >
+                    {e.name}
+                  </p>
+                  <QRCodeSVG
+                    value={`/api//boxes/${e._id}/items`}
+                    className="h-24 w-24 md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
+                    title={e.name}
+                    onClick={(event) => navigateToAddItems(e._id, event)}
+                  />
+                </div>
               </div>
               <div className="flex w-full items-center justify-between">
                 <div
@@ -295,13 +292,16 @@ console.log(inputs)
                     data-status={e.isPrivate}
                     className="flex h-[3rem] w-[33%] items-center justify-center bg-gray-50/50 text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
                   >
-                    <FaLockOpen size="2rem" className="p-1.5 md:p-2.5 xl:p-1.5" />
+                    <FaLockOpen
+                      size="2rem"
+                      className="p-1.5 md:p-2.5 xl:p-1.5"
+                    />
                   </div>
                 )}
                 <div
                   onClick={() => showModal(e._id, "delete")}
                   data-status={e.isPrivate}
-                  className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner md:h-[2rem] l:h-[3rem]"
+                  className="l:h-[3rem] flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner md:h-[2rem]"
                 >
                   <FaTrash
                     size="2rem"

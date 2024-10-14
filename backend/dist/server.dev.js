@@ -20,11 +20,7 @@ var _admin = _interopRequireDefault(require("./routes/admin.js"));
 
 var _cors = _interopRequireDefault(require("cors"));
 
-var _multer = _interopRequireDefault(require("multer"));
-
 var _bodyParser = _interopRequireDefault(require("body-parser"));
-
-var _shortUniqueId = _interopRequireDefault(require("short-unique-id"));
 
 var _updateLastActive = _interopRequireDefault(require("./middlewares/updateLastActive.js"));
 
@@ -35,62 +31,25 @@ var _dirname = _path["default"].resolve(); // Utils
 
 
 var port = process.env.PORT || 5000;
-var app = (0, _express["default"])();
-var uid = new _shortUniqueId["default"]({
-  length: 10
-}); // Check if the img directory exists, if not, create it
+var app = (0, _express["default"])(); // Check if the img directory exists, if not, create it
 
-var uploadDir = process.env.UPLOADS_PATH || "uploads";
+var uploadsPath = _path["default"].join(_dirname, process.env.UPLOADS_PATH);
 
-var imgProducts = _path["default"].join(_dirname, process.env.UPLOADS_PATH);
+var deletedUploadsPath = _path["default"].join(_dirname, process.env.DELETED_UPLOADS_PATH);
 
-if (!_fs["default"].existsSync(imgProducts)) {
-  _fs["default"].mkdirSync(imgProducts);
+if (!_fs["default"].existsSync(uploadsPath)) {
+  _fs["default"].mkdirSync(uploadsPath);
 }
 
-app.use("/uploads", _express["default"]["static"](imgProducts)); // Multer storage configuration
+if (!_fs["default"].existsSync(deletedUploadsPath)) {
+  _fs["default"].mkdirSync(deletedUploadsPath);
+}
 
-var fileStorage = _multer["default"].diskStorage({
-  destination: function destination(req, file, cb) {
-    cb(null, imgProducts);
-  },
-  filename: function filename(req, file, cb) {
-    // TODO: Choose a file size limit with .env file
-    // const randomNum = Math.floor(Math.random() * 9000) + 1000;
-    var newName = uid.rnd() + "-" + file.originalname;
-    newName = newName.replace(/\s/g, "-");
-    cb(null, newName);
-  }
-}); // Filter the files that are allowed to be uploaded
-
-
-var fileFilter = function fileFilter(req, file, cb) {
-  var filetypes = /jpe?g|png|webp|mp3|wav/;
-  var mimeTypes = /image\/jpe?g|image\/png|image\/webp|audio\/mpeg|audio\/wav/;
-
-  var extname = _path["default"].extname(file.originalname).toLowerCase();
-
-  var mimetype = file.mimetype.toLowerCase();
-
-  if (filetypes.test(extname) && mimeTypes.test(mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Images only"), false);
-  }
-};
-
-app.set("view engine", "ejs");
+app.use("/uploads", _express["default"]["static"](uploadsPath));
+app.use("/deleted-uploads", _express["default"]["static"](deletedUploadsPath));
 app.use(_bodyParser["default"].urlencoded({
   extended: false
-})); // Multer middleware.
-
-app.use((0, _multer["default"])({
-  storage: fileStorage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: process.env.MAX_UPLOAD_SIZE
-  }
-}).single("media")); // Middlewares
+})); // Middlewares
 
 app.use(_express["default"].urlencoded({
   extended: true

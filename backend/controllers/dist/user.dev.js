@@ -7,6 +7,12 @@ exports["default"] = exports.sendDeleteEmail = exports.reactivateCurrentUser = e
 
 var _User = _interopRequireDefault(require("../models/User.js"));
 
+var _Box = _interopRequireDefault(require("../models/Box.js"));
+
+var _DeletedUser = _interopRequireDefault(require("../models/DeletedUser.js"));
+
+var _DeletedBox = _interopRequireDefault(require("../models/DeletedBox.js"));
+
 var _bcryptjs = _interopRequireDefault(require("bcryptjs"));
 
 var _expressValidator = require("express-validator");
@@ -21,11 +27,17 @@ var _fs = _interopRequireDefault(require("fs"));
 
 var _path = _interopRequireDefault(require("path"));
 
-var _Box = _interopRequireDefault(require("../models/Box.js"));
-
 var _shortUniqueId = _interopRequireDefault(require("short-unique-id"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 var _dirname = _path["default"].resolve();
 
@@ -1010,7 +1022,8 @@ var updateCurrentUser = function updateCurrentUser(req, res) {
 exports.updateCurrentUser = updateCurrentUser;
 
 var deleteUser = function deleteUser(req, res) {
-  var token, users;
+  var token, user, mediaFiles, userBoxes, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, box;
+
   return regeneratorRuntime.async(function deleteUser$(_context12) {
     while (1) {
       switch (_context12.prev = _context12.next) {
@@ -1027,9 +1040,9 @@ var deleteUser = function deleteUser(req, res) {
           }));
 
         case 3:
-          users = _context12.sent;
+          user = _context12.sent;
 
-          if (users) {
+          if (user) {
             _context12.next = 6;
             break;
           }
@@ -1039,32 +1052,122 @@ var deleteUser = function deleteUser(req, res) {
           }));
 
         case 6:
-          // remove the media in the uploads folder
           try {
-            if (users.mediaPath) {
-              _fs["default"].unlinkSync(_path["default"].join(_dirname, users.mediaPath));
-            }
+            // Remove all media files that have the user ID as the first part of the filename
+            mediaFiles = _fs["default"].readdirSync(_path["default"].join(_dirname, process.env.UPLOADS_PATH));
+            mediaFiles.forEach(function (file) {
+              var _file$split = file.split("-"),
+                  _file$split2 = _slicedToArray(_file$split, 1),
+                  fileUserId = _file$split2[0];
+
+              if (fileUserId === req.user._id.toString()) {
+                var deletedPath = _path["default"].join(_dirname, process.env.DELETED_UPLOADS_PATH, file);
+
+                _fs["default"].renameSync(_path["default"].join(_dirname, process.env.UPLOADS_PATH, file), deletedPath);
+              }
+            });
           } catch (error) {
             console.log(error);
-          } // Delete the user
+          } // Move user to DeletedUser model and delete from User model
 
 
-          _context12.next = 9;
-          return regeneratorRuntime.awrap(users.deleteOne());
+          if (user.emailDeleteToken && user.emailDeleteTokenExpiresAt) {
+            user.emailDeleteToken = undefined;
+            user.emailDeleteTokenExpiresAt = undefined;
+          }
 
-        case 9:
+          _context12.next = 10;
+          return regeneratorRuntime.awrap(_DeletedUser["default"].create(user.toObject()));
+
+        case 10:
+          _context12.next = 12;
+          return regeneratorRuntime.awrap(user.deleteOne());
+
+        case 12:
+          _context12.next = 14;
+          return regeneratorRuntime.awrap(_Box["default"].find({
+            user: req.user._id
+          }));
+
+        case 14:
+          userBoxes = _context12.sent;
+          _iteratorNormalCompletion = true;
+          _didIteratorError = false;
+          _iteratorError = undefined;
+          _context12.prev = 18;
+          _iterator = userBoxes[Symbol.iterator]();
+
+        case 20:
+          if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
+            _context12.next = 30;
+            break;
+          }
+
+          box = _step.value;
+          box.items.forEach(function (item) {
+            if (item.mediaPath) {
+              item.mediaPath = item.mediaPath.replace(process.env.UPLOADS_PATH, process.env.DELETED_UPLOADS_PATH);
+            }
+          });
+          _context12.next = 25;
+          return regeneratorRuntime.awrap(_DeletedBox["default"].create(box.toObject()));
+
+        case 25:
+          _context12.next = 27;
+          return regeneratorRuntime.awrap(box.deleteOne());
+
+        case 27:
+          _iteratorNormalCompletion = true;
+          _context12.next = 20;
+          break;
+
+        case 30:
+          _context12.next = 36;
+          break;
+
+        case 32:
+          _context12.prev = 32;
+          _context12.t0 = _context12["catch"](18);
+          _didIteratorError = true;
+          _iteratorError = _context12.t0;
+
+        case 36:
+          _context12.prev = 36;
+          _context12.prev = 37;
+
+          if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+            _iterator["return"]();
+          }
+
+        case 39:
+          _context12.prev = 39;
+
+          if (!_didIteratorError) {
+            _context12.next = 42;
+            break;
+          }
+
+          throw _iteratorError;
+
+        case 42:
+          return _context12.finish(39);
+
+        case 43:
+          return _context12.finish(36);
+
+        case 44:
           // Clear the cookie
           res.clearCookie("JWTMERNMoveOut");
           return _context12.abrupt("return", res.status(200).json({
             message: "Your account has been successfully deleted. We're sorry to see you go."
           }));
 
-        case 11:
+        case 46:
         case "end":
           return _context12.stop();
       }
     }
-  });
+  }, null, null, [[18, 32, 36, 44], [37,, 39, 43]]);
 };
 
 exports.deleteUser = deleteUser;

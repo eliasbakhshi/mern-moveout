@@ -15,7 +15,7 @@ const itemSchema = new Schema({
 }, { timestamps: true });
 
 // Define the schema for the box
-const boxSchema = new Schema({
+const deletedBoxSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -42,4 +42,4 @@ const boxSchema = new Schema({
 
 
 // Export the model
-export default model("Box", boxSchema);
+export default model("DeletedBox", deletedBoxSchema);

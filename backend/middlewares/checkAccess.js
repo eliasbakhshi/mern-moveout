@@ -20,12 +20,12 @@ const roleHierarchy = {
 };
 const checkAccess = (role) => {
     return function (req, res, next) {
-        if (req.user === undefined) {
+        if (req?.user === undefined) {
         return res.status(403).json({"Error": "You do not have access to this route"});
         }
-        if (req.user.role === "admin") {
+        if (req?.user?.role === "admin") {
             return next();
-        } else if (roleHierarchy[req.user.role] < roleHierarchy[role]) {
+        } else if (roleHierarchy[req?.user?.role] < roleHierarchy[role]) {
             return res.status(403).json({"Error": "You do not have access to this route"});
         }
         return next();
@@ -33,3 +33,4 @@ const checkAccess = (role) => {
 };
 
 export default checkAccess;
+
