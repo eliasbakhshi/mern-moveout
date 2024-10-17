@@ -24,7 +24,7 @@ var _multer = _interopRequireDefault(require("../middlewares/multer.js"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 var router = (0, _express.Router)();
-router.post("/register", (0, _expressValidator.body)("email").isEmail().withMessage("The email is not correct.").custom(function (value) {
+router.post("/register", (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not correct.").custom(function (value) {
   return _User["default"].findOne({
     email: value
   }).then(function (user) {
@@ -75,7 +75,7 @@ router.put("/reset-password", (0, _expressValidator.body)("password", "The passw
 
   return true;
 }), (0, _expressAsyncHandler["default"])(_user.updateUserPasswordById));
-router.put("/users", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("email").isEmail().withMessage("The email is not correct."), (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").optional({
+router.put("/users", _validateToken["default"], (0, _checkAccess["default"])("user"), _multer["default"], (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not correct."), (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").optional({
   checkFalsy: true
 }).isLength({
   min: 6,
@@ -90,7 +90,7 @@ router.put("/users", _validateToken["default"], (0, _checkAccess["default"])("us
   }
 
   return true;
-}), _multer["default"], (0, _expressAsyncHandler["default"])(_user.updateCurrentUser));
+}), (0, _expressAsyncHandler["default"])(_user.updateCurrentUser));
 router.get("/users/current", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.getCurrentUser));
 router.get("/users/get-name-email", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.getNamesAndEmails));
 router.post("/users/share-box", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressAsyncHandler["default"])(_user.shareBox));

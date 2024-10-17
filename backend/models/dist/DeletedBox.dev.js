@@ -46,7 +46,11 @@ var deletedBoxSchema = new _mongoose.Schema({
     type: Number,
     required: false
   },
-  items: [itemSchema]
+  items: [itemSchema],
+  deletedAt: {
+    type: Date,
+    "default": Date.now
+  }
 }, {
   timestamps: true
 }); // Export the model

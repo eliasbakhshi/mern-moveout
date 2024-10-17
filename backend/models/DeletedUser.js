@@ -62,6 +62,10 @@ const deletedUserSchema = new Schema(
     resetPasswordTokenExpiresAt: {
       type: String,
     },
+    deletedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true },
 );

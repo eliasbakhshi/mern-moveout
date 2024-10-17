@@ -7,18 +7,6 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
 function App() {
-
-  const { pathname } = useLocation();
-
-
-const location = useLocation();
-
-console.log("Current URL:", location.pathname);
-console.log("Current URL 2 :", pathname);
-
-// useEffect(() => {
-//   console.log("Current URL:", location.pathname);
-// }, [location]);
   return (
     <>
       <ToastContainer />

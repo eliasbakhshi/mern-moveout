@@ -90,9 +90,9 @@ router.post(
   "/boxes/items",
   validateToken,
   checkAccess("user"),
+  getMedia,
   body("description").optional().trim().isString(),
   body("mediaPath").optional().trim().isString(),
-  getMedia,
   asyncHandler(createItem),
 );
 
@@ -100,9 +100,9 @@ router.put(
   "/boxes/items",
   validateToken,
   checkAccess("user"),
+  getMedia,
   body("description").optional().trim().isString(),
   body("mediaPath").optional().trim().isString(),
-  getMedia,
   asyncHandler(updateItem),
 );
 

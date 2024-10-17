@@ -1076,98 +1076,100 @@ var deleteUser = function deleteUser(req, res) {
             user.emailDeleteTokenExpiresAt = undefined;
           }
 
-          _context12.next = 10;
+          user.deletedAt = Date.now();
+          _context12.next = 11;
           return regeneratorRuntime.awrap(_DeletedUser["default"].create(user.toObject()));
 
-        case 10:
-          _context12.next = 12;
+        case 11:
+          _context12.next = 13;
           return regeneratorRuntime.awrap(user.deleteOne());
 
-        case 12:
-          _context12.next = 14;
+        case 13:
+          _context12.next = 15;
           return regeneratorRuntime.awrap(_Box["default"].find({
             user: req.user._id
           }));
 
-        case 14:
+        case 15:
           userBoxes = _context12.sent;
           _iteratorNormalCompletion = true;
           _didIteratorError = false;
           _iteratorError = undefined;
-          _context12.prev = 18;
+          _context12.prev = 19;
           _iterator = userBoxes[Symbol.iterator]();
 
-        case 20:
+        case 21:
           if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-            _context12.next = 30;
+            _context12.next = 32;
             break;
           }
 
           box = _step.value;
+          box.deletedAt = Date.now();
           box.items.forEach(function (item) {
             if (item.mediaPath) {
               item.mediaPath = item.mediaPath.replace(process.env.UPLOADS_PATH, process.env.DELETED_UPLOADS_PATH);
             }
           });
-          _context12.next = 25;
+          _context12.next = 27;
           return regeneratorRuntime.awrap(_DeletedBox["default"].create(box.toObject()));
 
-        case 25:
-          _context12.next = 27;
+        case 27:
+          _context12.next = 29;
           return regeneratorRuntime.awrap(box.deleteOne());
 
-        case 27:
+        case 29:
           _iteratorNormalCompletion = true;
-          _context12.next = 20;
-          break;
-
-        case 30:
-          _context12.next = 36;
+          _context12.next = 21;
           break;
 
         case 32:
-          _context12.prev = 32;
-          _context12.t0 = _context12["catch"](18);
+          _context12.next = 38;
+          break;
+
+        case 34:
+          _context12.prev = 34;
+          _context12.t0 = _context12["catch"](19);
           _didIteratorError = true;
           _iteratorError = _context12.t0;
 
-        case 36:
-          _context12.prev = 36;
-          _context12.prev = 37;
+        case 38:
+          _context12.prev = 38;
+          _context12.prev = 39;
 
           if (!_iteratorNormalCompletion && _iterator["return"] != null) {
             _iterator["return"]();
           }
 
-        case 39:
-          _context12.prev = 39;
+        case 41:
+          _context12.prev = 41;
 
           if (!_didIteratorError) {
-            _context12.next = 42;
+            _context12.next = 44;
             break;
           }
 
           throw _iteratorError;
 
-        case 42:
-          return _context12.finish(39);
-
-        case 43:
-          return _context12.finish(36);
-
         case 44:
+          return _context12.finish(41);
+
+        case 45:
+          return _context12.finish(38);
+
+        case 46:
           // Clear the cookie
           res.clearCookie("JWTMERNMoveOut");
           return _context12.abrupt("return", res.status(200).json({
             message: "Your account has been successfully deleted. We're sorry to see you go."
           }));
 
-        case 46:
+        case 48:
         case "end":
           return _context12.stop();
       }
     }
-  }, null, null, [[18, 32, 36, 44], [37,, 39, 43]]);
+  }, null, null, [[19, 34, 38, 46], [39,, 41, 45]]);
 };
 
 exports.deleteUser = deleteUser;
@@ -1463,7 +1465,13 @@ var shareLabel = function shareLabel(req, res) {
           emailTemplate = emailTemplate.replace(/(\*\*name_from\*\*)/g, req.user.name);
           emailTemplate = emailTemplate.replace(/(\*\*name_to\*\*)/g, user.name);
           emailTemplate = emailTemplate.replace(/(\*\*shared_object\*\*)/g, "label");
-          emailTemplate = emailTemplate.replace(/(\*\*privateCode\*\*)/g, "<p>The private code is: <strong>".concat(label.privateCode, "</strong></p> "));
+
+          if (label.isPrivate) {
+            emailTemplate = emailTemplate.replace(/(\*\*privateCode\*\*)/g, "<p>The private code is: <strong>".concat(label.privateCode, "</strong></p> "));
+          } else {
+            emailTemplate = emailTemplate.replace(/(\*\*privateCode\*\*)/g, "");
+          }
+
           _context15.prev = 25;
           _context15.next = 28;
           return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({

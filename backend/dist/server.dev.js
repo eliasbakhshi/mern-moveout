@@ -26,12 +26,13 @@ var _updateLastActive = _interopRequireDefault(require("./middlewares/updateLast
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-// Create __dirname equivalent
-var _dirname = _path["default"].resolve(); // Utils
-
-
+// Utils
 var port = process.env.PORT || 5000;
-var app = (0, _express["default"])(); // Check if the img directory exists, if not, create it
+
+var _dirname = _path["default"].resolve();
+
+var app = (0, _express["default"])(); // Configure Multer to use memory storage
+// Check if the img directories exists, if not, create it
 
 var uploadsPath = _path["default"].join(_dirname, process.env.UPLOADS_PATH);
 

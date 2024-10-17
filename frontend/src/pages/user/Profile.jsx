@@ -127,6 +127,7 @@ function Profile() {
       return toast.error("Passwords do not match");
     }
     try {
+      console.log("user", user);
       const productData = new FormData();
       productData.append("name", user.name);
       productData.append("email", user.email);

@@ -20,7 +20,7 @@ function DeleteAccount() {
       localStorage.removeItem("userInfo");
       localStorage.removeItem("expirationTime");
     }
-  }, [data, error, dispatch]);
+  }, [data, error]);
 
 
   return isLoading ? (

@@ -551,12 +551,14 @@ export const deleteUser = async (req, res) => {
     user.emailDeleteToken = undefined;
     user.emailDeleteTokenExpiresAt = undefined;
   }
+  user.deletedAt = Date.now();
   await DeletedUser.create(user.toObject());
   await user.deleteOne();
 
   // Move user's boxes to DeletedBox collection
   const userBoxes = await Box.find({ user: req.user._id });
   for (const box of userBoxes) {
+    box.deletedAt = Date.now();
     box.items.forEach((item) => {
       if (item.mediaPath) {
         item.mediaPath = item.mediaPath.replace(
@@ -718,10 +720,14 @@ export const shareLabel = async (req, res) => {
   emailTemplate = emailTemplate.replace(/(\*\*name_from\*\*)/g, req.user.name);
   emailTemplate = emailTemplate.replace(/(\*\*name_to\*\*)/g, user.name);
   emailTemplate = emailTemplate.replace(/(\*\*shared_object\*\*)/g, "label");
-  emailTemplate = emailTemplate.replace(
-    /(\*\*privateCode\*\*)/g,
-    `<p>The private code is: <strong>${label.privateCode}</strong></p> `,
-  );
+  if (label.isPrivate) {
+    emailTemplate = emailTemplate.replace(
+      /(\*\*privateCode\*\*)/g,
+      `<p>The private code is: <strong>${label.privateCode}</strong></p> `,
+    );
+  } else {
+    emailTemplate = emailTemplate.replace(/(\*\*privateCode\*\*)/g, ``);
+  }
 
   try {
     // Send the email

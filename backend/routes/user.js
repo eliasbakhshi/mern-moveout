@@ -32,6 +32,7 @@ const router = Router();
 router.post(
   "/register",
   body("email")
+    .trim()
     .isEmail()
     .withMessage("The email is not correct.")
     .custom((value) => {
@@ -127,7 +128,8 @@ router.put(
   "/users",
   validateToken,
   checkAccess("user"),
-  body("email").isEmail().withMessage("The email is not correct."),
+  getMedia,
+  body("email").trim().isEmail().withMessage("The email is not correct."),
   body(
     "password",
     "The password must be alphanumeric and at least 6 characters long.",
@@ -143,7 +145,6 @@ router.put(
       }
       return true;
     }),
-  getMedia,
   asyncHandler(updateCurrentUser),
 );
 

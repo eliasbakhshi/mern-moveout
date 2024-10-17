@@ -4,7 +4,7 @@ import Loading from "../../components/Loading";
 import Label from "../../components/Label";
 import Button from "../../components/Button";
 import Overlay from "../../components/Overlay";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   useGetUsersEmailAndNameQuery,
   useShareLabelMutation,
@@ -13,10 +13,10 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
-
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 function Labels() {
-
   const { userInfo } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
@@ -27,9 +27,8 @@ function Labels() {
     }
   }, [navigate, userInfo]);
 
-
-
   const { labelId } = useParams();
+  const pdfRef = useRef(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isShowingUsers, setIsShowingUsers] = useState(false);
 
@@ -70,13 +69,29 @@ function Labels() {
         setIsShowingUsers(false);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
     }
   };
+
+  const generatePdf = () => {
+    const input = pdfRef.current;
+    if (!input) {
+      console.error("Invalid element provided as first argument");
+      return;
+    }
+    html2canvas(input, { scale: 1 }).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      console.log(canvas);
+      const pdf = new jsPDF("l", "px", [250,150]);
+      pdf.addImage(imgData, "PNG", 0, 0, 250,150);
+      pdf.save("download.pdf");
+    });
+  };
+
   return labelLoading ? (
     <Loading />
   ) : (
@@ -86,9 +101,14 @@ function Labels() {
           <Button extraClasses="mr-5" onClick={showUsers}>
             Share Label
           </Button>
+          <Button extraClasses="mr-5" onClick={generatePdf}>
+            Print Label
+          </Button>
         </div>
-        <div className="flex w-full flex-grow items-center justify-center">
-          <Label label={label} />
+        <div
+          className="flex h-full w-full flex-grow items-center justify-center "
+        >
+        <Label label={label} extraClasses={"w-96"}  ref={pdfRef}/>
         </div>
       </div>
       {/* Show the popup for sharing the label with users. */}

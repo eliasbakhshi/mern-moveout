@@ -65,6 +65,10 @@ var deletedUserSchema = new _mongoose.Schema({
   },
   resetPasswordTokenExpiresAt: {
     type: String
+  },
+  deletedAt: {
+    type: Date,
+    "default": Date.now
   }
 }, {
   timestamps: true

@@ -12,16 +12,18 @@ import "./utils/env.js";
 import bodyParser from "body-parser";
 import updateLastActive from "./middlewares/updateLastActive.js";
 
-// Create __dirname equivalent
-const __dirname = path.resolve();
-
 // Utils
 const port = process.env.PORT || 5000;
+const __dirname = path.resolve();
 const app = express();
+// Configure Multer to use memory storage
 
-// Check if the img directory exists, if not, create it
+// Check if the img directories exists, if not, create it
 const uploadsPath = path.join(__dirname, process.env.UPLOADS_PATH);
-const deletedUploadsPath = path.join(__dirname, process.env.DELETED_UPLOADS_PATH);
+const deletedUploadsPath = path.join(
+  __dirname,
+  process.env.DELETED_UPLOADS_PATH,
+);
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath);
 }
