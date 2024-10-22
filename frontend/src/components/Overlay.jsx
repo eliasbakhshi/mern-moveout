@@ -22,7 +22,7 @@ function Overlay({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600/50"
       onClick={hideOverlay}
     >
       <form
@@ -32,7 +32,7 @@ function Overlay({
       >
         <div
           id="header"
-          className="container left-0 top-0 flex w-full justify-between bg-gray-100 p-2"
+          className="container left-0 top-0 flex w-full justify-between bg-blue-100 p-2"
         >
           <h2 className="text-lg font-semibold">{title}</h2>
           <button

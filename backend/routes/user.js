@@ -9,9 +9,15 @@ import {
   verifyEmail,
   sendVerificationEmail,
   sendResetPasswordEmail,
+  getUsers,
+  getDeletedUsers,
   getCurrentUser,
   updateCurrentUser,
+  deleteCurrentUser,
+  createUser,
+  editUser,
   deleteUser,
+  changeUserStatus,
   verifyTokenResetPassword,
   updateUserPasswordById,
   getNamesAndEmails,
@@ -124,8 +130,22 @@ router.put(
   asyncHandler(updateUserPasswordById),
 );
 
-router.put(
+router.get(
   "/users",
+  validateToken,
+  checkAccess("admin"),
+  asyncHandler(getUsers),
+);
+
+router.get(
+  "/users/deleted",
+  validateToken,
+  checkAccess("admin"),
+  asyncHandler(getDeletedUsers),
+);
+
+router.put(
+  "/users/current",
   validateToken,
   checkAccess("user"),
   getMedia,
@@ -200,10 +220,42 @@ router.put(
 );
 
 router.delete(
-  "/users/delete",
+  "/users/current",
   validateToken,
   checkAccess("user"),
+  asyncHandler(deleteCurrentUser),
+);
+
+router.post(
+  "/users",
+  validateToken,
+  checkAccess("admin"),
+  body("name").trim().isString().withMessage("The name is not valid."),
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(createUser),
+);
+
+router.put(
+  "/users",
+  validateToken,
+  checkAccess("admin"),
+  body("name").trim().isString().withMessage("The name is not valid."),
+  body("email").trim().isEmail().withMessage("The email is not valid."),
+  asyncHandler(editUser),
+);
+
+router.delete(
+  "/users",
+  validateToken,
+  checkAccess("admin"),
   asyncHandler(deleteUser),
+);
+
+router.put(
+  "/users/status",
+  validateToken,
+  checkAccess("admin"),
+  asyncHandler(changeUserStatus),
 );
 
 export default router;

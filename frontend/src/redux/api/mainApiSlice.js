@@ -6,31 +6,31 @@ export const mainApi = apiSlice.injectEndpoints({
       query: () => ({
         url: "/api/boxes/",
         method: "GET",
-        providesTags: ["Box"],
       }),
+      providesTags: ["Box"],
     }),
     getBox: builder.query({
       query: (boxId) => ({
         url: "/api/boxes/" + boxId,
         method: "GET",
-        providesTags: ["Box"],
       }),
+      providesTags: (result, error, boxId) => [{ type: "Box", id: boxId }],
     }),
     createBox: builder.mutation({
       query: (info) => ({
         url: "/api/boxes",
         method: "POST",
         body: info,
-        invalidatesTags: ["Box"],
       }),
+      invalidatesTags: ["Box"],
     }),
     updateBox: builder.mutation({
       query: (info) => ({
         url: "/api/boxes",
         method: "PUT",
         body: info,
-        invalidatesTags: ["Box"],
       }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Box", id }],
     }),
     deleteBox: builder.mutation({
       query: (id) => ({
@@ -38,14 +38,15 @@ export const mainApi = apiSlice.injectEndpoints({
         method: "DELETE",
         invalidatesTags: ["Box"],
       }),
+      invalidatesTags: (result, error, id) => [{ type: "Box", id }],
     }),
     changeBoxStatus: builder.mutation({
       query: (info) => ({
         url: "/api/boxes/status",
         body: info,
         method: "PUT",
-        invalidatesTags: ["Box"],
       }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Box", id }],
     }),
 
     // public stuff
@@ -53,8 +54,8 @@ export const mainApi = apiSlice.injectEndpoints({
       query: (boxId) => ({
         url: "/api/boxes/" + boxId + "/show",
         method: "GET",
-        providesTags: ["Box"],
       }),
+      providesTags: (result, error, boxId) => [{ type: "Box", id: boxId }],
     }),
     sendContactMessage: builder.mutation({
       query: (info) => ({
@@ -70,38 +71,38 @@ export const mainApi = apiSlice.injectEndpoints({
         url: `/api/boxes/${boxId}/items/`,
         method: "GET",
         params: { privateCode },
-        providesTags: ["Box"],
       }),
+      providesTags: ["Box"],
     }),
     getItem: builder.query({
       query: (itemId) => ({
         url: `/api/boxes/${boxId}/items/${itemId}`,
         method: "GET",
-        providesTags: ["Box"],
       }),
+      providesTags: ["Box"],
     }),
     createItem: builder.mutation({
       query: (info) => ({
         url: "/api/boxes/items",
         method: "POST",
         body: info,
-        invalidatesTags: ["Box"],
       }),
+      invalidatesTags: ["Box"],
     }),
     updateItem: builder.mutation({
       query: (info) => ({
         url: "/api/boxes/items",
         method: "PUT",
         body: info,
-        invalidatesTags: ["Box"],
       }),
+      invalidatesTags: ["Box"],
     }),
     deleteItem: builder.mutation({
       query: (id) => ({
         url: "/api/boxes/items/" + id,
         method: "DELETE",
-        invalidatesTags: ["Box"],
       }),
+      invalidatesTags: ["Box"],
     }),
   }),
 });

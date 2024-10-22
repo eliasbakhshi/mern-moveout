@@ -85,8 +85,9 @@ function ResetPassword() {
         ) : // if the token is provided in the URL
         error ? (
           // show the error message when the token is invalid
+          // TODO: backgroundImage is not covering the whole screen
           <>
-            <div className="flex w-full flex-grow items-center justify-center bg-[url('/img/login-bg.jpg')]">
+            <div className="flex w-full flex-grow items-center justify-center bg-cover bg-center bg-no-repeat bg-[url('/img/login-bg.jpg')]">
               <MessageBox
                 title="Error Resetting Password"
                 message={

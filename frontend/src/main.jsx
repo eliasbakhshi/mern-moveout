@@ -15,7 +15,7 @@ import Items from "./pages/user/Items.jsx";
 import Boxes from "./pages/user/Boxes.jsx";
 import Labels from "./pages/user/Labels.jsx";
 import AdminRoutes from "./pages/admin/AdminRoutes";
-import UserList from "./pages/admin/UserList.jsx";
+import Users from "./pages/admin/Users.jsx";
 import Error404 from "./pages/Error404.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 import SendVerificationEmail from "./pages/auth/sendVerificationEmail.jsx";
@@ -24,6 +24,7 @@ import Contact from "./pages/Contact.jsx";
 import BoxDetails from "./pages/BoxDetails.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import DeleteAccount from "./pages/user/DeleteAccount.jsx";
+import Dashboard from "./pages/admin/Dashboard.jsx";
 
 
 // TODO: Add a loading page then user is navigating between pages
@@ -37,7 +38,7 @@ import DeleteAccount from "./pages/user/DeleteAccount.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<App />}>
+    <Route path="" element={<App />}>
       <Route index element={<Home />} />
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />
@@ -60,8 +61,9 @@ const router = createBrowserRouter(
         <Route path="labels/:labelId" element={<Labels />} />
       </Route>
 
-      <Route path="/admin" element={<AdminRoutes />}>
-        <Route path="users" element={<UserList />} />
+      <Route path="admin" element={<AdminRoutes />}>
+        <Route path="" element={<Users />} />
+        <Route path="users" element={<Users />} />
       </Route>
 
       <Route path="*" element={<Error404 />} />

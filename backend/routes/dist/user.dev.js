@@ -75,7 +75,9 @@ router.put("/reset-password", (0, _expressValidator.body)("password", "The passw
 
   return true;
 }), (0, _expressAsyncHandler["default"])(_user.updateUserPasswordById));
-router.put("/users", _validateToken["default"], (0, _checkAccess["default"])("user"), _multer["default"], (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not correct."), (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").optional({
+router.get("/users", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.getUsers));
+router.get("/users/deleted", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.getDeletedUsers));
+router.put("/users/current", _validateToken["default"], (0, _checkAccess["default"])("user"), _multer["default"], (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not correct."), (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").optional({
   checkFalsy: true
 }).isLength({
   min: 6,
@@ -98,7 +100,11 @@ router.post("/users/share-label", _validateToken["default"], (0, _checkAccess["d
 router.put("/users/deactivate-current", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.deactivateCurrentUser));
 router.put("/users/reactivate-current", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.reactivateCurrentUser));
 router.put("/users/send-delete-email", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.sendDeleteEmail));
-router["delete"]("/users/delete", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.deleteUser));
+router["delete"]("/users/current", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_user.deleteCurrentUser));
+router.post("/users", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressValidator.body)("name").trim().isString().withMessage("The name is not valid."), (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressAsyncHandler["default"])(_user.createUser));
+router.put("/users", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressValidator.body)("name").trim().isString().withMessage("The name is not valid."), (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressAsyncHandler["default"])(_user.editUser));
+router["delete"]("/users", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.deleteUser));
+router.put("/users/status", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.changeUserStatus));
 var _default = router; // TODO: redirect to verification page after the token was expired or changed or invalid
 // TODO: Implement reset password
 

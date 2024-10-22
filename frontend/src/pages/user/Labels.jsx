@@ -15,6 +15,9 @@ import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import LabelInsurance from "../../components/LabelInsurance";
+
+// TODO: information should be updated when any changes happens in the label especially the privateCode
 
 function Labels() {
   const { userInfo } = useSelector((state) => state.auth);
@@ -83,12 +86,11 @@ function Labels() {
       console.error("Invalid element provided as first argument");
       return;
     }
-    html2canvas(input, { scale: 1 }).then((canvas) => {
+    html2canvas(input, { scale: 5, backgroundColor: null }).then((canvas) => {
       const imgData = canvas.toDataURL("image/png");
-      console.log(canvas);
-      const pdf = new jsPDF("l", "px", [250,150]);
-      pdf.addImage(imgData, "PNG", 0, 0, 250,150);
-      pdf.save("download.pdf");
+      const pdf = new jsPDF("l", "px", [250, 150]);
+      pdf.addImage(imgData, "PNG", 0, 0, 250, 150);
+      pdf.save(`${label.name}-label.pdf`);
     });
   };
 
@@ -96,19 +98,22 @@ function Labels() {
     <Loading />
   ) : (
     <>
-      <div className="flex h-full w-full flex-grow flex-col items-center justify-center bg-[url('/img/login-bg.jpg')]">
+      <div className="flex h-full w-full flex-grow flex-col items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-no-repeat">
         <div className="container my-5 flex w-full flex-col items-start gap-y-4 px-2 md:flex-row md:items-center md:px-4 xl:px-0">
           <Button extraClasses="mr-5" onClick={showUsers}>
             Share Label
           </Button>
           <Button extraClasses="mr-5" onClick={generatePdf}>
-            Print Label
+            Download Label
           </Button>
         </div>
-        <div
-          className="flex h-full w-full flex-grow items-center justify-center "
-        >
-        <Label label={label} extraClasses={"w-96"}  ref={pdfRef}/>
+        <div className="flex h-full w-full flex-grow items-center justify-center">
+          {label.type === "standard" && (
+            <Label label={label} ref={pdfRef} extraClasses={"w-96"} />
+          )}
+          {label.type === "insurance" && (
+            <LabelInsurance label={label} ref={pdfRef} extraClasses={"w-96"} />
+          )}
         </div>
       </div>
       {/* Show the popup for sharing the label with users. */}

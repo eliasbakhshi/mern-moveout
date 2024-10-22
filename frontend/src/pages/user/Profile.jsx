@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 // TODO: Get the current expirationTime and set it again
 // TODO: Send a notification when the user change the email
 // TODO: Changes saves but no toast shown in the first click on the save button.
+// TODO: Everything updates with id ?
 
 function Profile() {
   const { userInfo } = useSelector((state) => state.auth);

@@ -20,7 +20,8 @@ import { useSelector } from "react-redux";
 import ItemList from "../../components/ItemList";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-
+import ItemListInsurance from "../../components/ItemListInsurance";
+import Input from "../../components/Input";
 
 // TODO: Add sort by type or name or date
 // TODO: Make a filter for the media type
@@ -47,11 +48,14 @@ function Items() {
   const [inputs, setInputs] = useState({
     itemId: "",
     description: "",
+    value: "",
     media: "",
     boxId,
     mode: "",
     mediaPath: "",
   });
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [isShowingUsers, setIsShowingUsers] = useState(false);
 
   // TODO: check the responsiveness of the page
 
@@ -62,13 +66,10 @@ function Items() {
   const {
     data: box,
     isLoading: boxLoading,
-    refetch: refetchBox,
+    // refetch: refetchBox,
     error: boxError,
   } = useGetBoxQuery(boxId);
   const { data: emailsAndNames } = useGetUsersEmailAndNameQuery();
-
-  const [isOpenModal, setIsOpenModal] = useState(false);
-  const [isShowingUsers, setIsShowingUsers] = useState(false);
 
   useEffect(() => {
     // Redirect to profile page if the user is inactivated.
@@ -93,6 +94,8 @@ function Items() {
       return;
     }
 
+    console.log("media", media);
+
     setImage(URL.createObjectURL(media));
     setInputs({ ...inputs, media });
   };
@@ -108,8 +111,11 @@ function Items() {
 
   const createItemHandler = async (e) => {
     e.preventDefault();
-
-    if (inputs.description === "" && inputs.media === "") {
+    if (
+      inputs.description === "" &&
+      inputs.media === "" &&
+      box.type === "standard"
+    ) {
       return toast.error("Please give a description or upload a file.");
     }
 
@@ -118,24 +124,26 @@ function Items() {
       productData.append("boxId", inputs.boxId);
       productData.append("description", inputs.description);
       productData.append("media", inputs.media);
+      productData.append("value", inputs.value);
+      productData.append("type", box.type);
 
       const { data, error } = await createItem(productData);
 
-      setImage("");
-      refetchBox();
-      setInputs({
-        itemId: "",
-        description: "",
-        media: "",
-        boxId,
-        mode: "",
-        mediaPath: "",
-      });
-      setIsOpenModal(false);
-      e.target.reset();
       if (error) {
         toast.error(error.data.message);
       } else {
+        setImage("");
+        setInputs({
+          itemId: "",
+          description: "",
+          value: "",
+          media: "",
+          boxId,
+          mode: "",
+          mediaPath: "",
+        });
+        setIsOpenModal(false);
+        e.target.reset();
         toast.success(data.message);
       }
     } catch (err) {
@@ -156,37 +164,8 @@ function Items() {
         err?.message || "An error occurred. Please contact the administration.",
       );
     }
-    refetchBox();
+    // refetchBox();
     setIsOpenModal(false);
-  };
-
-  const showModal = (itemId = "", mode = "create") => {
-    if (mode === "edit") {
-      // Find the box information for editing
-      const item = box?.items.find((item) => item._id === itemId);
-      setInputs({
-        ...inputs,
-        description: item.description,
-        mode,
-        itemId,
-        boxId,
-        mediaPath: item.mediaPath,
-      });
-      item.mediaPath ? setImage(`/api/${item.mediaPath}`) : setImage("");
-    } else if (mode === "create") {
-      setInputs({
-        itemId: "",
-        description: "",
-        media: "",
-        boxId,
-        mode,
-        mediaPath: "",
-      });
-      setImage("");
-    } else if (mode === "delete") {
-      setInputs({ ...inputs, itemId, mode });
-    }
-    setIsOpenModal(true);
   };
 
   const editItemHandler = async (e) => {
@@ -195,7 +174,8 @@ function Items() {
     if (
       inputs.description === "" &&
       (inputs.media === undefined || inputs.media === "") &&
-      (inputs.mediaPath === undefined || inputs.mediaPath === "")
+      (inputs.mediaPath === undefined || inputs.mediaPath === "") &&
+      box.type === "standard"
     ) {
       return toast.error("Please give a description or upload a file.");
     }
@@ -206,31 +186,64 @@ function Items() {
     productData.append("description", inputs.description);
     productData.append("media", inputs.media);
     productData.append("mediaPath", inputs.mediaPath);
+    productData.append("value", inputs.value);
+    productData.append("type", box.type);
 
     try {
       const { data, error } = await updateItem(productData);
       if (error) {
         toast.error(error.data.message);
       } else {
+        setInputs({
+          itemId: "",
+          description: "",
+          value: "",
+          mode: "",
+          name: "",
+          labelNum: 1,
+          mediaPath: "",
+        });
+        e.target.reset();
+        // refetchBox();
+        setIsOpenModal(false);
         toast.success(data.message);
       }
-
-      setInputs({
-        itemId: "",
-        mode: "",
-        name: "",
-        labelNum: 1,
-        mediaPath: "",
-      });
-      e.target.reset();
-      refetchBox();
-      setIsOpenModal(false);
     } catch (err) {
       toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
     }
+  };
+
+  const showModal = (itemId = "", mode = "create") => {
+    if (mode === "create") {
+      setInputs({
+        itemId: "",
+        description: "",
+        media: "",
+        boxId,
+        mode,
+        mediaPath: "",
+      });
+      setImage("");
+    } else if (mode === "edit") {
+      // Find the box information for editing
+      const item = box?.items.find((item) => item._id === itemId);
+      setInputs({
+        ...inputs,
+        description: item.description,
+        mode,
+        itemId,
+        boxId,
+        mediaPath: item.mediaPath,
+        value: item.value,
+      });
+      item.mediaPath ? setImage(`/api/${item.mediaPath}`) : setImage("");
+    } else if (mode === "delete") {
+      setInputs({ ...inputs, itemId, mode });
+    }
+    setIsOpenModal(true);
   };
 
   const showUsers = () => {
@@ -269,6 +282,11 @@ function Items() {
     }
   };
 
+  // console.log("box", box);
+  // console.log("inputs", inputs);
+
+  const filteredItems = box?.items.filter((item) => !item.deletedAt);
+
   return boxLoading ? (
     <Loading />
   ) : box?.items ? (
@@ -287,7 +305,12 @@ function Items() {
         </div>
       )}
       {/* Show the list of the items */}
-      <ItemList items={box.items} showModal={showModal} />
+      {box.type === "standard" && (
+        <ItemList items={filteredItems} showModal={showModal} />
+      )}
+      {box.type === "insurance" && (
+        <ItemListInsurance items={filteredItems} showModal={showModal} />
+      )}
 
       {/* Show the popup for sharing the label with users. */}
       {isShowingUsers && (
@@ -332,60 +355,87 @@ function Items() {
           isOpen={isOpenModal}
           onClose={onCloseOverlay}
           setIsOpen={setIsOpenModal}
-          extraClasses={"w-full h-[95vh] md:h-auto"}
+          extraClasses={"w-full h-[95vh] h-auto"}
           title="Add Item"
           submitText="Create"
           cancelText="Cancel"
           onSubmit={createItemHandler}
         >
           <div className="container flex w-full flex-col gap-10 py-3 md:flex-row xl:px-0">
-            <div
-              className={`group relative h-96 w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
-              style={{ backgroundImage: `url(${image})` }}
-            >
-              <label
-                htmlFor="media"
-                className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
-              >
-                <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                  <div className="flex flex-row items-center justify-center gap-5">
-                    <FaDownload size="2rem" className="mb-3" />
+            {box.type === "standard" && (
+              <>
+                <div
+                  className={`group relative h-96 w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
+                  style={{ backgroundImage: `url(${image})` }}
+                >
+                  <label
+                    htmlFor="media"
+                    className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
+                  >
+                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                      <div className="flex flex-row items-center justify-center gap-5">
+                        <FaDownload size="2rem" className="mb-3" />
+                      </div>
+                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop 2
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        PNG, JPG, JPEG, WEBP, MP3 (MAX. 2 MB)
+                      </p>
+                    </div>
+                    <input
+                      id="media"
+                      name="media"
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,.mp3"
+                      className="hidden"
+                      onInput={fileChangeHandler}
+                      onClick={(e) => {
+                        e.value = null;
+                        return false;
+                      }}
+                      value=""
+                    />
+                  </label>
+                  <div
+                    className="absolute bottom-0 flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:bottom-auto lg:group-hover:-translate-y-full"
+                    onClick={deletePreview}
+                  >
+                    <FaTrash size="2rem" />
                   </div>
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-semibold">Click to upload</span> or
-                    drag and drop 2
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    PNG, JPG, JPEG, WEBP, MP3 (MAX. 2 MB)
-                  </p>
                 </div>
-                <input
-                  id="media"
-                  name="media"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp,.mp3"
-                  className="hidden"
-                  onInput={fileChangeHandler}
-                  onClick={(e) => {
-                    e.value = null;
-                    return false;
-                  }}
-                  value=""
+                <textarea
+                  name="description"
+                  onInput={changeHandler}
+                  className="h-full w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
+                  value={inputs.description}
+                ></textarea>
+              </>
+            )}
+            {box.type === "insurance" && (
+              <>
+                <Input
+                  name="description"
+                  onInput={changeHandler}
+                  value={inputs.description}
+                  extraClasses="mt-4 md:mt-0"
                 />
-              </label>
-              <div
-                className="absolute bottom-0 flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:bottom-auto lg:group-hover:-translate-y-full"
-                onClick={deletePreview}
-              >
-                <FaTrash size="2rem" />
-              </div>
-            </div>
-            <textarea
-              name="description"
-              onInput={changeHandler}
-              className="h-full w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
-              value={inputs.description}
-            ></textarea>
+                <Input
+                  name="value"
+                  type="number"
+                  step="0.01"
+                  onInput={changeHandler}
+                  onKeyDown={(e) => {
+                    if (e.key === "e" || e.key === "E") {
+                      e.preventDefault();
+                    }
+                  }}
+                  extraClasses=""
+                  value={inputs.value}
+                />
+              </>
+            )}
           </div>
         </Overlay>
       )}
@@ -395,58 +445,84 @@ function Items() {
           isOpen={isOpenModal}
           onClose={onCloseOverlay}
           setIsOpen={setIsOpenModal}
-          extraClasses={"w-full h-[95vh] md:h-auto"}
+          extraClasses={"w-full h-[95vh] h-auto"}
           title="Edit Item"
           submitText="Edit"
           cancelText="Cancel"
           onSubmit={editItemHandler}
         >
           <div className="container flex w-full flex-col gap-10 py-3 md:flex-row xl:px-0">
-            <div
-              className={`group relative h-96 w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
-              style={{ backgroundImage: `url(${image})` }}
-            >
-              <label
-                htmlFor="media"
-                className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
-              >
-                <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                  <FaDownload size="2rem" className="mb-3" />
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-semibold">Click to upload</span> or
-                    drag and drop
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    PNG, JPG, JPEG, WEBP, MP3 (MAX. 2 MB)
-                  </p>
+            {box.type === "standard" && (
+              <>
+                <div
+                  className={`group relative h-96 w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
+                  style={{ backgroundImage: `url(${image})` }}
+                >
+                  <label
+                    htmlFor="media"
+                    className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
+                  >
+                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                      <FaDownload size="2rem" className="mb-3" />
+                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        PNG, JPG, JPEG, WEBP, MP3 (MAX. 2 MB)
+                      </p>
+                    </div>
+                    <input
+                      id="media"
+                      name="media"
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,.mp3"
+                      className="hidden"
+                      onInput={fileChangeHandler}
+                      onClick={(e) => {
+                        e.value = null;
+                        return false;
+                      }}
+                      value=""
+                    />
+                  </label>
+                  <div
+                    className="absolute bottom-0 flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:bottom-auto lg:group-hover:-translate-y-full"
+                    onClick={deletePreview}
+                  >
+                    <FaTrash size="2rem" />
+                  </div>
                 </div>
-                <input
-                  id="media"
-                  name="media"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp,.mp3"
-                  className="hidden"
-                  onInput={fileChangeHandler}
-                  onClick={(e) => {
-                    e.value = null;
-                    return false;
-                  }}
-                  value=""
+                <textarea
+                  name="description"
+                  onInput={changeHandler}
+                  className="h-full min-h-12 w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
+                  value={inputs.description}
+                ></textarea>
+              </>
+            )}
+            {box.type === "insurance" && (
+              <>
+                <Input
+                  name="description"
+                  onInput={changeHandler}
+                  value={inputs.description}
+                  extraClasses="mt-4 md:mt-0"
                 />
-              </label>
-              <div
-                className="absolute bottom-0 flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:bottom-auto lg:group-hover:-translate-y-full"
-                onClick={deletePreview}
-              >
-                <FaTrash size="2rem" />
-              </div>
-            </div>
-            <textarea
-              name="description"
-              onInput={changeHandler}
-              className="h-full min-h-12 w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
-              value={inputs.description}
-            ></textarea>
+                <Input
+                  name="value"
+                  type="number"
+                  step="0.01"
+                  onInput={changeHandler}
+                  onKeyDown={(e) => {
+                    if (e.key === "e" || e.key === "E") {
+                      e.preventDefault();
+                    }
+                  }}
+                  value={inputs.value}
+                />
+              </>
+            )}
           </div>
         </Overlay>
       )}

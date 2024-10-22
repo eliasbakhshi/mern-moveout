@@ -7,6 +7,7 @@ import MessageBox from "../components/MessageBox";
 import Loading from "../components/Loading";
 import { toast } from "react-toastify";
 import Input from "../components/Input";
+import ItemListInsurance from "../components/ItemListInsurance";
 
 // TODO: Show the list of the items with a 6 digit number if the label is private and the item is not in the box
 function BoxDetails() {
@@ -50,7 +51,11 @@ function BoxDetails() {
   return itemsLoading ? (
     <Loading />
   ) : items ? (
-    <ItemList items={items} />
+    items.type === "standard" ? (
+      <ItemList items={items.items} />
+    ) : (
+      <ItemListInsurance items={items.items} />
+    )
   ) : itemsError?.data?.message.includes("private") ? (
     <>
       <div className="flex w-full flex-grow items-center justify-center">
@@ -61,7 +66,7 @@ function BoxDetails() {
             </p>
             <Input
               type="number"
-              className="m-4 rounded border border-gray-300 p-2 appearance-none"
+              className="m-4 appearance-none rounded border border-gray-300 p-2"
               placeholder="Enter private code"
               onChange={handleCodeChange}
               pattern="\d*"

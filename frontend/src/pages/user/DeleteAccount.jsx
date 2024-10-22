@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useDeleteUserQuery } from "../../redux/api/usersApiSlice";
+import { useDeleteCurrentUserQuery } from "../../redux/api/usersApiSlice";
 import Loading from "../../components/Loading";
 import MessageBox from "../../components/MessageBox";
 import { useDispatch } from "react-redux";
@@ -12,7 +12,7 @@ function DeleteAccount() {
   const { token } = useParams();
   const dispatch = useDispatch();
 
-  const { data, error, isLoading } = useDeleteUserQuery(token);
+  const { data, error, isLoading } = useDeleteCurrentUserQuery(token);
 
   useEffect(() => {
     if (data && !error) {

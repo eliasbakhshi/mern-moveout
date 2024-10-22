@@ -1,5 +1,5 @@
 import Button from "../../components/Button";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   useCreateBoxMutation,
   useDeleteBoxMutation,
@@ -33,7 +33,6 @@ function Boxes() {
     data: boxes,
     isLoading: boxesLoading,
     isFetching: boxesFetching,
-    refetch: refetchBoxes,
   } = useGetBoxesQuery();
 
   const [inputs, setInputs] = useState({
@@ -42,6 +41,7 @@ function Boxes() {
     name: "",
     labelNum: 1,
     isPrivate: false,
+    type: "standard",
   });
   const [isOpenModal, setIsOpenModal] = useState(false);
 
@@ -59,23 +59,58 @@ function Boxes() {
         name: inputs.name,
         labelNum: inputs.labelNum,
         isPrivate: inputs.isPrivate,
-      });
-      setInputs({
-        boxId: "",
-        mode: "create",
-        name: "",
-        labelNum: 1,
-        isPrivate: false,
+        type: inputs.type,
       });
       if (error) {
         toast.error(error.data.message);
       } else {
+        setInputs({
+          boxId: "",
+          mode: "create",
+          name: "",
+          labelNum: 1,
+          isPrivate: false,
+          type: "standard",
+        });
+        e.target.reset();
+        setIsOpenModal(false);
         toast.success(data.message);
       }
+    } catch (err) {
+      toast.error(
+        err?.data?.message ||
+          "An error occurred. Please contact the administration.",
+      );
+    }
+  };
 
-      e.target.reset();
-      refetchBoxes();
-      setIsOpenModal(false);
+  const editBoxHandler = async (e) => {
+    e.preventDefault();
+
+    try {
+      const { data, error } = await updateBox({
+        boxId: inputs.boxId,
+        name: inputs.name,
+        labelNum: inputs.labelNum,
+        isPrivate: inputs.isPrivate,
+        type: inputs.type,
+      });
+
+      if (error) {
+        toast.error(error.data.message);
+      } else {
+        setInputs({
+          boxId: "",
+          mode: "create",
+          name: "",
+          labelNum: 1,
+          isPrivate: false,
+          type: "standard",
+        });
+        e.target.reset();
+        setIsOpenModal(false);
+        toast.success(data.message);
+      }
     } catch (err) {
       toast.error(
         err?.data?.message ||
@@ -101,12 +136,12 @@ function Boxes() {
       );
     }
 
-    refetchBoxes();
     setIsOpenModal(false);
   };
 
   const navigateToAddItems = (boxId, e) => {
-    if (e.target === e.currentTarget) {
+    console.log("boxId", boxId);
+    if (e.target.tagName === "DIV" || e.target.closest("div")) {
       navigate(`/boxes/${boxId}/items`);
     }
   };
@@ -127,45 +162,12 @@ function Boxes() {
         name: "",
         labelNum: 1,
         isPrivate: false,
+        type: "standard",
       });
     } else {
       setInputs({ ...inputs, boxId, mode });
     }
     setIsOpenModal(true);
-  };
-
-  const editBoxHandler = async (e) => {
-    e.preventDefault();
-
-    try {
-      const { data, error } = await updateBox({
-        boxId: inputs.boxId,
-        name: inputs.name,
-        labelNum: inputs.labelNum,
-        isPrivate: inputs.isPrivate,
-      });
-      setInputs({
-        boxId: "",
-        mode: "create",
-        name: "",
-        labelNum: 1,
-        isPrivate: false,
-      });
-      if (error) {
-        toast.error(error.data.message);
-      } else {
-        toast.success(data.message);
-      }
-
-      e.target.reset();
-      refetchBoxes();
-      setIsOpenModal(false);
-    } catch (err) {
-      toast.error(
-        err?.data?.message ||
-          "An error occurred. Please contact the administration.",
-      );
-    }
   };
 
   const changeBoxStatusHandler = async (e) => {
@@ -192,7 +194,6 @@ function Boxes() {
         } else {
           toast.success(data.message);
         }
-        refetchBoxes();
       } catch (err) {
         toast.error(
           err?.data?.message ||
@@ -202,36 +203,16 @@ function Boxes() {
     }
   };
 
-  // const makeBoxPrivateHandler = async (e) => {
-  //   if (e.target === e.currentTarget) {
-  //     console.log(e.target.id);
-  //     try {
-  //       const { data, error } = await makeBoxPrivate(e.target.id);
-  //       // setInputs({
-  //       //   boxId: "",
-  //       //   mode: "create",
-  //       //   name: "",
-  //       //   labelNum: 1,
-  //       //   isPrivate: true,
-  //       // });
-  //       // console.log(data);
-  //       // if (error) {
-  //       //   toast.error(error.data.message);
-  //       // } else {
-  //       //   toast.success(data.message);
-  //       // }
+  // Box types
+  const boxTypes = [
+    { labelNum: 1, type: "standard" },
+    { labelNum: 2, type: "standard" },
+    { labelNum: 3, type: "standard" },
+    { labelNum: 4, type: "insurance" },
+  ];
 
-  //       refetchBoxes();
-  //     } catch (err) {
-  //       toast.error(
-  //         err?.data?.message ||
-  //           "An error occurred. Please contact the administration.",
-  //       );
-  //     }
-  //   }
-  // };
-
-  console.log(inputs);
+  console.log("inputs", inputs);
+  console.log("boxes?.boxes", boxes?.boxes);
   return (
     <>
       <div className="container my-2 flex items-center px-4 xl:px-0">
@@ -239,78 +220,169 @@ function Boxes() {
           Create New Box
         </Button>
       </div>
-      <div className="container flex flex-row flex-wrap gap-[5%] gap-y-6 px-4 py-5 lg:gap-x-[10%] xl:px-0">
+      <div className="container flex flex-row flex-wrap gap-[5%] gap-y-6 px-4 py-5 xl:px-0">
         {Array.isArray(boxes?.boxes) &&
-          boxes.boxes.map((e) => (
-            <article
-              key={e._id}
-              className="flex h-full min-h-[70vw] w-full min-w-28 flex-col items-center justify-center overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:cursor-pointer hover:shadow-lg md:min-h-44 md:w-[calc(90%/3)] lg:min-h-48 lg:w-[calc(80%/3)] xl:min-h-72"
-            >
-              <div
-                className={`flex h-full w-full flex-grow items-center bg-cover bg-center bg-no-repeat`}
-                onClick={(event) => navigateToAddItems(e._id, event)}
-                style={{
-                  backgroundImage: `url('/img/label_${e.labelNum}.png')`,
-                }}
-              >
-                <div className="flex w-[45%] flex-col items-center">
-                  <p
-                    className="mb-10 flex flex-wrap text-sm text-black md:mb-4"
-                    onClick={(event) => navigateToAddItems(e._id, event)}
-                  >
-                    {e.name}
-                  </p>
-                  <QRCodeSVG
-                    value={`/api//boxes/${e._id}/items`}
-                    className="h-24 w-24 md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
-                    title={e.name}
-                    onClick={(event) => navigateToAddItems(e._id, event)}
-                  />
-                </div>
-              </div>
-              <div className="flex w-full items-center justify-between">
-                <div
-                  onClick={() => showModal(e._id, "edit")}
-                  className="flex h-[3rem] w-[33%] items-center justify-center bg-gray-50/50 text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
-                >
-                  <FaEdit size="2rem" className="p-1.5 md:p-2.5 xl:p-1.5" />
-                </div>
+          boxes.boxes.map((e) => {
+            return (
+              <Fragment key={e._id}>
+                {e.type == "standard" && (
+                  <article className="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:cursor-pointer hover:shadow-lg md:w-[calc(90%/3)]">
+                    <div
+                      className={`relative flex h-full w-full flex-grow items-center bg-cover bg-center bg-no-repeat`}
+                      onClick={(event) => navigateToAddItems(e._id, event)}
+                    >
+                      <img
+                        src={`/img/label_${e.labelNum}.png`}
+                        alt={`label_${e.labelNum}`}
+                        className="h-full w-full"
+                      />
+                      <div className="absolute flex w-[45%] flex-col items-center">
+                        <p className="mb-10 flex flex-wrap text-center text-sm text-black md:mb-4 xl:mb-6">
+                          {e.name}
+                        </p>
+                        <QRCodeSVG
+                          value={`/api//boxes/${e._id}/items`}
+                          className="h-24 w-24 md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
+                          title={e.name}
+                        />
+                      </div>
+                      §
+                    </div>
+                    <div className="flex w-full items-center justify-between">
+                      <div
+                        onClick={() => showModal(e._id, "edit")}
+                        className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                      >
+                        <FaEdit
+                          size="2rem"
+                          className="p-1.5 md:p-2.5 xl:p-1.5"
+                        />
+                      </div>
 
-                {e.isPrivate ? (
-                  <div
-                    onClick={changeBoxStatusHandler}
-                    id={e._id}
-                    data-status={e.isPrivate}
-                    className="flex h-[3rem] w-[33%] items-center justify-center bg-gray-50/50 text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
-                  >
-                    <FaLock size="2rem" className="p-1.5 md:p-2.5 xl:p-1.5" />
-                  </div>
-                ) : (
-                  <div
-                    onClick={changeBoxStatusHandler}
-                    id={e._id}
-                    data-status={e.isPrivate}
-                    className="flex h-[3rem] w-[33%] items-center justify-center bg-gray-50/50 text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
-                  >
-                    <FaLockOpen
-                      size="2rem"
-                      className="p-1.5 md:p-2.5 xl:p-1.5"
-                    />
-                  </div>
+                      {e.isPrivate ? (
+                        <div
+                          onClick={changeBoxStatusHandler}
+                          id={e._id}
+                          data-status={e.isPrivate}
+                          className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                        >
+                          <FaLock
+                            size="2rem"
+                            className="p-1.5 md:p-2.5 xl:p-1.5"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          onClick={changeBoxStatusHandler}
+                          id={e._id}
+                          data-status={e.isPrivate}
+                          className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                        >
+                          <FaLockOpen
+                            size="2rem"
+                            className="p-1.5 md:p-2.5 xl:p-1.5"
+                          />
+                        </div>
+                      )}
+                      <div
+                        onClick={() => showModal(e._id, "delete")}
+                        data-status={e.isPrivate}
+                        className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                      >
+                        <FaTrash
+                          size="2rem"
+                          className="p-1.5 text-red-700 md:p-2.5 xl:p-1.5"
+                        />
+                      </div>
+                    </div>
+                  </article>
                 )}
-                <div
-                  onClick={() => showModal(e._id, "delete")}
-                  data-status={e.isPrivate}
-                  className="l:h-[3rem] flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner md:h-[2rem]"
-                >
-                  <FaTrash
-                    size="2rem"
-                    className="p-1.5 text-red-700 hover:bg-red-50 md:p-2.5 xl:p-1.5"
-                  />
-                </div>
-              </div>
-            </article>
-          ))}
+                {e.type === "insurance" && (
+                  <article className="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:cursor-pointer hover:shadow-lg md:w-[calc(90%/3)]">
+                    <div
+                      className={`relative flex h-full w-full flex-grow items-center`}
+                      onClick={(event) => navigateToAddItems(e._id, event)}
+                    >
+                      <img
+                        src={`/img/label_${e.labelNum}.png`}
+                        alt={`label_${e.labelNum}`}
+                        className="h-full w-full"
+                      />
+
+                      <div className="absolute top-0 flex h-[35%] w-full flex-col items-center justify-center">
+                        <p
+                          className="flex flex-wrap text-center text-sm text-black"
+                          onClick={(event) => navigateToAddItems(e._id, event)}
+                        >
+                          {e.name}
+                        </p>
+                      </div>
+                      <div className="absolute bottom-0 flex h-[65%] w-full justify-around">
+                        <img
+                          src={`/img/insurance_logo.png`}
+                          alt={`label_${e.labelNum}`}
+                          className="h-24 w-24 md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
+                        />
+                        <QRCodeSVG
+                          value={`/api//boxes/${e._id}/items`}
+                          className="h-24 w-24 md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
+                          title={e.name}
+                          onClick={(event) => navigateToAddItems(e._id, event)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex w-full items-center justify-between">
+                      <div
+                        onClick={() => showModal(e._id, "edit")}
+                        className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                      >
+                        <FaEdit
+                          size="2rem"
+                          className="p-1.5 md:p-2.5 xl:p-1.5"
+                        />
+                      </div>
+
+                      {e.isPrivate ? (
+                        <div
+                          onClick={changeBoxStatusHandler}
+                          id={e._id}
+                          data-status={e.isPrivate}
+                          className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                        >
+                          <FaLock
+                            size="2rem"
+                            className="p-1.5 md:p-2.5 xl:p-1.5"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          onClick={changeBoxStatusHandler}
+                          id={e._id}
+                          data-status={e.isPrivate}
+                          className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-blue-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                        >
+                          <FaLockOpen
+                            size="2rem"
+                            className="p-1.5 md:p-2.5 xl:p-1.5"
+                          />
+                        </div>
+                      )}
+                      <div
+                        onClick={() => showModal(e._id, "delete")}
+                        data-status={e.isPrivate}
+                        className="flex h-[3rem] w-[33%] items-center justify-center text-gray-700 transition-all ease-in-out hover:bg-red-50 hover:shadow-lg active:shadow-inner md:h-[2rem] xl:h-[3rem]"
+                      >
+                        <FaTrash
+                          size="2rem"
+                          className="p-1.5 text-red-700 md:p-2.5 xl:p-1.5"
+                        />
+                      </div>
+                    </div>
+                  </article>
+                )}
+              </Fragment>
+            );
+          })}
       </div>
       {/* Show the popup for creating */}
       {isOpenModal && inputs.mode === "create" && (
@@ -325,55 +397,77 @@ function Boxes() {
           onSubmit={createBoxHandler}
         >
           <div className="container flex w-full flex-grow flex-col justify-between py-5 xl:px-0">
-            <div className="container mb-5 flex flex-grow flex-col gap-x-[5%] gap-y-5 md:flex-row lg:gap-x-[10%] xl:px-0">
-              <div
-                onClick={() => setInputs({ ...inputs, labelNum: 1 })}
-                className={`relative flex min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:h-[10%] md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56 ${inputs.labelNum === 1 ? "border-2 border-blue-500" : ""}`}
-                style={{
-                  backgroundImage: `url('/img/label_1.png')`,
-                }}
-              >
-                <p className="absolute left-10 top-8 flex w-[100px] flex-wrap items-center justify-center text-sm text-black md:left-3 md:top-6 md:w-[85px] xl:left-9 xl:top-6">
-                  Box 1
-                </p>
-                <QRCodeSVG
-                  value={`/api//boxes`}
-                  className="absolute bottom-8 left-10 h-28 w-28 md:bottom-5 md:left-6 md:h-14 md:w-14 lg:h-20 lg:w-20 xl:bottom-8 xl:left-8 xl:h-28 xl:w-28"
-                  title={"Label 1"}
-                />
-              </div>
-              <div
-                onClick={() => setInputs({ ...inputs, labelNum: 2 })}
-                className={`relative flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56 ${inputs.labelNum === 2 ? "border-2 border-blue-500" : ""}`}
-                style={{
-                  backgroundImage: `url('/img/label_2.png')`,
-                }}
-              >
-                <p className="absolute left-10 top-8 flex w-[100px] flex-wrap items-center justify-center text-sm text-black md:left-3 md:top-6 md:w-[85px] xl:left-9 xl:top-6">
-                  Box 2
-                </p>
-                <QRCodeSVG
-                  value={`/api//boxes`}
-                  className="absolute bottom-8 left-10 h-28 w-28 md:bottom-5 md:left-6 md:h-14 md:w-14 lg:h-20 lg:w-20 xl:bottom-8 xl:left-8 xl:h-28 xl:w-28"
-                  title={"Label 2"}
-                />
-              </div>
-              <div
-                onClick={() => setInputs({ ...inputs, labelNum: 3 })}
-                className={`relative flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56 ${inputs.labelNum === 3 ? "border-2 border-blue-500" : ""}`}
-                style={{
-                  backgroundImage: `url('/img/label_3.png')`,
-                }}
-              >
-                <p className="absolute left-10 top-8 flex w-[100px] flex-wrap items-center justify-center text-sm text-black md:left-3 md:top-6 md:w-[85px] xl:left-9 xl:top-6">
-                  Box 3
-                </p>
-                <QRCodeSVG
-                  value={`/api//boxes`}
-                  className="absolute bottom-8 left-10 h-28 w-28 md:bottom-5 md:left-6 md:h-14 md:w-14 lg:h-20 lg:w-20 xl:bottom-8 xl:left-8 xl:h-28 xl:w-28"
-                  title={"Label 3"}
-                />
-              </div>
+            <div className="container mb-5 flex flex-grow flex-wrap gap-x-[5%] gap-y-5 md:flex-row xl:px-0">
+              {boxTypes.map((e) => {
+                return (
+                  <Fragment key={e.labelNum}>
+                    {e.type === "standard" && (
+                      <div
+                        onClick={() =>
+                          setInputs({
+                            ...inputs,
+                            labelNum: e.labelNum,
+                            type: e.type,
+                          })
+                        }
+                        className={`relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                      >
+                        <img
+                          src={`/img/label_${e.labelNum}.png`}
+                          alt={`label_${e.labelNum}`}
+                          className="h-full w-full"
+                        />
+                        <div className="absolute left-0 flex w-[50%] flex-col items-center">
+                          <p className="mb-10 flex flex-wrap text-center text-sm text-black md:mb-6">
+                            {inputs.name ? inputs.name : `Box ${e.labelNum}`}
+                          </p>
+                          <QRCodeSVG
+                            value={`/api//boxes`}
+                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            title={`Label ${e.labelNum}`}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {e.type === "insurance" && (
+                      <div
+                        onClick={() =>
+                          setInputs({
+                            ...inputs,
+                            labelNum: e.labelNum,
+                            type: e.type,
+                          })
+                        }
+                        className={`relative flex w-full flex-col items-center justify-center rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                      >
+                        <img
+                          src={`/img/label_${e.labelNum}.png`}
+                          alt={`label_${e.labelNum}`}
+                          className="h-full w-full"
+                        />
+
+                        <div className="absolute top-0 flex h-[40%] flex-col items-center justify-center">
+                          <p className="flex flex-wrap text-center text-sm text-black">
+                            {inputs.name ? inputs.name : `Box ${e.labelNum}`}
+                          </p>
+                        </div>
+                        <div className="absolute bottom-0 flex h-[60%] w-full justify-around">
+                          <img
+                            src={`/img/insurance_logo.png`}
+                            alt={`label_${e.labelNum}`}
+                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                          />
+                          <QRCodeSVG
+                            value={`/api//boxes`}
+                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            title={`Label ${e.labelNum}`}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </Fragment>
+                );
+              })}
             </div>
             <div className="container mt-3 flex flex-col md:mt-0 md:flex-row">
               <Input
@@ -414,56 +508,78 @@ function Boxes() {
           cancelText="Cancel"
           onSubmit={editBoxHandler}
         >
-          <div className="container flex w-full flex-col py-5 xl:px-0">
-            <div className="container mb-5 flex flex-grow flex-col gap-x-[5%] gap-y-5 md:flex-row lg:gap-x-[10%] xl:px-0">
-              <div
-                onClick={() => setInputs({ ...inputs, labelNum: 1 })}
-                className={`relative flex min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:h-[10%] md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56 ${inputs.labelNum === 1 ? "border-2 border-blue-500" : ""}`}
-                style={{
-                  backgroundImage: `url('/img/label_1.png')`,
-                }}
-              >
-                <p className="absolute left-10 top-8 flex w-[100px] flex-wrap items-center justify-center text-sm text-black md:left-3 md:top-6 md:w-[85px] xl:left-9 xl:top-6">
-                  {inputs.name}
-                </p>
-                <QRCodeSVG
-                  value={`/api//boxes/${inputs._id}/items`}
-                  className="absolute bottom-8 left-10 h-28 w-28 md:bottom-5 md:left-6 md:h-14 md:w-14 lg:h-20 lg:w-20 xl:bottom-8 xl:left-8 xl:h-28 xl:w-28"
-                  title={inputs.name}
-                />
-              </div>
-              <div
-                onClick={() => setInputs({ ...inputs, labelNum: 2 })}
-                className={`relative flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56 ${inputs.labelNum === 2 ? "border-2 border-blue-500" : ""}`}
-                style={{
-                  backgroundImage: `url('/img/label_2.png')`,
-                }}
-              >
-                <p className="absolute left-10 top-8 flex w-[100px] flex-wrap items-center justify-center text-sm text-black md:left-3 md:top-6 md:w-[85px] xl:left-9 xl:top-6">
-                  {inputs.name}
-                </p>
-                <QRCodeSVG
-                  value={`/api//boxes/${inputs._id}/items`}
-                  className="absolute bottom-8 left-10 h-28 w-28 md:bottom-5 md:left-6 md:h-14 md:w-14 lg:h-20 lg:w-20 xl:bottom-8 xl:left-8 xl:h-28 xl:w-28"
-                  title={inputs.name}
-                />
-              </div>
-              <div
-                onClick={() => setInputs({ ...inputs, labelNum: 3 })}
-                className={`relative flex h-[10%] min-h-[55vw] w-full min-w-28 flex-col items-center justify-center rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:min-h-32 md:w-[calc(90%/3)] lg:min-h-40 lg:w-[calc(80%/3)] xl:min-h-56 ${inputs.labelNum === 3 ? "border-2 border-blue-500" : ""}`}
-                style={{
-                  backgroundImage: `url('/img/label_3.png')`,
-                }}
-              >
-                <p className="absolute left-10 top-8 flex w-[100px] flex-wrap items-center justify-center text-sm text-black md:left-3 md:top-6 md:w-[85px] xl:left-9 xl:top-6">
-                  {inputs.name}
-                </p>
-                <QRCodeSVG
-                  value={`/api//boxes/${inputs._id}/items`}
-                  className="absolute bottom-8 left-10 h-28 w-28 md:bottom-5 md:left-6 md:h-14 md:w-14 lg:h-20 lg:w-20 xl:bottom-8 xl:left-8 xl:h-28 xl:w-28"
-                  title={inputs.name}
-                />
-              </div>
+          <div className="container flex w-full flex-grow flex-col justify-between py-5 xl:px-0">
+            <div className="container mb-5 flex flex-grow flex-wrap gap-x-[5%] gap-y-5 md:flex-row xl:px-0">
+              {boxTypes.map((e) => {
+                return (
+                  <Fragment key={e.labelNum}>
+                    {e.type === "standard" && (
+                      <div
+                        onClick={() =>
+                          setInputs({
+                            ...inputs,
+                            labelNum: e.labelNum,
+                            type: e.type,
+                          })
+                        }
+                        className={`relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                      >
+                        <img
+                          src={`/img/label_${e.labelNum}.png`}
+                          alt={`label_${e.labelNum}`}
+                          className="h-full w-full"
+                        />
+                        <div className="absolute left-0 flex w-[50%] flex-col items-center">
+                          <p className="mb-10 flex flex-wrap text-center text-sm text-black md:mb-6">
+                            {inputs.name ? inputs.name : `Box ${e.labelNum}`}
+                          </p>
+                          <QRCodeSVG
+                            value={`/api//boxes/${inputs._id}/items`}
+                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            title={`Label ${e.labelNum}`}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {e.type === "insurance" && (
+                      <div
+                        onClick={() =>
+                          setInputs({
+                            ...inputs,
+                            labelNum: e.labelNum,
+                            type: e.type,
+                          })
+                        }
+                        className={`relative flex w-full flex-col items-center justify-center rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                      >
+                        <img
+                          src={`/img/label_${e.labelNum}.png`}
+                          alt={`label_${e.labelNum}`}
+                          className="h-full w-full"
+                        />
+
+                        <div className="absolute top-0 flex h-[45%] flex-col items-center justify-center">
+                          <p className="flex flex-wrap text-center text-sm text-black">
+                            {inputs.name ? inputs.name : `Box ${e.labelNum}`}
+                          </p>
+                        </div>
+                        <div className="absolute bottom-0 flex h-[60%] w-full justify-around">
+                          <img
+                            src={`/img/insurance_logo.png`}
+                            alt={`label_${e.labelNum}`}
+                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                          />
+                          <QRCodeSVG
+                            value={`/api//boxes`}
+                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            title={`Label ${e.labelNum}`}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </Fragment>
+                );
+              })}
             </div>
             <div className="container mt-3 flex flex-col md:mt-0 md:flex-row">
               <Input

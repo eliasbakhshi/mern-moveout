@@ -47,11 +47,12 @@ export const register = async (req, res) => {
     path.resolve(".") + "/backend/views/template-email-verification.html",
     "utf8",
   );
+  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, name);
+  emailTemplate = emailTemplate.replace(/(\*\*button_text\*\*)/g, "Verify Me");
   emailTemplate = emailTemplate.replace(
     /(\*\*email_link\*\*)/g,
     `${process.env.BASE_URL}/verify-email/${emailVerificationToken}`,
   );
-  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, name);
 
   try {
     // Send the email
@@ -119,7 +120,7 @@ export const registerWithGoogle = async (req, res) => {
     await transporter.sendMail({
       from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Welcome to Move out",
+      subject: `Welcome to ${process.env.SITE_NAME}`,
       text: `Thank you ${name} for signing up! We're excited to have you on board.`,
       html: emailTemplate,
     });
@@ -147,7 +148,6 @@ export const registerWithGoogle = async (req, res) => {
 
 export const login = async (req, res) => {
   let { email, password, remember } = req.body;
-  console.log(req.body);
   email = email.trim().toLowerCase();
   if (!email || !password) {
     return res.status(400).json({ message: "Please fill in all the fields." });
@@ -176,7 +176,6 @@ export const login = async (req, res) => {
     return res.status(400).json({ message: "Please verify your email." });
   }
 
-  console.log(password, user.password);
   // Check if the password is correct
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
@@ -418,6 +417,43 @@ export const updateUserPasswordById = async (req, res) => {
   return res.status(200).json({ message: "Password has been updated." });
 };
 
+export const getUsers = async (req, res) => {
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+
+  if (!isAdmin) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // Find all users
+  const users = await User.find(
+    { _id: { $ne: req.user._id } },
+    { password: 0 },
+  );
+  if (!users) {
+    return res.status(404).json({ message: "No users found." });
+  }
+
+  return res.status(200).json(users);
+};
+
+export const getDeletedUsers = async (req, res) => {
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+
+  if (!isAdmin) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // Find all users
+  const users = await DeletedUser.find({}, { password: 0 });
+  if (!users) {
+    return res.status(404).json({ message: "No users found." });
+  }
+
+  return res.status(200).json(users);
+};
+
 export const getCurrentUser = async (req, res) => {
   const users = await User.findById({ _id: req.user._id });
 
@@ -509,7 +545,235 @@ export const updateCurrentUser = async (req, res) => {
   });
 };
 
+export const createUser = async (req, res) => {
+  const uid = new ShortUniqueId({ length: 6 });
+  let { name, email, password } = req.body;
+  email = email.trim().toLowerCase();
+  if (!name || !email) {
+    return res.status(400).json({ message: "Please fill in all the fields." });
+  }
+
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+
+  if (!isAdmin) {
+    return res
+      .status(404)
+      .json({ message: "Admin can just do this operation." });
+  }
+
+  // Check if the email already exists
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    return res.status(400).json({ message: "Email already exists." });
+  }
+
+  if (password === "") {
+    password = uid.randomUUID(6);
+  }
+  // Create hashed password and email token
+  const hashed = await bcrypt.hash(password, 10);
+  // Create a new user
+  const user = await User.create({
+    name,
+    email,
+    password: hashed,
+    registeredWith: ["Email"],
+    role: "user",
+    isActive: true,
+    emailVerified: true,
+  });
+  // Get the email template
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") +
+      "/backend/views/template-welcome-registration-admin.html",
+    "utf8",
+  );
+
+  emailTemplate = emailTemplate.replace(
+    /(\*\*website_name\*\*)/g,
+    `${process.env.SITE_NAME}`,
+  );
+  emailTemplate = emailTemplate.replace(
+    /(\*\*login_url\*\*)/g,
+    `${process.env.BASE_URL}/login`,
+  );
+  emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, name);
+  emailTemplate = emailTemplate.replace(/(\*\*email\*\*)/g, email);
+  emailTemplate = emailTemplate.replace(/(\*\*password\*\*)/g, password);
+
+  try {
+    // Send the email
+    await transporter.sendMail({
+      from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: `Welcome to ${process.env.SITE_NAME}`,
+      text: `Hi ${name}. Admin has registered you in the for signing up! We're excited to have you on board.`,
+      html: emailTemplate,
+    });
+  } catch (error) {
+    // Delete the user if the email is not sent
+    await user.deleteOne();
+    return res
+      .status(500)
+      .json({ message: "Email address rejected because domain not found." });
+  }
+
+  return res.status(201).json({ message: "User created successfully.", user });
+};
+
+export const editUser = async (req, res) => {
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+  if (!isAdmin) {
+    return res
+      .status(404)
+      .json({ message: "Admin can just do this operation." });
+  }
+
+  console.log("req.body", req.body)
+  let { userId, name, email, password, isActive } = req.body;
+  email = email.trim().toLowerCase();
+  if (!name || !email) {
+    return res.status(400).json({ message: "Please give name and email." });
+  }
+
+  // Check if the user user has the email if admin wants to change the email
+  const userExists = await User.findOne({ _id: { $ne: userId }, email });
+  if (userExists) {
+    return res.status(400).json({ message: "Email already exists." });
+  }
+
+  if (password !== "") {
+    // Create hashed password and email token
+    password = await bcrypt.hash(password, 10);
+  }
+
+  // Find the user
+  const user = await User.findById({ _id: userId });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // Update the user
+  user.name = name || user.name;
+  user.email = email || user.email;
+  user.password = password || user.password;
+  user.isActive = isActive ? true : false;
+
+  await user.save();
+
+  return res.status(201).json({ message: "User updated successfully." });
+};
+
 export const deleteUser = async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "Please provide a userId." });
+  }
+
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+
+  if (!isAdmin) {
+    return res
+      .status(404)
+      .json({ message: "Admin can just do this operation." });
+  }
+
+  // Find the user
+  const user = await User.findById({ _id: userId });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  try {
+    // Remove all media files that have the user ID as the first part of the filename
+    const mediaFiles = fs.readdirSync(
+      path.join(__dirname, process.env.UPLOADS_PATH),
+    );
+    mediaFiles.forEach((file) => {
+      const [fileUserId] = file.split("-");
+      if (fileUserId === req.user._id.toString()) {
+        const deletedPath = path.join(
+          __dirname,
+          process.env.DELETED_UPLOADS_PATH,
+          file,
+        );
+        fs.renameSync(
+          path.join(__dirname, process.env.UPLOADS_PATH, file),
+          deletedPath,
+        );
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
+  // Move user to DeletedUser model and delete from User model
+  if (user.emailDeleteToken && user.emailDeleteTokenExpiresAt) {
+    user.emailDeleteToken = undefined;
+    user.emailDeleteTokenExpiresAt = undefined;
+  }
+  user.deletedAt = Date.now();
+  await DeletedUser.create(user.toObject());
+  await user.deleteOne();
+
+  // Move user's boxes to DeletedBox collection
+  const userBoxes = await Box.find({ user: req.user._id });
+  for (const box of userBoxes) {
+    box.deletedAt = Date.now();
+    box.items.forEach((item) => {
+      if (item.mediaPath) {
+        item.mediaPath = item.mediaPath.replace(
+          process.env.UPLOADS_PATH,
+          process.env.DELETED_UPLOADS_PATH,
+        );
+      }
+    });
+    await DeletedBox.create(box.toObject());
+    await box.deleteOne();
+  }
+
+  return res.status(200).json({
+    message: "User has been deleted.",
+  });
+};
+
+export const changeUserStatus = async (req, res) => {
+  const { userId, isActive } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "Please provide a userId." });
+  }
+
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+
+  if (!isAdmin) {
+    return res
+      .status(404)
+      .json({ message: "Admin can just do this operation." });
+  }
+
+  // Find the user
+  const user = await User.findById({ _id: userId });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // Update the user
+  user.isActive = isActive ? true : false;
+  await user.save();
+
+  return res.status(201).json({ message: "User status updated successfully." });
+};
+
+export const deleteCurrentUser = async (req, res) => {
   const { token } = req.query;
 
   // Find the user
@@ -889,13 +1153,20 @@ export default {
   sendResetPasswordEmail,
   verifyTokenResetPassword,
   updateUserPasswordById,
+  getUsers,
+  getDeletedUsers,
   getCurrentUser,
   updateCurrentUser,
+  createUser,
+  editUser,
   deleteUser,
+  changeUserStatus,
+  deleteCurrentUser,
   getNamesAndEmails,
   shareBox,
   shareLabel,
   deactivateCurrentUser,
   reactivateCurrentUser,
+
   sendDeleteEmail,
 };

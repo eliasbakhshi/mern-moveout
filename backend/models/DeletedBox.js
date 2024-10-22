@@ -8,10 +8,15 @@ const itemSchema = new Schema(
     },
     description: {
       type: String,
-      required: false, // Optional field
+    },
+    value: {
+      type: Number,
     },
     mediaPath: {
       type: String,
+    },
+    deletedAt: {
+      type: Date,
     },
   },
   { timestamps: true },
@@ -39,9 +44,12 @@ const deletedBoxSchema = new Schema(
     },
     privateCode: {
       type: Number,
-      required: false,
     },
     items: [itemSchema],
+    type: {
+      type: String,
+      required: true,
+    },
     deletedAt: {
       type: Date,
       default: Date.now,

@@ -1,5 +1,7 @@
 "use strict";
 
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -7,9 +9,11 @@ exports["default"] = exports.deleteItem = exports.updateItem = exports.createIte
 
 var _Box = _interopRequireDefault(require("../models/Box.js"));
 
+var _DeletedBox = _interopRequireDefault(require("../models/DeletedBox.js"));
+
 var _expressValidator = require("express-validator");
 
-var _fs = _interopRequireDefault(require("fs"));
+var _fs = _interopRequireWildcard(require("fs"));
 
 var _path = _interopRequireDefault(require("path"));
 
@@ -19,15 +23,19 @@ var _shortUniqueId = _interopRequireDefault(require("short-unique-id"));
 
 var _User = _interopRequireDefault(require("../models/User.js"));
 
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -44,7 +52,7 @@ var _dirname = _path["default"].resolve();
 
 var home = function home(req, res) {
   return res.status(200).json({
-    message: "Welcome to the Move out API"
+    message: "Welcome to the ".concat(process.env.SITE_NAME, " API")
   });
 };
 
@@ -79,7 +87,7 @@ var getBoxes = function getBoxes(req, res) {
           return regeneratorRuntime.awrap(_Box["default"].find({
             user: req.user._id
           }).sort({
-            createdAt: 1
+            createdAt: -1
           }));
 
         case 7:
@@ -165,7 +173,7 @@ var getBox = function getBox(req, res) {
 exports.getBox = getBox;
 
 var createBox = function createBox(req, res) {
-  var user, _req$body, name, labelNum, isPrivate, privateCode, box, newBox;
+  var user, _req$body, name, labelNum, isPrivate, type, privateCode, box, newBox;
 
   return regeneratorRuntime.async(function createBox$(_context3) {
     while (1) {
@@ -190,7 +198,7 @@ var createBox = function createBox(req, res) {
           }));
 
         case 5:
-          _req$body = req.body, name = _req$body.name, labelNum = _req$body.labelNum, isPrivate = _req$body.isPrivate;
+          _req$body = req.body, name = _req$body.name, labelNum = _req$body.labelNum, isPrivate = _req$body.isPrivate, type = _req$body.type;
           privateCode = uid.randomUUID(6);
 
           if (!(!name || !labelNum || isPrivate === undefined)) {
@@ -208,7 +216,8 @@ var createBox = function createBox(req, res) {
             labelNum: labelNum,
             user: req.user._id,
             isPrivate: isPrivate,
-            privateCode: isPrivate ? privateCode : undefined
+            privateCode: isPrivate ? privateCode : undefined,
+            type: type
           });
           _context3.next = 12;
           return regeneratorRuntime.awrap(box.save());
@@ -237,13 +246,13 @@ var createBox = function createBox(req, res) {
 exports.createBox = createBox;
 
 var updateBox = function updateBox(req, res) {
-  var _req$body2, name, labelNum, boxId, isPrivate, user, box;
+  var _req$body2, name, labelNum, boxId, isPrivate, type, user, box;
 
   return regeneratorRuntime.async(function updateBox$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          _req$body2 = req.body, name = _req$body2.name, labelNum = _req$body2.labelNum, boxId = _req$body2.boxId, isPrivate = _req$body2.isPrivate; // Check if the user is active
+          _req$body2 = req.body, name = _req$body2.name, labelNum = _req$body2.labelNum, boxId = _req$body2.boxId, isPrivate = _req$body2.isPrivate, type = _req$body2.type; // Check if the user is active
 
           _context4.next = 3;
           return regeneratorRuntime.awrap(_User["default"].findOne({
@@ -297,15 +306,16 @@ var updateBox = function updateBox(req, res) {
           box.labelNum = labelNum;
           box.isPrivate = isPrivate;
           box.privateCode = isPrivate == "true" ? uid.randomUUID(6) : undefined;
-          _context4.next = 19;
+          box.type = type;
+          _context4.next = 20;
           return regeneratorRuntime.awrap(box.save());
 
-        case 19:
+        case 20:
           return _context4.abrupt("return", res.status(200).json({
             message: "Box updated successfully."
           }));
 
-        case 20:
+        case 21:
         case "end":
           return _context4.stop();
       }
@@ -316,7 +326,7 @@ var updateBox = function updateBox(req, res) {
 exports.updateBox = updateBox;
 
 var deleteBox = function deleteBox(req, res) {
-  var boxId, user, box;
+  var boxId, user, box, mediaFiles;
   return regeneratorRuntime.async(function deleteBox$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
@@ -353,7 +363,7 @@ var deleteBox = function deleteBox(req, res) {
 
         case 8:
           _context5.next = 10;
-          return regeneratorRuntime.awrap(_Box["default"].findOneAndDelete({
+          return regeneratorRuntime.awrap(_Box["default"].findOne({
             user: req.user._id,
             _id: boxId
           }));
@@ -371,19 +381,44 @@ var deleteBox = function deleteBox(req, res) {
           }));
 
         case 13:
-          // Remove the box from the user's boxes
-          req.user.boxes = req.user.boxes.filter(function (boxId) {
-            return boxId.toString() !== box._id.toString();
+          // Move the box to DeletedBox collection
+          box.deletedAt = Date.now();
+          box.items.forEach(function (item) {
+            if (item.mediaPath) {
+              item.mediaPath = item.mediaPath.replace(process.env.UPLOADS_PATH, process.env.DELETED_UPLOADS_PATH);
+            }
           });
-          _context5.next = 16;
-          return regeneratorRuntime.awrap(req.user.save());
+          _context5.next = 17;
+          return regeneratorRuntime.awrap(_DeletedBox["default"].create(box.toObject()));
 
-        case 16:
+        case 17:
+          _context5.next = 19;
+          return regeneratorRuntime.awrap(box.deleteOne());
+
+        case 19:
+          try {
+            // Remove all media files that have the user ID as the first part of the filename
+            mediaFiles = _fs["default"].readdirSync(_path["default"].join(_dirname, process.env.UPLOADS_PATH));
+            mediaFiles.forEach(function (file) {
+              var _file$split = file.split("-"),
+                  _file$split2 = _slicedToArray(_file$split, 1),
+                  fileUserId = _file$split2[0];
+
+              if (fileUserId === req.user._id.toString()) {
+                var deletedPath = _path["default"].join(_dirname, process.env.DELETED_UPLOADS_PATH, file);
+
+                _fs["default"].renameSync(_path["default"].join(_dirname, process.env.UPLOADS_PATH, file), deletedPath);
+              }
+            });
+          } catch (error) {
+            console.log(error);
+          }
+
           return _context5.abrupt("return", res.status(200).json({
             message: "Box deleted successfully."
           }));
 
-        case 17:
+        case 21:
         case "end":
           return _context5.stop();
       }
@@ -400,20 +435,19 @@ var changeBoxStatus = function changeBoxStatus(req, res) {
     while (1) {
       switch (_context6.prev = _context6.next) {
         case 0:
-          _req$body3 = req.body, boxId = _req$body3.boxId, status = _req$body3.status;
-          console.log(req.body); // Check if the user is active
+          _req$body3 = req.body, boxId = _req$body3.boxId, status = _req$body3.status; // Check if the user is active
 
-          _context6.next = 4;
+          _context6.next = 3;
           return regeneratorRuntime.awrap(_User["default"].findOne({
             _id: req.user._id,
             isActive: true
           }));
 
-        case 4:
+        case 3:
           user = _context6.sent;
 
           if (user) {
-            _context6.next = 7;
+            _context6.next = 6;
             break;
           }
 
@@ -421,9 +455,9 @@ var changeBoxStatus = function changeBoxStatus(req, res) {
             message: "User is inactive."
           }));
 
-        case 7:
+        case 6:
           if (!(!boxId || status == undefined)) {
-            _context6.next = 9;
+            _context6.next = 8;
             break;
           }
 
@@ -431,18 +465,18 @@ var changeBoxStatus = function changeBoxStatus(req, res) {
             message: "Please provide an box ID and a status"
           }));
 
-        case 9:
-          _context6.next = 11;
+        case 8:
+          _context6.next = 10;
           return regeneratorRuntime.awrap(_Box["default"].findOne({
             user: req.user._id,
             _id: boxId
           }));
 
-        case 11:
+        case 10:
           box = _context6.sent;
 
           if (box) {
-            _context6.next = 14;
+            _context6.next = 13;
             break;
           }
 
@@ -450,19 +484,19 @@ var changeBoxStatus = function changeBoxStatus(req, res) {
             message: "Box not found"
           }));
 
-        case 14:
+        case 13:
           // Change the status of the box
           box.isPrivate = status;
           box.privateCode = status ? uid.randomUUID(6) : undefined;
-          _context6.next = 18;
+          _context6.next = 17;
           return regeneratorRuntime.awrap(box.save());
 
-        case 18:
+        case 17:
           return _context6.abrupt("return", res.status(200).json({
             message: "Box is ".concat(box.isPrivate ? "private" : "public", " now.")
           }));
 
-        case 19:
+        case 18:
         case "end":
           return _context6.stop();
       }
@@ -642,13 +676,18 @@ var getBoxItems = function getBoxItems(req, res) {
           }));
 
         case 17:
+          // Remove the items that are deleted
+          box.items = box.items.filter(function (item) {
+            return !item.deletedAt;
+          });
           sortedItems = box.items.sort(function (a, b) {
             return b.createdAt - a.createdAt;
           });
-          box.items = sortedItems;
-          return _context9.abrupt("return", res.status(200).json(_toConsumableArray(box.items)));
+          box.items = sortedItems; // TODO: This should return items in the future for boxDetails page
 
-        case 20:
+          return _context9.abrupt("return", res.status(200).json(box));
+
+        case 21:
         case "end":
           return _context9.stop();
       }
@@ -674,7 +713,7 @@ var getBoxItem = function getBoxItem(req, res) {
 exports.getBoxItem = getBoxItem;
 
 var createItem = function createItem(req, res) {
-  var user, _req$body5, boxId, description, media, mediaType, mediaPath, err, theBox;
+  var user, _req$body5, boxId, description, value, type, media, mediaType, mediaPath, err, numericValue, theBox;
 
   return regeneratorRuntime.async(function createItem$(_context11) {
     while (1) {
@@ -700,7 +739,7 @@ var createItem = function createItem(req, res) {
 
         case 5:
           // get the files
-          _req$body5 = req.body, boxId = _req$body5.boxId, description = _req$body5.description;
+          _req$body5 = req.body, boxId = _req$body5.boxId, description = _req$body5.description, value = _req$body5.value, type = _req$body5.type;
           media = req.file;
           mediaType = undefined, mediaPath = undefined; // Return the errors if there are any
 
@@ -716,8 +755,38 @@ var createItem = function createItem(req, res) {
           }));
 
         case 11:
-          if (!(description === "" && !media)) {
+          if (!(description === "" && value === "undefined" && type === "insurance")) {
             _context11.next = 13;
+            break;
+          }
+
+          return _context11.abrupt("return", res.status(400).json({
+            message: "Please give a description and value."
+          }));
+
+        case 13:
+          // Validate and convert the value field
+          numericValue = undefined;
+
+          if (!(value !== "undefined" && value !== "")) {
+            _context11.next = 18;
+            break;
+          }
+
+          numericValue = Number(value);
+
+          if (!isNaN(numericValue)) {
+            _context11.next = 18;
+            break;
+          }
+
+          return _context11.abrupt("return", res.status(400).json({
+            message: "Invalid value provided"
+          }));
+
+        case 18:
+          if (!(description === "" && !media && type === "standard")) {
+            _context11.next = 20;
             break;
           }
 
@@ -725,9 +794,9 @@ var createItem = function createItem(req, res) {
             message: "Please give a description or upload a file."
           }));
 
-        case 13:
+        case 20:
           if (!media) {
-            _context11.next = 19;
+            _context11.next = 26;
             break;
           }
 
@@ -737,7 +806,7 @@ var createItem = function createItem(req, res) {
           mediaType = media.mimetype; // if the file mediaType is not an image or an audio file, return an error
 
           if (!(mediaType !== "image/png" && mediaType !== "image/jpg" && mediaType !== "image/jpeg" && mediaType !== "audio/mpeg" && mediaType !== "audio/wav")) {
-            _context11.next = 18;
+            _context11.next = 25;
             break;
           }
 
@@ -745,18 +814,18 @@ var createItem = function createItem(req, res) {
             message: "Please provide a valid file"
           }));
 
-        case 18:
+        case 25:
           mediaType = mediaType.split("/")[0];
 
-        case 19:
-          _context11.next = 21;
+        case 26:
+          _context11.next = 28;
           return regeneratorRuntime.awrap(_Box["default"].findById(boxId));
 
-        case 21:
+        case 28:
           theBox = _context11.sent;
 
           if (theBox) {
-            _context11.next = 24;
+            _context11.next = 31;
             break;
           }
 
@@ -764,21 +833,22 @@ var createItem = function createItem(req, res) {
             message: "Box not found"
           }));
 
-        case 24:
+        case 31:
           theBox.items.push({
             mediaType: mediaType,
             description: description,
-            mediaPath: mediaPath
+            mediaPath: mediaPath,
+            value: numericValue
           });
-          _context11.next = 27;
+          _context11.next = 34;
           return regeneratorRuntime.awrap(theBox.save());
 
-        case 27:
+        case 34:
           return _context11.abrupt("return", res.status(201).json({
             message: "Item added to the box"
           }));
 
-        case 28:
+        case 35:
         case "end":
           return _context11.stop();
       }
@@ -789,13 +859,13 @@ var createItem = function createItem(req, res) {
 exports.createItem = createItem;
 
 var updateItem = function updateItem(req, res) {
-  var _req$body6, itemId, description, mediaPath, media, mediaType, newMediaPath, err, box;
+  var _req$body6, itemId, description, mediaPath, value, type, media, mediaType, newMediaPath, err, numericValue, box;
 
   return regeneratorRuntime.async(function updateItem$(_context12) {
     while (1) {
       switch (_context12.prev = _context12.next) {
         case 0:
-          _req$body6 = req.body, itemId = _req$body6.itemId, description = _req$body6.description, mediaPath = _req$body6.mediaPath;
+          _req$body6 = req.body, itemId = _req$body6.itemId, description = _req$body6.description, mediaPath = _req$body6.mediaPath, value = _req$body6.value, type = _req$body6.type;
           media = req.file;
           mediaType = undefined, newMediaPath = undefined; // Return the errors if there are any
 
@@ -811,8 +881,40 @@ var updateItem = function updateItem(req, res) {
           }));
 
         case 6:
-          if (!(description === "" && !media && mediaPath === "")) {
-            _context12.next = 8;
+          console.log(req.body);
+
+          if (!((description === "" || description === "undefined") && (value === "" || value === "undefined") && type === "insurance")) {
+            _context12.next = 9;
+            break;
+          }
+
+          return _context12.abrupt("return", res.status(400).json({
+            message: "Please give a description and value."
+          }));
+
+        case 9:
+          // Validate and convert the value field
+          numericValue = undefined;
+
+          if (!(value !== "undefined" && value !== "" && type === "insurance")) {
+            _context12.next = 14;
+            break;
+          }
+
+          numericValue = Number(value);
+
+          if (!isNaN(numericValue)) {
+            _context12.next = 14;
+            break;
+          }
+
+          return _context12.abrupt("return", res.status(400).json({
+            message: "Invalid value provided"
+          }));
+
+        case 14:
+          if (!((description === "" || description === "undefined") && !media && mediaPath === "", type === "standard")) {
+            _context12.next = 16;
             break;
           }
 
@@ -820,9 +922,9 @@ var updateItem = function updateItem(req, res) {
             message: "Please give a description or upload a file."
           }));
 
-        case 8:
+        case 16:
           if (!media) {
-            _context12.next = 14;
+            _context12.next = 22;
             break;
           }
 
@@ -830,7 +932,7 @@ var updateItem = function updateItem(req, res) {
           mediaType = media.mimetype; // if the file mediaType is not an image or an audio file, return an error
 
           if (!(mediaType !== "image/png" && mediaType !== "image/jpg" && mediaType !== "image/jpeg" && mediaType !== "audio/mpeg" && mediaType !== "audio/wav")) {
-            _context12.next = 13;
+            _context12.next = 21;
             break;
           }
 
@@ -838,21 +940,21 @@ var updateItem = function updateItem(req, res) {
             message: "Please provide a valid file"
           }));
 
-        case 13:
+        case 21:
           mediaType = mediaType.split("/")[0];
 
-        case 14:
-          _context12.next = 16;
+        case 22:
+          _context12.next = 24;
           return regeneratorRuntime.awrap(_Box["default"].findOne({
             user: req.user._id,
             "items._id": itemId
           }).populate("user"));
 
-        case 16:
+        case 24:
           box = _context12.sent;
 
           if (box.user.isActive) {
-            _context12.next = 19;
+            _context12.next = 27;
             break;
           }
 
@@ -860,9 +962,9 @@ var updateItem = function updateItem(req, res) {
             message: "User is inactive."
           }));
 
-        case 19:
+        case 27:
           if (box) {
-            _context12.next = 21;
+            _context12.next = 29;
             break;
           }
 
@@ -870,7 +972,7 @@ var updateItem = function updateItem(req, res) {
             message: "Item not found"
           }));
 
-        case 21:
+        case 29:
           // Find the item and update it
           box.items = box.items.map(function (item) {
             if (item._id.toString() === itemId) {
@@ -897,19 +999,20 @@ var updateItem = function updateItem(req, res) {
               }
 
               item.description = description;
+              item.value = numericValue;
             }
 
             return item;
           });
-          _context12.next = 24;
+          _context12.next = 32;
           return regeneratorRuntime.awrap(box.save());
 
-        case 24:
+        case 32:
           return _context12.abrupt("return", res.status(200).json({
             message: "Item updated successfully."
           }));
 
-        case 25:
+        case 33:
         case "end":
           return _context12.stop();
       }
@@ -968,10 +1071,14 @@ var deleteItem = function deleteItem(req, res) {
         case 10:
           box.items = box.items.filter(function (item) {
             if (item._id.toString() === itemId) {
-              if (item.mediaPath) {
-                // remove the media in the uploads folder
-                _fs["default"].unlinkSync(_path["default"].join(_dirname, item.mediaPath));
-              }
+              if (item.mediaPath) {} // remove the media in the uploads folder
+              // fs.unlinkSync(path.join(__dirname, item.mediaPath));
+              // soft delete the item
+
+
+              item.deletedAt = Date.now();
+              console.log(item);
+              return item;
             } else {
               return item;
             }

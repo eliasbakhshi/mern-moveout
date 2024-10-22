@@ -13,12 +13,16 @@ var itemSchema = new _mongoose.Schema({
     type: String
   },
   description: {
-    type: String,
-    required: false // Optional field
-
+    type: String
+  },
+  value: {
+    type: Number
   },
   mediaPath: {
     type: String
+  },
+  deletedAt: {
+    type: Date
   }
 }, {
   timestamps: true
@@ -43,10 +47,13 @@ var deletedBoxSchema = new _mongoose.Schema({
     required: true
   },
   privateCode: {
-    type: Number,
-    required: false
+    type: Number
   },
   items: [itemSchema],
+  type: {
+    type: String,
+    required: true
+  },
   deletedAt: {
     type: Date,
     "default": Date.now

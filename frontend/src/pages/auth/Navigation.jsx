@@ -11,7 +11,7 @@ import { PiSignOut, PiSignIn } from "react-icons/pi";
 import { BsPersonPlus } from "react-icons/bs";
 import Loading from "../../components/Loading";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { IoMdHome } from "react-icons/io";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -126,8 +126,12 @@ const Login = () => {
         <Navbar.Toggle />
       </div>
       <Navbar.Collapse>
-        <Link to="/">Home</Link>
-        <Link to="/contact">Contact</Link>
+        <Link to="/" className="flex items-center py-2 px-3 hover:bg-blue-100 rounded-md transition-all ease-in-out duration-300">
+          <IoMdHome className="mr-2"/>
+          Home
+        </Link>
+        <Link to="/contact" className="flex items-center py-2 px-3 hover:bg-blue-100 rounded-md transition-all ease-in-out duration-300">Contact</Link>
+        {userInfo.role == "admin" && <Link to="/admin" className="flex items-center py-2 px-3 hover:bg-blue-100 rounded-md transition-all ease-in-out duration-300">Dashboard</Link>}
       </Navbar.Collapse>
     </Navbar>
   );

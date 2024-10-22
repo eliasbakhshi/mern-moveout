@@ -9,7 +9,7 @@ function MessageBox({ title, message, buttonText, buttonLink, children }) {
     >
       <div
         id="header"
-        className="container left-0 top-0 flex w-full justify-between bg-gray-100 p-2"
+        className="container left-0 top-0 flex w-full justify-between bg-blue-100 p-2"
       >
         <h2 className="text-lg font-semibold">{title}</h2>
       </div>

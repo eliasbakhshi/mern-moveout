@@ -1,6 +1,7 @@
 import Box from "../models/Box.js";
+import DeletedBox from "../models/DeletedBox.js";
 import { validationResult } from "express-validator";
-import fs from "fs";
+import fs, { exists } from "fs";
 import path from "path";
 import transporter from "../config/nodemailer.js";
 import ShortUniqueId from "short-unique-id";
@@ -11,7 +12,9 @@ const uid = new ShortUniqueId({ length: 6, dictionary: "number" });
 const __dirname = path.resolve();
 
 export const home = (req, res) => {
-  return res.status(200).json({ message: "Welcome to the Move out API" });
+  return res
+    .status(200)
+    .json({ message: `Welcome to the ${process.env.SITE_NAME} API` });
 };
 
 export const getBoxes = async (req, res) => {
@@ -23,7 +26,7 @@ export const getBoxes = async (req, res) => {
 
   // Get the boxes
   const boxes = await Box.find({ user: req.user._id }).sort({
-    createdAt: 1,
+    createdAt: -1,
   });
 
   if (!boxes) {
@@ -61,7 +64,8 @@ export const createBox = async (req, res) => {
   if (!user) {
     return res.status(400).json({ message: "User is inactive." });
   }
-  const { name, labelNum, isPrivate } = req.body;
+
+  const { name, labelNum, isPrivate, type } = req.body;
   const privateCode = uid.randomUUID(6);
   if (!name || !labelNum || isPrivate === undefined) {
     return res
@@ -75,6 +79,7 @@ export const createBox = async (req, res) => {
     user: req.user._id,
     isPrivate,
     privateCode: isPrivate ? privateCode : undefined,
+    type,
   });
 
   const newBox = await box.save();
@@ -87,7 +92,7 @@ export const createBox = async (req, res) => {
 };
 
 export const updateBox = async (req, res) => {
-  const { name, labelNum, boxId, isPrivate } = req.body;
+  const { name, labelNum, boxId, isPrivate, type } = req.body;
 
   // Check if the user is active
   const user = await User.findOne({ _id: req.user._id, isActive: true });
@@ -111,6 +116,7 @@ export const updateBox = async (req, res) => {
   box.labelNum = labelNum;
   box.isPrivate = isPrivate;
   box.privateCode = isPrivate == "true" ? uid.randomUUID(6) : undefined;
+  box.type = type;
 
   await box.save();
 
@@ -130,24 +136,53 @@ export const deleteBox = async (req, res) => {
     return res.status(400).json({ message: "Please provide an box ID" });
   }
 
-  const box = await Box.findOneAndDelete({ user: req.user._id, _id: boxId });
+  const box = await Box.findOne({ user: req.user._id, _id: boxId });
 
   if (!box) {
     return res.status(400).json({ message: "Box not found" });
   }
 
-  // Remove the box from the user's boxes
-  req.user.boxes = req.user.boxes.filter(
-    (boxId) => boxId.toString() !== box._id.toString(),
-  );
-  await req.user.save();
+  // Move the box to DeletedBox collection
+  box.deletedAt = Date.now();
+  box.items.forEach((item) => {
+    if (item.mediaPath) {
+      item.mediaPath = item.mediaPath.replace(
+        process.env.UPLOADS_PATH,
+        process.env.DELETED_UPLOADS_PATH,
+      );
+    }
+  });
+  await DeletedBox.create(box.toObject());
+  await box.deleteOne();
+
+  try {
+    // Remove all media files that have the user ID as the first part of the filename
+    const mediaFiles = fs.readdirSync(
+      path.join(__dirname, process.env.UPLOADS_PATH),
+    );
+    mediaFiles.forEach((file) => {
+      const [fileUserId] = file.split("-");
+      if (fileUserId === req.user._id.toString()) {
+        const deletedPath = path.join(
+          __dirname,
+          process.env.DELETED_UPLOADS_PATH,
+          file,
+        );
+        fs.renameSync(
+          path.join(__dirname, process.env.UPLOADS_PATH, file),
+          deletedPath,
+        );
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
 
   return res.status(200).json({ message: "Box deleted successfully." });
 };
+
 export const changeBoxStatus = async (req, res) => {
   const { boxId, status } = req.body;
-
-  console.log(req.body);
 
   // Check if the user is active
   const user = await User.findOne({ _id: req.user._id, isActive: true });
@@ -172,7 +207,9 @@ export const changeBoxStatus = async (req, res) => {
   box.privateCode = status ? uid.randomUUID(6) : undefined;
   await box.save();
 
-  return res.status(200).json({ message: `Box is ${box.isPrivate ? "private" : "public"} now.` });
+  return res
+    .status(200)
+    .json({ message: `Box is ${box.isPrivate ? "private" : "public"} now.` });
 };
 
 // Public stuff
@@ -260,10 +297,13 @@ export const getBoxItems = async (req, res) => {
     }
   }
 
+  // Remove the items that are deleted
+  box.items = box.items.filter((item) => !item.deletedAt);
+
   const sortedItems = box.items.sort((a, b) => b.createdAt - a.createdAt);
   box.items = sortedItems;
-
-  return res.status(200).json([...box.items]);
+  // TODO: This should return items in the future for boxDetails page
+  return res.status(200).json(box);
 };
 
 export const getBoxItem = async (req, res) => {};
@@ -277,7 +317,7 @@ export const createItem = async (req, res) => {
   }
 
   // get the files
-  const { boxId, description } = req.body;
+  const { boxId, description, value, type } = req.body;
   const media = req.file;
   let mediaType = undefined,
     mediaPath = undefined;
@@ -288,7 +328,22 @@ export const createItem = async (req, res) => {
     return res.status(422).json({ message: err.array()[0].msg });
   }
 
-  if (description === "" && !media) {
+  if (description === "" && value === "undefined" && type === "insurance") {
+    return res
+      .status(400)
+      .json({ message: "Please give a description and value." });
+  }
+
+  // Validate and convert the value field
+  let numericValue = undefined;
+  if (value !== "undefined" && value !== "") {
+    numericValue = Number(value);
+    if (isNaN(numericValue)) {
+      return res.status(400).json({ message: "Invalid value provided" });
+    }
+  }
+
+  if (description === "" && !media && type === "standard") {
     return res
       .status(400)
       .json({ message: "Please give a description or upload a file." });
@@ -322,6 +377,7 @@ export const createItem = async (req, res) => {
     mediaType,
     description,
     mediaPath,
+    value: numericValue,
   });
 
   await theBox.save();
@@ -330,7 +386,7 @@ export const createItem = async (req, res) => {
 };
 
 export const updateItem = async (req, res) => {
-  const { itemId, description, mediaPath } = req.body;
+  const { itemId, description, mediaPath, value, type } = req.body;
   const media = req.file;
   let mediaType = undefined,
     newMediaPath = undefined;
@@ -341,7 +397,24 @@ export const updateItem = async (req, res) => {
     return res.status(422).json({ message: err.array()[0].msg });
   }
 
-  if (description === "" && !media && mediaPath === "") {
+  console.log(req.body);
+
+  if ((description === "" || description === "undefined") && (value === "" || value === "undefined") && type === "insurance") {
+    return res
+      .status(400)
+      .json({ message: "Please give a description and value." });
+  }
+
+  // Validate and convert the value field
+  let numericValue = undefined;
+  if (value !== "undefined" && value !== "" && type === "insurance") {
+    numericValue = Number(value);
+    if (isNaN(numericValue)) {
+      return res.status(400).json({ message: "Invalid value provided" });
+    }
+  }
+
+  if ((description === "" || description === "undefined") && !media && mediaPath === "", type === "standard") {
     // if there is no description and no media, return an error
     return res
       .status(400)
@@ -405,6 +478,7 @@ export const updateItem = async (req, res) => {
       }
 
       item.description = description;
+      item.value = numericValue;
     }
     return item;
   });
@@ -439,8 +513,12 @@ export const deleteItem = async (req, res) => {
     if (item._id.toString() === itemId) {
       if (item.mediaPath) {
         // remove the media in the uploads folder
-        fs.unlinkSync(path.join(__dirname, item.mediaPath));
+        // fs.unlinkSync(path.join(__dirname, item.mediaPath));
       }
+      // soft delete the item
+      item.deletedAt = Date.now();
+      console.log(item);
+      return item;
     } else {
       return item;
     }

@@ -21,16 +21,16 @@ export const usersApi = apiSlice.injectEndpoints({
         url: "/api/register",
         method: "POST",
         body: credentials,
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     registerWithGoogle: builder.mutation({
       query: (credentials) => ({
         url: "/api/register-with-google",
         method: "POST",
         body: credentials,
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     logout: builder.mutation({
       query: () => ({
@@ -43,16 +43,16 @@ export const usersApi = apiSlice.injectEndpoints({
         url: "/api/verify-email",
         method: "PUT",
         body: { token },
-        providesTags: ["User"],
       }),
+      providesTags: ["User"],
     }),
     sendVerificationEmail: builder.mutation({
       query: (email) => ({
         url: "/api/verify-email",
         method: "POST",
         body: email,
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
 
     sendEmailResetPassword: builder.mutation({
@@ -60,46 +60,46 @@ export const usersApi = apiSlice.injectEndpoints({
         url: "/api/reset-password/",
         method: "POST",
         body: email,
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     checkTokenResetPassword: builder.query({
       query: (token) => ({
         url: "/api/reset-password/" + token,
         method: "GET",
-        providesTags: ["User"],
       }),
+      providesTags: ["User"],
     }),
     resetPassword: builder.mutation({
       query: (info) => ({
         url: "/api/reset-password/",
         method: "PUT",
         body: info,
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     editCurrentUser: builder.mutation({
       query: (info) => ({
-        url: "/api/users",
+        url: "/api/users/current",
         method: "PUT",
         body: info,
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     getCurrentUser: builder.query({
       query: (id) => ({
         url: "/api/users/" + id,
         method: "GET",
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
-    deleteUser: builder.query({
+    deleteCurrentUser: builder.query({
       query: (token) => ({
-        url: "/api/users/delete",
+        url: "/api/users/current",
         method: "DELETE",
         params: {token},
-        providesTags: ["User"],
       }),
+      providesTags: ["User"],
     }),
     getUsersEmailAndName: builder.query({
       query: () => ({
@@ -112,48 +112,94 @@ export const usersApi = apiSlice.injectEndpoints({
         url: "/api/users/share-box/",
         method: "POST",
         body: info,
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     shareLabel: builder.mutation({
       query: (info) => ({
         url: "/api/users/share-label/",
         method: "POST",
         body: info,
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     getUserFromGoogle: builder.query({
       query: (user) => ({
         url: `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`,
         method: "GET",
-        invalidatesTags: ["User"],
         headers: {
           Authorization: `Bearer ${user.access_token}`,
           Accept: "application/json",
         },
       }),
+      invalidatesTags: ["User"],
     }),
     deactivateCurrentUser: builder.mutation({
       query: () => ({
         url: `/api/users/deactivate-current`,
         method: "PUT",
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     reactivateCurrentUser: builder.mutation({
       query: () => ({
         url: `/api/users/reactivate-current`,
         method: "PUT",
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
     }),
     sendDeleteEmail: builder.mutation({
       query: () => ({
         url: `/api/users/send-delete-email`,
         method: "PUT",
-        invalidatesTags: ["User"],
       }),
+      invalidatesTags: ["User"],
+    }),
+    getUsers: builder.query({
+      query: () => ({
+        url: `/api/users`,
+        method: "GET",
+      }),
+      providesTags: ["User"],
+    }),
+    getDeletedUsers: builder.query({
+      query: () => ({
+        url: `/api/users/deleted`,
+        method: "GET",
+      }),
+      providesTags: ["User"],
+    }),
+    createUser: builder.mutation({
+      query: (info) => ({
+        url: `/api/users`,
+        body: info,
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
+    }),
+    editUser: builder.mutation({
+      query: (info) => ({
+        url: `/api/users`,
+        body: info,
+        method: "PUT",
+      }),
+      invalidatesTags: ["User"],
+    }),
+    deleteUser: builder.mutation({
+      query: (info) => ({
+        url: `/api/users`,
+        body: info,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["User"],
+    }),
+    changeUserStatus: builder.mutation({
+      query: (info) => ({
+        url: `/api/users/status`,
+        body: info,
+        method: "PUT",
+      }),
+      invalidatesTags: ["User"],
     }),
   }),
 });
@@ -171,7 +217,7 @@ export const {
   useCheckTokenResetPasswordQuery,
   useEditCurrentUserMutation,
   useGetCurrentUserQuery,
-  useDeleteUserQuery,
+  useDeleteCurrentUserQuery,
   useGetUsersEmailAndNameQuery,
   useShareBoxMutation,
   useShareLabelMutation,
@@ -179,4 +225,10 @@ export const {
   useDeactivateCurrentUserMutation,
   useReactivateCurrentUserMutation,
   useSendDeleteEmailMutation,
+  useGetUsersQuery,
+  useGetDeletedUsersQuery,
+  useCreateUserMutation,
+  useEditUserMutation,
+  useDeleteUserMutation,
+  useChangeUserStatusMutation,
 } = usersApi;
