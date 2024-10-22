@@ -17,6 +17,8 @@ import {
   useEditUserMutation,
   useDeleteUserMutation,
   useChangeUserStatusMutation,
+  useRecoverUserMutation,
+  useDeleteUserPermanentlyMutation,
 } from "../../redux/api/usersApiSlice";
 
 // TODO: Add a loading page then user is navigating between pages
@@ -44,6 +46,8 @@ function Users() {
   const [editUser] = useEditUserMutation();
   const [deleteUser] = useDeleteUserMutation();
   const [changeUserStatus] = useChangeUserStatusMutation();
+  const [recoverUser] = useRecoverUserMutation();
+  const [deleteUserPermanently] = useDeleteUserPermanentlyMutation();
 
   const showModal = (userId = "", mode = "create") => {
     if (mode === "create") {
@@ -56,7 +60,7 @@ function Users() {
         mode,
       });
     } else if (mode === "edit") {
-      // Find the box information for editing
+      // Find the user information for editing
       let user;
       if (showingDeletedUsers) {
         user = deletedUsers.find((theUser) => theUser._id === userId);
@@ -73,6 +77,8 @@ function Users() {
         mode,
       });
     } else if (mode === "delete") {
+      setInputs({ ...inputs, userId, mode });
+    } else if (mode === "delete-permanently") {
       setInputs({ ...inputs, userId, mode });
     }
     setIsOpenModal(true);
@@ -169,6 +175,34 @@ function Users() {
       if (error) {
         return toast.error(error.data.message);
       } else {
+        setInputs({
+          userId: "",
+          name: "",
+          email: "",
+          password: "",
+          isActive: false,
+          mode: "",
+        });
+        setIsOpenModal(false);
+        return toast.success(data.message);
+      }
+    } catch (err) {
+      return toast.error(
+        err?.message || "An error occurred. Please contact the administration.",
+      );
+    }
+  };
+
+  const deleteUserPermanentlyHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await deleteUserPermanently({
+        userId: inputs.userId,
+      });
+
+      if (error) {
+        return toast.error(error.data.message);
+      } else {
         return toast.success(data.message);
       }
     } catch (err) {
@@ -200,6 +234,24 @@ function Users() {
     }
   };
 
+  const recoverUserHandler = async (userId) => {
+    try {
+      const { data, error } = await recoverUser({
+        userId,
+      });
+
+      if (error) {
+        return toast.error(error.data.message);
+      } else {
+        return toast.success(data.message);
+      }
+    } catch (err) {
+      return toast.error(
+        err?.message || "An error occurred. Please contact the administration.",
+      );
+    }
+  };
+
   useEffect(() => {
     // Redirect to profile page if the user is inactivated.
     if (userInfo?.isActive === false || userInfo?.isActive === undefined) {
@@ -208,6 +260,7 @@ function Users() {
   }, [navigate, userInfo]);
 
   console.log(inputs);
+  console.log("users", users);
 
   return (
     <>
@@ -223,11 +276,17 @@ function Users() {
         </Button>
       </div>
       {showingDeletedUsers ? (
-        <UserList users={deletedUsers} showModal={showModal} />
+        <UserList
+          users={deletedUsers}
+          showModal={showModal}
+          showingDeletedUsers={showingDeletedUsers}
+          recoverUserHandler={recoverUserHandler}
+        />
       ) : (
         <UserList
           users={users}
           showModal={showModal}
+          showingDeletedUsers={showingDeletedUsers}
           changeStatusHandler={changeStatusHandler}
         />
       )}
@@ -331,7 +390,7 @@ function Users() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          title="Delete Box"
+          title="Delete User"
           submitText="Yes"
           submitColor="red"
           cancelText="No"
@@ -342,87 +401,23 @@ function Users() {
         </Overlay>
       )}
 
-      {/* Show the popup for editing */}
-      {/* {isOpenModal && inputs.mode === "edit" && (
+      {/* Show the popup for deleting permanently */}
+      {isOpenModal && inputs.mode === "delete-permanently" && (
         <Overlay
           isOpen={isOpenModal}
-          onClose={onCloseOverlay}
-          setIsOpen={setIsOpenModal}
-          extraClasses={"w-full h-[95vh] h-auto"}
-          title="Edit Item"
-          submitText="Edit"
-          cancelText="Cancel"
-          onSubmit={editItemHandler}
+          onClose={() => setIsOpenModal(!isOpenModal)}
+          title="Delete User"
+          submitText="Yes"
+          submitColor="red"
+          cancelText="No"
+          onSubmit={deleteUserPermanentlyHandler}
+          extraClasses={"w-96 md:mx-4 h-auto"}
         >
-          <div className="container flex w-full flex-col gap-10 py-3 md:flex-row xl:px-0">
-            {box.type === "standard" && (
-              <>
-                <div
-                  className={`group relative h-96 w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
-                  style={{ backgroundImage: `url(${image})` }}
-                >
-                  <label
-                    htmlFor="media"
-                    className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
-                  >
-                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                      <FaDownload size="2rem" className="mb-3" />
-                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                        <span className="font-semibold">Click to upload</span>{" "}
-                        or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        PNG, JPG, JPEG, WEBP, MP3 (MAX. 2 MB)
-                      </p>
-                    </div>
-                    <input
-                      id="media"
-                      name="media"
-                      type="file"
-                      accept=".jpg,.jpeg,.png,.webp,.mp3"
-                      className="hidden"
-                      onInput={fileChangeHandler}
-                      onClick={(e) => {
-                        e.value = null;
-                        return false;
-                      }}
-                      value=""
-                    />
-                  </label>
-                  <div
-                    className="absolute bottom-0 flex w-full justify-center border-2 border-t-0 border-dashed border-gray-300 bg-gray-200 p-3 transition hover:cursor-pointer lg:bottom-auto lg:group-hover:-translate-y-full"
-                    onClick={deletePreview}
-                  >
-                    <FaTrash size="2rem" />
-                  </div>
-                </div>
-                <textarea
-                  name="description"
-                  onInput={changeHandler}
-                  className="h-full min-h-12 w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
-                  value={inputs.description}
-                ></textarea>
-              </>
-            )}
-            {box.type === "insurance" && (
-              <>
-                <textarea
-                  name="description"
-                  onInput={changeHandler}
-                  className="h-full w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
-                  value={inputs.description}
-                ></textarea>
-                <textarea
-                  name="value"
-                  onInput={changeHandler}
-                  className="h-full w-full rounded-lg bg-white shadow-md transition-shadow ease-in-out hover:shadow-lg active:shadow-inner"
-                  value={inputs.value}
-                ></textarea>
-              </>
-            )}
-          </div>
+          <p className="py-4">
+            Are you sure you want to delete this user permanently?
+          </p>
         </Overlay>
-      )} */}
+      )}
     </>
   );
 }

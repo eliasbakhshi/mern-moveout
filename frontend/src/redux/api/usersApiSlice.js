@@ -1,5 +1,7 @@
 import apiSlice from "./apiSlice";
 
+// TODO: Add custom invalidatesTags providesTags
+
 export const usersApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation({
@@ -201,6 +203,22 @@ export const usersApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+    recoverUser: builder.mutation({
+      query: (info) => ({
+        url: `/api/users/recover`,
+        body: info,
+        method: "PUT",
+      }),
+      invalidatesTags: ["User"],
+    }),
+    deleteUserPermanently: builder.mutation({
+      query: (info) => ({
+        url: `/api/users/permanently`,
+        body: info,
+        method: "Delete",
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
 });
 
@@ -231,4 +249,6 @@ export const {
   useEditUserMutation,
   useDeleteUserMutation,
   useChangeUserStatusMutation,
+  useRecoverUserMutation,
+  useDeleteUserPermanentlyMutation,
 } = usersApi;

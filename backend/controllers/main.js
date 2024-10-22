@@ -162,7 +162,7 @@ export const deleteBox = async (req, res) => {
     );
     mediaFiles.forEach((file) => {
       const [fileUserId] = file.split("-");
-      if (fileUserId === req.user._id.toString()) {
+      if (fileUserId === user._id.toString()) {
         const deletedPath = path.join(
           __dirname,
           process.env.DELETED_UPLOADS_PATH,
@@ -277,11 +277,6 @@ export const getBoxItems = async (req, res) => {
   const query = { _id: boxId };
 
   const box = await Box.findOne(query).populate("user");
-
-  // Check if the user is active
-  if (!box.user.isActive) {
-    return res.status(400).json({ message: "User is inactive." });
-  }
 
   if (!box) {
     return res.status(400).json({ message: "No box found." });
@@ -399,7 +394,11 @@ export const updateItem = async (req, res) => {
 
   console.log(req.body);
 
-  if ((description === "" || description === "undefined") && (value === "" || value === "undefined") && type === "insurance") {
+  if (
+    (description === "" || description === "undefined") &&
+    (value === "" || value === "undefined") &&
+    type === "insurance"
+  ) {
     return res
       .status(400)
       .json({ message: "Please give a description and value." });
@@ -414,7 +413,12 @@ export const updateItem = async (req, res) => {
     }
   }
 
-  if ((description === "" || description === "undefined") && !media && mediaPath === "", type === "standard") {
+  if (
+    ((description === "" || description === "undefined") &&
+      !media &&
+      mediaPath === "",
+    type === "standard")
+  ) {
     // if there is no description and no media, return an error
     return res
       .status(400)
@@ -509,15 +513,32 @@ export const deleteItem = async (req, res) => {
     return res.status(400).json({ message: "Item not found" });
   }
 
-  box.items = box.items.filter((item) => {
+  box.items = box.items.filter(async (item) => {
     if (item._id.toString() === itemId) {
       if (item.mediaPath) {
         // remove the media in the uploads folder
         // fs.unlinkSync(path.join(__dirname, item.mediaPath));
       }
+
+      // Check if there is any box with the same box ID in the DeletedBox collection
+      // const deletedBox = await DeletedBox.findOne({ box: box._id });
+      // if (deletedBox) {
+      //   deletedBox.items.push(item);
+      //   await deletedBox.save();
+      // } else {
+      //   const newDeletedBox = new DeletedBox({
+      //     box: box._id,
+      //     items: [item],
+      //   });
+      //   await newDeletedBox.save();
+      // }
+
+      //   If there is, move the item from the box to the DeletedBox collection
+      // If there is not, create a new DeletedBox collection with the same box ID and move the item to the DeletedBox collection
+      // Move the media file to the deleted folder
+
       // soft delete the item
       item.deletedAt = Date.now();
-      console.log(item);
       return item;
     } else {
       return item;

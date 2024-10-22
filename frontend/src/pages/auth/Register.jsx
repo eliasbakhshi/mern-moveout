@@ -15,6 +15,7 @@ import { googleLogout, useGoogleLogin } from "@react-oauth/google";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { FcGoogle } from "react-icons/fc";
 import { setCredentials } from "../../redux/features/auth/authSlice";
+import { Link } from "react-router-dom";
 
 // TODO: Make a focus for register button when the user press enter
 // Add reCaptcha to prevent bots from registering and login and contact form submission
@@ -91,7 +92,7 @@ function Register() {
       toast.error("Passwords do not match");
     }
 
-    try { 
+    try {
       const registered = await register({ name, email, password }).unwrap();
       // Handle successful register
       if (registered) {
@@ -158,19 +159,26 @@ function Register() {
           ref={reCaptchaRef}
         />
 
-        <Button disabled={registerLoading} extraClasses={"mt-auto"}>
-          {registerLoading ? <Spinner /> : "Register"}
-        </Button>
-        <Button
-          onClick={googleRegister}
-          disabled={getUserFromGoogleLoading || registerWithGoogleLoading}
-          extraClasses="mt-3 flex justify-center items-center"
-        >
-          {getUserFromGoogleLoading ||
-            (registerWithGoogleLoading && <Spinner />)}
-          <FcGoogle className="mr-3" />
-          Register with Google
-        </Button>
+          <Button disabled={registerLoading} extraClasses={"mt-auto"}>
+            {registerLoading ? <Spinner /> : "Register"}
+          </Button>
+          <Button
+            onClick={googleRegister}
+            disabled={getUserFromGoogleLoading || registerWithGoogleLoading}
+            extraClasses="mt-3 flex justify-center items-center"
+          >
+            {getUserFromGoogleLoading ||
+              (registerWithGoogleLoading && <Spinner />)}
+            <FcGoogle className="mr-3" />
+            Register with Google
+          </Button>
+
+          <p className="mt-3 text-center">
+            Already have an account?{" "}
+            <Link to="/login" className="text-blue-500">
+              Login
+            </Link>
+          </p>
       </form>
       <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-center bg-no-repeat md:block"></div>
     </section>

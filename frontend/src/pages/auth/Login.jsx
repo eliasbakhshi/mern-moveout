@@ -173,6 +173,12 @@ function Login() {
           <FcGoogle className="mr-3" />
           Login with google
         </Button>
+        <p className="mt-3 text-center">
+          Don't have an account?{" "}
+          <Link to="/register" className="text-blue-500">
+            Register{" "}
+          </Link>
+        </p>
       </form>
       <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-center bg-no-repeat md:block"></div>
     </section>

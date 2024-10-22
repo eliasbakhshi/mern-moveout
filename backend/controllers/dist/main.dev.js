@@ -404,7 +404,7 @@ var deleteBox = function deleteBox(req, res) {
                   _file$split2 = _slicedToArray(_file$split, 1),
                   fileUserId = _file$split2[0];
 
-              if (fileUserId === req.user._id.toString()) {
+              if (fileUserId === user._id.toString()) {
                 var deletedPath = _path["default"].join(_dirname, process.env.DELETED_UPLOADS_PATH, file);
 
                 _fs["default"].renameSync(_path["default"].join(_dirname, process.env.UPLOADS_PATH, file), deletedPath);
@@ -631,18 +631,8 @@ var getBoxItems = function getBoxItems(req, res) {
         case 5:
           box = _context9.sent;
 
-          if (box.user.isActive) {
-            _context9.next = 8;
-            break;
-          }
-
-          return _context9.abrupt("return", res.status(400).json({
-            message: "User is inactive."
-          }));
-
-        case 8:
           if (box) {
-            _context9.next = 10;
+            _context9.next = 8;
             break;
           }
 
@@ -650,14 +640,14 @@ var getBoxItems = function getBoxItems(req, res) {
             message: "No box found."
           }));
 
-        case 10:
+        case 8:
           if (!box.isPrivate) {
-            _context9.next = 17;
+            _context9.next = 15;
             break;
           }
 
           if (!(privateCode !== "" && privateCode !== box.privateCode.toString())) {
-            _context9.next = 15;
+            _context9.next = 13;
             break;
           }
 
@@ -665,9 +655,9 @@ var getBoxItems = function getBoxItems(req, res) {
             message: "Please enter the right private code."
           }));
 
-        case 15:
+        case 13:
           if (!(privateCode === "")) {
-            _context9.next = 17;
+            _context9.next = 15;
             break;
           }
 
@@ -675,7 +665,7 @@ var getBoxItems = function getBoxItems(req, res) {
             message: "Box is private."
           }));
 
-        case 17:
+        case 15:
           // Remove the items that are deleted
           box.items = box.items.filter(function (item) {
             return !item.deletedAt;
@@ -687,7 +677,7 @@ var getBoxItems = function getBoxItems(req, res) {
 
           return _context9.abrupt("return", res.status(200).json(box));
 
-        case 21:
+        case 19:
         case "end":
           return _context9.stop();
       }
@@ -1024,76 +1014,105 @@ exports.updateItem = updateItem;
 
 var deleteItem = function deleteItem(req, res) {
   var itemId, box;
-  return regeneratorRuntime.async(function deleteItem$(_context13) {
+  return regeneratorRuntime.async(function deleteItem$(_context14) {
     while (1) {
-      switch (_context13.prev = _context13.next) {
+      switch (_context14.prev = _context14.next) {
         case 0:
           itemId = req.params.itemId;
 
           if (itemId) {
-            _context13.next = 3;
+            _context14.next = 3;
             break;
           }
 
-          return _context13.abrupt("return", res.status(400).json({
+          return _context14.abrupt("return", res.status(400).json({
             message: "Please provide an item ID"
           }));
 
         case 3:
-          _context13.next = 5;
+          _context14.next = 5;
           return regeneratorRuntime.awrap(_Box["default"].findOne({
             user: req.user._id,
             "items._id": itemId
           }).populate("user"));
 
         case 5:
-          box = _context13.sent;
+          box = _context14.sent;
 
           if (box.user.isActive) {
-            _context13.next = 8;
+            _context14.next = 8;
             break;
           }
 
-          return _context13.abrupt("return", res.status(400).json({
+          return _context14.abrupt("return", res.status(400).json({
             message: "User is inactive."
           }));
 
         case 8:
           if (box) {
-            _context13.next = 10;
+            _context14.next = 10;
             break;
           }
 
-          return _context13.abrupt("return", res.status(400).json({
+          return _context14.abrupt("return", res.status(400).json({
             message: "Item not found"
           }));
 
         case 10:
-          box.items = box.items.filter(function (item) {
-            if (item._id.toString() === itemId) {
-              if (item.mediaPath) {} // remove the media in the uploads folder
-              // fs.unlinkSync(path.join(__dirname, item.mediaPath));
-              // soft delete the item
+          box.items = box.items.filter(function _callee(item) {
+            return regeneratorRuntime.async(function _callee$(_context13) {
+              while (1) {
+                switch (_context13.prev = _context13.next) {
+                  case 0:
+                    if (!(item._id.toString() === itemId)) {
+                      _context13.next = 6;
+                      break;
+                    }
+
+                    if (item.mediaPath) {} // remove the media in the uploads folder
+                    // fs.unlinkSync(path.join(__dirname, item.mediaPath));
+                    // Check if there is any box with the same box ID in the DeletedBox collection
+                    // const deletedBox = await DeletedBox.findOne({ box: box._id });
+                    // if (deletedBox) {
+                    //   deletedBox.items.push(item);
+                    //   await deletedBox.save();
+                    // } else {
+                    //   const newDeletedBox = new DeletedBox({
+                    //     box: box._id,
+                    //     items: [item],
+                    //   });
+                    //   await newDeletedBox.save();
+                    // }
+                    //   If there is, move the item from the box to the DeletedBox collection
+                    // If there is not, create a new DeletedBox collection with the same box ID and move the item to the DeletedBox collection
+                    // Move the media file to the deleted folder
+                    // soft delete the item
 
 
-              item.deletedAt = Date.now();
-              console.log(item);
-              return item;
-            } else {
-              return item;
-            }
+                    item.deletedAt = Date.now();
+                    return _context13.abrupt("return", item);
+
+                  case 6:
+                    return _context13.abrupt("return", item);
+
+                  case 7:
+                  case "end":
+                    return _context13.stop();
+                }
+              }
+            });
           });
-          _context13.next = 13;
+          _context14.next = 13;
           return regeneratorRuntime.awrap(box.save());
 
         case 13:
-          return _context13.abrupt("return", res.status(200).json({
+          return _context14.abrupt("return", res.status(200).json({
             message: "Item deleted successfully."
           }));
 
         case 14:
         case "end":
-          return _context13.stop();
+          return _context14.stop();
       }
     }
   });

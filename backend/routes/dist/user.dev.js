@@ -32,10 +32,10 @@ router.post("/register", (0, _expressValidator.body)("email").trim().isEmail().w
       return Promise.reject("The email is already in use.");
     }
   });
-}), (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").isLength({
+}), (0, _expressValidator.body)("password").isLength({
   min: 6,
   max: 100
-}).isAlphanumeric(), (0, _expressValidator.body)("confirmPassword").custom(function (value, _ref) {
+}).withMessage("Password must be at least 6 characters long and at most 100 characters long.").isAlphanumeric().withMessage("Password must contain only alphanumeric characters."), (0, _expressValidator.body)("confirmPassword").custom(function (value, _ref) {
   var req = _ref.req;
 
   if (value !== req.body.password) {
@@ -53,20 +53,20 @@ router.post("/register-with-google", (0, _expressValidator.body)("email").isEmai
     }
   });
 }), (0, _expressAsyncHandler["default"])(_user.registerWithGoogle));
-router.post("/login", (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").isLength({
+router.post("/login", (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressValidator.body)("password").isLength({
   min: 6,
   max: 100
-}).isAlphanumeric(), (0, _expressAsyncHandler["default"])(_user.login));
+}).withMessage("Password must be at least 6 characters long and at most 100 characters long.").isAlphanumeric().withMessage("Password must contain only alphanumeric characters."), (0, _expressAsyncHandler["default"])(_user.login));
 router.post("/login-with-google", (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressAsyncHandler["default"])(_user.loginWithGoogle));
 router.post("/logout", (0, _expressAsyncHandler["default"])(_user.logout));
 router.put("/verify-email", (0, _expressAsyncHandler["default"])(_user.verifyEmail));
 router.post("/verify-email", (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressAsyncHandler["default"])(_user.sendVerificationEmail));
 router.post("/reset-password", (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressAsyncHandler["default"])(_user.sendResetPasswordEmail));
 router.get("/reset-password/:token", (0, _expressAsyncHandler["default"])(_user.verifyTokenResetPassword));
-router.put("/reset-password", (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").isLength({
+router.put("/reset-password", (0, _expressValidator.body)("password").isLength({
   min: 6,
   max: 100
-}).isAlphanumeric(), (0, _expressValidator.body)("confirmPassword").custom(function (value, _ref2) {
+}).withMessage("Password must be at least 6 characters long and at most 100 characters long.").isAlphanumeric().withMessage("Password must contain only alphanumeric characters."), (0, _expressValidator.body)("confirmPassword").custom(function (value, _ref2) {
   var req = _ref2.req;
 
   if (value && value !== req.body.password) {
@@ -77,12 +77,12 @@ router.put("/reset-password", (0, _expressValidator.body)("password", "The passw
 }), (0, _expressAsyncHandler["default"])(_user.updateUserPasswordById));
 router.get("/users", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.getUsers));
 router.get("/users/deleted", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.getDeletedUsers));
-router.put("/users/current", _validateToken["default"], (0, _checkAccess["default"])("user"), _multer["default"], (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not correct."), (0, _expressValidator.body)("password", "The password must be alphanumeric and at least 6 characters long.").optional({
-  checkFalsy: true
-}).isLength({
+router.put("/users/current", _validateToken["default"], (0, _checkAccess["default"])("user"), _multer["default"], (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not correct."), (0, _expressValidator.body)("password").isLength({
   min: 6,
   max: 100
-}).isAlphanumeric(), (0, _expressValidator.body)("confirmPassword").optional({
+}).withMessage("Password must be at least 6 characters long and at most 100 characters long.").optional({
+  checkFalsy: true
+}).isAlphanumeric().withMessage("Password must contain only alphanumeric characters."), (0, _expressValidator.body)("confirmPassword").optional({
   checkFalsy: true
 }).custom(function (value, _ref3) {
   var req = _ref3.req;
@@ -105,6 +105,7 @@ router.post("/users", _validateToken["default"], (0, _checkAccess["default"])("a
 router.put("/users", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressValidator.body)("name").trim().isString().withMessage("The name is not valid."), (0, _expressValidator.body)("email").trim().isEmail().withMessage("The email is not valid."), (0, _expressAsyncHandler["default"])(_user.editUser));
 router["delete"]("/users", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.deleteUser));
 router.put("/users/status", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.changeUserStatus));
+router.put("/users/recover", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.recoverUser));
 var _default = router; // TODO: redirect to verification page after the token was expired or changed or invalid
 // TODO: Implement reset password
 

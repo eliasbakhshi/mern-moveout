@@ -31,8 +31,8 @@ function BoxDetails() {
   useEffect(() => {
     if (
       itemsError &&
-      itemsError.data &&
-      itemsError.data.message.includes("right")
+      itemsError?.data &&
+      itemsError?.data?.message?.includes("right")
     ) {
       toast.error(itemsError.data.message);
     }
@@ -48,6 +48,7 @@ function BoxDetails() {
     }
   };
 
+
   return itemsLoading ? (
     <Loading />
   ) : items ? (
@@ -56,7 +57,7 @@ function BoxDetails() {
     ) : (
       <ItemListInsurance items={items.items} />
     )
-  ) : itemsError?.data?.message.includes("private") ? (
+  ) : itemsError?.data?.message?.includes("private") ? (
     <>
       <div className="flex w-full flex-grow items-center justify-center">
         <MessageBox title="Private Box">
@@ -84,7 +85,8 @@ function BoxDetails() {
   ) : (
     <div className="container flex flex-col items-center justify-center py-10">
       <p className="text-lg font-semibold text-red-500">
-        {items && items?.error?.data?.message}
+        {items?.error?.data?.message && items?.error?.data?.message}
+        {itemsError?.data?.message && itemsError?.data?.message}
       </p>
     </div>
   );

@@ -22,6 +22,10 @@ const userSchema = new Schema(
     mediaPath: {
       type: String,
     },
+    dataUsage: {
+      type: Number,
+      default: 0,
+    },
     boxes: [
       {
         type: Schema.Types.ObjectId,

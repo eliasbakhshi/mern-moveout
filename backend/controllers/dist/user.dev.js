@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports["default"] = exports.sendDeleteEmail = exports.reactivateCurrentUser = exports.deactivateCurrentUser = exports.shareLabel = exports.shareBox = exports.getNamesAndEmails = exports.deleteCurrentUser = exports.changeUserStatus = exports.deleteUser = exports.editUser = exports.createUser = exports.updateCurrentUser = exports.getCurrentUser = exports.getDeletedUsers = exports.getUsers = exports.updateUserPasswordById = exports.verifyTokenResetPassword = exports.sendResetPasswordEmail = exports.sendVerificationEmail = exports.verifyEmail = exports.logout = exports.loginWithGoogle = exports.login = exports.registerWithGoogle = exports.register = void 0;
+exports["default"] = exports.sendDeleteEmail = exports.reactivateCurrentUser = exports.deactivateCurrentUser = exports.shareLabel = exports.shareBox = exports.getNamesAndEmails = exports.deleteCurrentUser = exports.changeUserStatus = exports.recoverUser = exports.deleteUser = exports.editUser = exports.createUser = exports.updateCurrentUser = exports.getCurrentUser = exports.getDeletedUsers = exports.getUsers = exports.updateUserPasswordById = exports.verifyTokenResetPassword = exports.sendResetPasswordEmail = exports.sendVerificationEmail = exports.verifyEmail = exports.logout = exports.loginWithGoogle = exports.login = exports.registerWithGoogle = exports.register = void 0;
 
 var _User = _interopRequireDefault(require("../models/User.js"));
 
@@ -832,7 +832,8 @@ var updateUserPasswordById = function updateUserPasswordById(req, res) {
 exports.updateUserPasswordById = updateUserPasswordById;
 
 var getUsers = function getUsers(req, res) {
-  var isAdmin, users;
+  var isAdmin, users, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, user, boxes, dataUsage, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, box, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, item, stats;
+
   return regeneratorRuntime.async(function getUsers$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
@@ -878,14 +879,180 @@ var getUsers = function getUsers(req, res) {
           }));
 
         case 10:
+          // get the data usage of each user
+          _iteratorNormalCompletion = true;
+          _didIteratorError = false;
+          _iteratorError = undefined;
+          _context10.prev = 13;
+          _iterator = users[Symbol.iterator]();
+
+        case 15:
+          if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
+            _context10.next = 70;
+            break;
+          }
+
+          user = _step.value;
+          _context10.next = 19;
+          return regeneratorRuntime.awrap(_Box["default"].find({
+            user: user._id
+          }));
+
+        case 19:
+          boxes = _context10.sent;
+          dataUsage = 0;
+          _iteratorNormalCompletion2 = true;
+          _didIteratorError2 = false;
+          _iteratorError2 = undefined;
+          _context10.prev = 24;
+          _iterator2 = boxes[Symbol.iterator]();
+
+        case 26:
+          if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
+            _context10.next = 50;
+            break;
+          }
+
+          box = _step2.value;
+          _iteratorNormalCompletion3 = true;
+          _didIteratorError3 = false;
+          _iteratorError3 = undefined;
+          _context10.prev = 31;
+
+          for (_iterator3 = box.items[Symbol.iterator](); !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            item = _step3.value;
+
+            if (item.mediaPath && item.deletedAt === undefined) {
+              stats = _fs["default"].statSync(_path["default"].join(_dirname, item.mediaPath));
+              dataUsage += stats.size;
+            }
+          }
+
+          _context10.next = 39;
+          break;
+
+        case 35:
+          _context10.prev = 35;
+          _context10.t0 = _context10["catch"](31);
+          _didIteratorError3 = true;
+          _iteratorError3 = _context10.t0;
+
+        case 39:
+          _context10.prev = 39;
+          _context10.prev = 40;
+
+          if (!_iteratorNormalCompletion3 && _iterator3["return"] != null) {
+            _iterator3["return"]();
+          }
+
+        case 42:
+          _context10.prev = 42;
+
+          if (!_didIteratorError3) {
+            _context10.next = 45;
+            break;
+          }
+
+          throw _iteratorError3;
+
+        case 45:
+          return _context10.finish(42);
+
+        case 46:
+          return _context10.finish(39);
+
+        case 47:
+          _iteratorNormalCompletion2 = true;
+          _context10.next = 26;
+          break;
+
+        case 50:
+          _context10.next = 56;
+          break;
+
+        case 52:
+          _context10.prev = 52;
+          _context10.t1 = _context10["catch"](24);
+          _didIteratorError2 = true;
+          _iteratorError2 = _context10.t1;
+
+        case 56:
+          _context10.prev = 56;
+          _context10.prev = 57;
+
+          if (!_iteratorNormalCompletion2 && _iterator2["return"] != null) {
+            _iterator2["return"]();
+          }
+
+        case 59:
+          _context10.prev = 59;
+
+          if (!_didIteratorError2) {
+            _context10.next = 62;
+            break;
+          }
+
+          throw _iteratorError2;
+
+        case 62:
+          return _context10.finish(59);
+
+        case 63:
+          return _context10.finish(56);
+
+        case 64:
+          user.dataUsage = dataUsage;
+          _context10.next = 67;
+          return regeneratorRuntime.awrap(user.save());
+
+        case 67:
+          _iteratorNormalCompletion = true;
+          _context10.next = 15;
+          break;
+
+        case 70:
+          _context10.next = 76;
+          break;
+
+        case 72:
+          _context10.prev = 72;
+          _context10.t2 = _context10["catch"](13);
+          _didIteratorError = true;
+          _iteratorError = _context10.t2;
+
+        case 76:
+          _context10.prev = 76;
+          _context10.prev = 77;
+
+          if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+            _iterator["return"]();
+          }
+
+        case 79:
+          _context10.prev = 79;
+
+          if (!_didIteratorError) {
+            _context10.next = 82;
+            break;
+          }
+
+          throw _iteratorError;
+
+        case 82:
+          return _context10.finish(79);
+
+        case 83:
+          return _context10.finish(76);
+
+        case 84:
           return _context10.abrupt("return", res.status(200).json(users));
 
-        case 11:
+        case 85:
         case "end":
           return _context10.stop();
       }
     }
-  });
+  }, null, null, [[13, 72, 76, 84], [24, 52, 56, 64], [31, 35, 39, 47], [40,, 42, 46], [57,, 59, 63], [77,, 79, 83]]);
 };
 
 exports.getUsers = getUsers;
@@ -1379,7 +1546,7 @@ var editUser = function editUser(req, res) {
 exports.editUser = editUser;
 
 var deleteUser = function deleteUser(req, res) {
-  var userId, isAdmin, user, mediaFiles, userBoxes, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, box;
+  var userId, isAdmin, user, mediaFiles, userBoxes, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, box;
 
   return regeneratorRuntime.async(function deleteUser$(_context16) {
     while (1) {
@@ -1442,7 +1609,7 @@ var deleteUser = function deleteUser(req, res) {
                   _file$split2 = _slicedToArray(_file$split, 1),
                   fileUserId = _file$split2[0];
 
-              if (fileUserId === req.user._id.toString()) {
+              if (fileUserId === user._id.toString()) {
                 var deletedPath = _path["default"].join(_dirname, process.env.DELETED_UPLOADS_PATH, file);
 
                 _fs["default"].renameSync(_path["default"].join(_dirname, process.env.UPLOADS_PATH, file), deletedPath);
@@ -1474,19 +1641,19 @@ var deleteUser = function deleteUser(req, res) {
 
         case 22:
           userBoxes = _context16.sent;
-          _iteratorNormalCompletion = true;
-          _didIteratorError = false;
-          _iteratorError = undefined;
+          _iteratorNormalCompletion4 = true;
+          _didIteratorError4 = false;
+          _iteratorError4 = undefined;
           _context16.prev = 26;
-          _iterator = userBoxes[Symbol.iterator]();
+          _iterator4 = userBoxes[Symbol.iterator]();
 
         case 28:
-          if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
+          if (_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done) {
             _context16.next = 39;
             break;
           }
 
-          box = _step.value;
+          box = _step4.value;
           box.deletedAt = Date.now();
           box.items.forEach(function (item) {
             if (item.mediaPath) {
@@ -1501,7 +1668,7 @@ var deleteUser = function deleteUser(req, res) {
           return regeneratorRuntime.awrap(box.deleteOne());
 
         case 36:
-          _iteratorNormalCompletion = true;
+          _iteratorNormalCompletion4 = true;
           _context16.next = 28;
           break;
 
@@ -1512,26 +1679,26 @@ var deleteUser = function deleteUser(req, res) {
         case 41:
           _context16.prev = 41;
           _context16.t0 = _context16["catch"](26);
-          _didIteratorError = true;
-          _iteratorError = _context16.t0;
+          _didIteratorError4 = true;
+          _iteratorError4 = _context16.t0;
 
         case 45:
           _context16.prev = 45;
           _context16.prev = 46;
 
-          if (!_iteratorNormalCompletion && _iterator["return"] != null) {
-            _iterator["return"]();
+          if (!_iteratorNormalCompletion4 && _iterator4["return"] != null) {
+            _iterator4["return"]();
           }
 
         case 48:
           _context16.prev = 48;
 
-          if (!_didIteratorError) {
+          if (!_didIteratorError4) {
             _context16.next = 51;
             break;
           }
 
-          throw _iteratorError;
+          throw _iteratorError4;
 
         case 51:
           return _context16.finish(48);
@@ -1554,14 +1721,14 @@ var deleteUser = function deleteUser(req, res) {
 
 exports.deleteUser = deleteUser;
 
-var changeUserStatus = function changeUserStatus(req, res) {
-  var _req$body9, userId, isActive, isAdmin, user;
+var recoverUser = function recoverUser(req, res) {
+  var userId, isAdmin, deletedUser, mediaFiles, deletedBoxes, _iteratorNormalCompletion5, _didIteratorError5, _iteratorError5, _iterator5, _step5, deletedBox;
 
-  return regeneratorRuntime.async(function changeUserStatus$(_context17) {
+  return regeneratorRuntime.async(function recoverUser$(_context17) {
     while (1) {
       switch (_context17.prev = _context17.next) {
         case 0:
-          _req$body9 = req.body, userId = _req$body9.userId, isActive = _req$body9.isActive;
+          userId = req.body.userId;
 
           if (userId) {
             _context17.next = 3;
@@ -1593,14 +1760,14 @@ var changeUserStatus = function changeUserStatus(req, res) {
 
         case 8:
           _context17.next = 10;
-          return regeneratorRuntime.awrap(_User["default"].findById({
+          return regeneratorRuntime.awrap(_DeletedUser["default"].findById({
             _id: userId
           }));
 
         case 10:
-          user = _context17.sent;
+          deletedUser = _context17.sent;
 
-          if (user) {
+          if (deletedUser) {
             _context17.next = 13;
             break;
           }
@@ -1610,19 +1777,189 @@ var changeUserStatus = function changeUserStatus(req, res) {
           }));
 
         case 13:
+          try {
+            // Move all media files that have the user ID from the deleted-uploads to uploads as the first part of the filename
+            mediaFiles = _fs["default"].readdirSync(_path["default"].join(_dirname, process.env.DELETED_UPLOADS_PATH));
+            mediaFiles.forEach(function (file) {
+              var _file$split3 = file.split("-"),
+                  _file$split4 = _slicedToArray(_file$split3, 1),
+                  fileUserId = _file$split4[0];
+
+              if (fileUserId === deletedUser._id.toString()) {
+                _fs["default"].renameSync(_path["default"].join(_dirname, process.env.DELETED_UPLOADS_PATH, file), _path["default"].join(_dirname, process.env.UPLOADS_PATH, file) // Move the file back to the uploads folder
+                );
+              }
+            });
+          } catch (error) {
+            console.log(error);
+          }
+
+          deleteUser.deletedAt = undefined; // Move back user from deletedUser model to User model
+
+          _context17.next = 17;
+          return regeneratorRuntime.awrap(_User["default"].create(deletedUser.toObject()));
+
+        case 17:
+          _context17.next = 19;
+          return regeneratorRuntime.awrap(deletedUser.deleteOne());
+
+        case 19:
+          _context17.next = 21;
+          return regeneratorRuntime.awrap(_DeletedBox["default"].find({
+            user: req.user._id
+          }));
+
+        case 21:
+          deletedBoxes = _context17.sent;
+          _iteratorNormalCompletion5 = true;
+          _didIteratorError5 = false;
+          _iteratorError5 = undefined;
+          _context17.prev = 25;
+          _iterator5 = deletedBoxes[Symbol.iterator]();
+
+        case 27:
+          if (_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done) {
+            _context17.next = 38;
+            break;
+          }
+
+          deletedBox = _step5.value;
+          deletedBox.deletedAt = undefined;
+          deletedBox.items.forEach(function (item) {
+            if (item.mediaPath) {
+              item.mediaPath = item.mediaPath.replace(process.env.DELETED_UPLOADS_PATH, process.env.UPLOADS_PATH);
+            }
+          });
+          _context17.next = 33;
+          return regeneratorRuntime.awrap(_Box["default"].create(deletedBox.toObject()));
+
+        case 33:
+          _context17.next = 35;
+          return regeneratorRuntime.awrap(deletedBox.deleteOne());
+
+        case 35:
+          _iteratorNormalCompletion5 = true;
+          _context17.next = 27;
+          break;
+
+        case 38:
+          _context17.next = 44;
+          break;
+
+        case 40:
+          _context17.prev = 40;
+          _context17.t0 = _context17["catch"](25);
+          _didIteratorError5 = true;
+          _iteratorError5 = _context17.t0;
+
+        case 44:
+          _context17.prev = 44;
+          _context17.prev = 45;
+
+          if (!_iteratorNormalCompletion5 && _iterator5["return"] != null) {
+            _iterator5["return"]();
+          }
+
+        case 47:
+          _context17.prev = 47;
+
+          if (!_didIteratorError5) {
+            _context17.next = 50;
+            break;
+          }
+
+          throw _iteratorError5;
+
+        case 50:
+          return _context17.finish(47);
+
+        case 51:
+          return _context17.finish(44);
+
+        case 52:
+          return _context17.abrupt("return", res.status(200).json({
+            message: "User has been recovered."
+          }));
+
+        case 53:
+        case "end":
+          return _context17.stop();
+      }
+    }
+  }, null, null, [[25, 40, 44, 52], [45,, 47, 51]]);
+};
+
+exports.recoverUser = recoverUser;
+
+var changeUserStatus = function changeUserStatus(req, res) {
+  var _req$body9, userId, isActive, isAdmin, user;
+
+  return regeneratorRuntime.async(function changeUserStatus$(_context18) {
+    while (1) {
+      switch (_context18.prev = _context18.next) {
+        case 0:
+          _req$body9 = req.body, userId = _req$body9.userId, isActive = _req$body9.isActive;
+
+          if (userId) {
+            _context18.next = 3;
+            break;
+          }
+
+          return _context18.abrupt("return", res.status(400).json({
+            message: "Please provide a userId."
+          }));
+
+        case 3:
+          _context18.next = 5;
+          return regeneratorRuntime.awrap(_User["default"].findById({
+            _id: req.user._id,
+            role: "admin"
+          }));
+
+        case 5:
+          isAdmin = _context18.sent;
+
+          if (isAdmin) {
+            _context18.next = 8;
+            break;
+          }
+
+          return _context18.abrupt("return", res.status(404).json({
+            message: "Admin can just do this operation."
+          }));
+
+        case 8:
+          _context18.next = 10;
+          return regeneratorRuntime.awrap(_User["default"].findById({
+            _id: userId
+          }));
+
+        case 10:
+          user = _context18.sent;
+
+          if (user) {
+            _context18.next = 13;
+            break;
+          }
+
+          return _context18.abrupt("return", res.status(404).json({
+            message: "User not found."
+          }));
+
+        case 13:
           // Update the user
           user.isActive = isActive ? true : false;
-          _context17.next = 16;
+          _context18.next = 16;
           return regeneratorRuntime.awrap(user.save());
 
         case 16:
-          return _context17.abrupt("return", res.status(201).json({
+          return _context18.abrupt("return", res.status(201).json({
             message: "User status updated successfully."
           }));
 
         case 17:
         case "end":
-          return _context17.stop();
+          return _context18.stop();
       }
     }
   });
@@ -1631,15 +1968,15 @@ var changeUserStatus = function changeUserStatus(req, res) {
 exports.changeUserStatus = changeUserStatus;
 
 var deleteCurrentUser = function deleteCurrentUser(req, res) {
-  var token, user, mediaFiles, userBoxes, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, box;
+  var token, user, mediaFiles, userBoxes, _iteratorNormalCompletion6, _didIteratorError6, _iteratorError6, _iterator6, _step6, box;
 
-  return regeneratorRuntime.async(function deleteCurrentUser$(_context18) {
+  return regeneratorRuntime.async(function deleteCurrentUser$(_context19) {
     while (1) {
-      switch (_context18.prev = _context18.next) {
+      switch (_context19.prev = _context19.next) {
         case 0:
           token = req.query.token; // Find the user
 
-          _context18.next = 3;
+          _context19.next = 3;
           return regeneratorRuntime.awrap(_User["default"].findOne({
             _id: req.user._id,
             emailDeleteToken: token,
@@ -1649,14 +1986,14 @@ var deleteCurrentUser = function deleteCurrentUser(req, res) {
           }));
 
         case 3:
-          user = _context18.sent;
+          user = _context19.sent;
 
           if (user) {
-            _context18.next = 6;
+            _context19.next = 6;
             break;
           }
 
-          return _context18.abrupt("return", res.status(404).json({
+          return _context19.abrupt("return", res.status(404).json({
             message: "User not found."
           }));
 
@@ -1665,9 +2002,9 @@ var deleteCurrentUser = function deleteCurrentUser(req, res) {
             // Remove all media files that have the user ID as the first part of the filename
             mediaFiles = _fs["default"].readdirSync(_path["default"].join(_dirname, process.env.UPLOADS_PATH));
             mediaFiles.forEach(function (file) {
-              var _file$split3 = file.split("-"),
-                  _file$split4 = _slicedToArray(_file$split3, 1),
-                  fileUserId = _file$split4[0];
+              var _file$split5 = file.split("-"),
+                  _file$split6 = _slicedToArray(_file$split5, 1),
+                  fileUserId = _file$split6[0];
 
               if (fileUserId === req.user._id.toString()) {
                 var deletedPath = _path["default"].join(_dirname, process.env.DELETED_UPLOADS_PATH, file);
@@ -1686,96 +2023,96 @@ var deleteCurrentUser = function deleteCurrentUser(req, res) {
           }
 
           user.deletedAt = Date.now();
-          _context18.next = 11;
+          _context19.next = 11;
           return regeneratorRuntime.awrap(_DeletedUser["default"].create(user.toObject()));
 
         case 11:
-          _context18.next = 13;
+          _context19.next = 13;
           return regeneratorRuntime.awrap(user.deleteOne());
 
         case 13:
-          _context18.next = 15;
+          _context19.next = 15;
           return regeneratorRuntime.awrap(_Box["default"].find({
             user: req.user._id
           }));
 
         case 15:
-          userBoxes = _context18.sent;
-          _iteratorNormalCompletion2 = true;
-          _didIteratorError2 = false;
-          _iteratorError2 = undefined;
-          _context18.prev = 19;
-          _iterator2 = userBoxes[Symbol.iterator]();
+          userBoxes = _context19.sent;
+          _iteratorNormalCompletion6 = true;
+          _didIteratorError6 = false;
+          _iteratorError6 = undefined;
+          _context19.prev = 19;
+          _iterator6 = userBoxes[Symbol.iterator]();
 
         case 21:
-          if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-            _context18.next = 32;
+          if (_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done) {
+            _context19.next = 32;
             break;
           }
 
-          box = _step2.value;
+          box = _step6.value;
           box.deletedAt = Date.now();
           box.items.forEach(function (item) {
             if (item.mediaPath) {
               item.mediaPath = item.mediaPath.replace(process.env.UPLOADS_PATH, process.env.DELETED_UPLOADS_PATH);
             }
           });
-          _context18.next = 27;
+          _context19.next = 27;
           return regeneratorRuntime.awrap(_DeletedBox["default"].create(box.toObject()));
 
         case 27:
-          _context18.next = 29;
+          _context19.next = 29;
           return regeneratorRuntime.awrap(box.deleteOne());
 
         case 29:
-          _iteratorNormalCompletion2 = true;
-          _context18.next = 21;
+          _iteratorNormalCompletion6 = true;
+          _context19.next = 21;
           break;
 
         case 32:
-          _context18.next = 38;
+          _context19.next = 38;
           break;
 
         case 34:
-          _context18.prev = 34;
-          _context18.t0 = _context18["catch"](19);
-          _didIteratorError2 = true;
-          _iteratorError2 = _context18.t0;
+          _context19.prev = 34;
+          _context19.t0 = _context19["catch"](19);
+          _didIteratorError6 = true;
+          _iteratorError6 = _context19.t0;
 
         case 38:
-          _context18.prev = 38;
-          _context18.prev = 39;
+          _context19.prev = 38;
+          _context19.prev = 39;
 
-          if (!_iteratorNormalCompletion2 && _iterator2["return"] != null) {
-            _iterator2["return"]();
+          if (!_iteratorNormalCompletion6 && _iterator6["return"] != null) {
+            _iterator6["return"]();
           }
 
         case 41:
-          _context18.prev = 41;
+          _context19.prev = 41;
 
-          if (!_didIteratorError2) {
-            _context18.next = 44;
+          if (!_didIteratorError6) {
+            _context19.next = 44;
             break;
           }
 
-          throw _iteratorError2;
+          throw _iteratorError6;
 
         case 44:
-          return _context18.finish(41);
+          return _context19.finish(41);
 
         case 45:
-          return _context18.finish(38);
+          return _context19.finish(38);
 
         case 46:
           // Clear the cookie
           res.clearCookie("JWTMERNMoveOut");
-          return _context18.abrupt("return", res.status(200).json({
+          return _context19.abrupt("return", res.status(200).json({
             message: "Your account has been successfully deleted. We're sorry to see you go."
           }));
 
         case 48:
         case "end":
-          return _context18.stop();
+          return _context19.stop();
       }
     }
   }, null, null, [[19, 34, 38, 46], [39,, 41, 45]]);
@@ -1785,30 +2122,30 @@ exports.deleteCurrentUser = deleteCurrentUser;
 
 var getNamesAndEmails = function getNamesAndEmails(req, res) {
   var user, users;
-  return regeneratorRuntime.async(function getNamesAndEmails$(_context19) {
+  return regeneratorRuntime.async(function getNamesAndEmails$(_context20) {
     while (1) {
-      switch (_context19.prev = _context19.next) {
+      switch (_context20.prev = _context20.next) {
         case 0:
-          _context19.next = 2;
+          _context20.next = 2;
           return regeneratorRuntime.awrap(_User["default"].findOne({
             _id: req.user._id,
             isActive: true
           }));
 
         case 2:
-          user = _context19.sent;
+          user = _context20.sent;
 
           if (user) {
-            _context19.next = 5;
+            _context20.next = 5;
             break;
           }
 
-          return _context19.abrupt("return", res.status(400).json({
+          return _context20.abrupt("return", res.status(400).json({
             message: "User is inactive."
           }));
 
         case 5:
-          _context19.next = 7;
+          _context20.next = 7;
           return regeneratorRuntime.awrap(_User["default"].find({
             email: {
               $ne: req.user.email
@@ -1820,23 +2157,23 @@ var getNamesAndEmails = function getNamesAndEmails(req, res) {
           }));
 
         case 7:
-          users = _context19.sent;
+          users = _context20.sent;
 
           if (users) {
-            _context19.next = 10;
+            _context20.next = 10;
             break;
           }
 
-          return _context19.abrupt("return", res.status(404).json({
+          return _context20.abrupt("return", res.status(404).json({
             message: "No email and name exists"
           }));
 
         case 10:
-          return _context19.abrupt("return", res.status(200).json(users));
+          return _context20.abrupt("return", res.status(200).json(users));
 
         case 11:
         case "end":
-          return _context19.stop();
+          return _context20.stop();
       }
     }
   });
@@ -1847,9 +2184,9 @@ exports.getNamesAndEmails = getNamesAndEmails;
 var shareBox = function shareBox(req, res) {
   var _req$body10, boxId, email, uid, err, user, box, newBox, emailTemplate;
 
-  return regeneratorRuntime.async(function shareBox$(_context20) {
+  return regeneratorRuntime.async(function shareBox$(_context21) {
     while (1) {
-      switch (_context20.prev = _context20.next) {
+      switch (_context21.prev = _context21.next) {
         case 0:
           _req$body10 = req.body, boxId = _req$body10.boxId, email = _req$body10.email;
           uid = new _shortUniqueId["default"]({
@@ -1858,149 +2195,6 @@ var shareBox = function shareBox(req, res) {
           }); // show the error if there is any
 
           if (!(!boxId || !email)) {
-            _context20.next = 4;
-            break;
-          }
-
-          return _context20.abrupt("return", res.status(400).json({
-            message: "Box ID and email are required."
-          }));
-
-        case 4:
-          err = (0, _expressValidator.validationResult)(req);
-
-          if (err.isEmpty()) {
-            _context20.next = 7;
-            break;
-          }
-
-          return _context20.abrupt("return", res.status(422).json({
-            message: err.array()[0].msg
-          }));
-
-        case 7:
-          _context20.next = 9;
-          return regeneratorRuntime.awrap(_User["default"].findOne({
-            email: email
-          }));
-
-        case 9:
-          user = _context20.sent;
-
-          if (user) {
-            _context20.next = 12;
-            break;
-          }
-
-          return _context20.abrupt("return", res.status(400).json({
-            message: "User not found."
-          }));
-
-        case 12:
-          if (user.isActive) {
-            _context20.next = 14;
-            break;
-          }
-
-          return _context20.abrupt("return", res.status(400).json({
-            message: "User is inactive."
-          }));
-
-        case 14:
-          _context20.next = 16;
-          return regeneratorRuntime.awrap(_Box["default"].findOne({
-            _id: boxId
-          }));
-
-        case 16:
-          box = _context20.sent;
-
-          if (box) {
-            _context20.next = 19;
-            break;
-          }
-
-          return _context20.abrupt("return", res.status(400).json({
-            message: "Box not found."
-          }));
-
-        case 19:
-          _context20.next = 21;
-          return regeneratorRuntime.awrap(_Box["default"].create({
-            name: box.name,
-            description: box.description,
-            items: box.items,
-            labelNum: box.labelNum,
-            isPrivate: box.isPrivate,
-            privateCode: box.privateCode ? uid.randomUUID(6) : undefined,
-            user: user._id
-          }));
-
-        case 21:
-          newBox = _context20.sent;
-          // Add the box to the user's box list
-          user.boxes.push(newBox._id);
-          _context20.next = 25;
-          return regeneratorRuntime.awrap(user.save());
-
-        case 25:
-          // Get the email template for sharing a box
-          emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-share-label-or-box.html", "utf8");
-          emailTemplate = emailTemplate.replace(/(\*\*email_link\*\*)/g, "".concat(process.env.BASE_URL, "/boxes/").concat(newBox._id, "/items"));
-          emailTemplate = emailTemplate.replace(/(\*\*name_from\*\*)/g, req.user.name);
-          emailTemplate = emailTemplate.replace(/(\*\*name_to\*\*)/g, user.name);
-          emailTemplate = emailTemplate.replace(/(\*\*shared_object\*\*)/g, "box");
-          emailTemplate = emailTemplate.replace(/(\*\*privateCode\*\*)/g, "");
-          _context20.prev = 31;
-          _context20.next = 34;
-          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
-            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
-            to: email,
-            subject: "A box has been shared with you.",
-            text: "".concat(user.name, " has shared a box with you. You can click on the link below to view the box."),
-            html: emailTemplate
-          }));
-
-        case 34:
-          _context20.next = 39;
-          break;
-
-        case 36:
-          _context20.prev = 36;
-          _context20.t0 = _context20["catch"](31);
-          return _context20.abrupt("return", res.status(500).json({
-            message: "Email address rejected because domain not found."
-          }));
-
-        case 39:
-          return _context20.abrupt("return", res.status(200).json({
-            message: "Box shared successfully."
-          }));
-
-        case 40:
-        case "end":
-          return _context20.stop();
-      }
-    }
-  }, null, null, [[31, 36]]);
-};
-
-exports.shareBox = shareBox;
-
-var shareLabel = function shareLabel(req, res) {
-  var _req$body11, labelId, email, uid, err, label, user, emailTemplate;
-
-  return regeneratorRuntime.async(function shareLabel$(_context21) {
-    while (1) {
-      switch (_context21.prev = _context21.next) {
-        case 0:
-          _req$body11 = req.body, labelId = _req$body11.labelId, email = _req$body11.email;
-          uid = new _shortUniqueId["default"]({
-            length: 6,
-            dictionary: "number"
-          }); // show the error if there is any
-
-          if (!(!labelId || !email)) {
             _context21.next = 4;
             break;
           }
@@ -2023,33 +2217,15 @@ var shareLabel = function shareLabel(req, res) {
 
         case 7:
           _context21.next = 9;
-          return regeneratorRuntime.awrap(_Box["default"].findOne({
-            _id: labelId
-          }));
-
-        case 9:
-          label = _context21.sent;
-
-          if (label) {
-            _context21.next = 12;
-            break;
-          }
-
-          return _context21.abrupt("return", res.status(400).json({
-            message: "Label not found."
-          }));
-
-        case 12:
-          _context21.next = 14;
           return regeneratorRuntime.awrap(_User["default"].findOne({
             email: email
           }));
 
-        case 14:
+        case 9:
           user = _context21.sent;
 
           if (user) {
-            _context21.next = 17;
+            _context21.next = 12;
             break;
           }
 
@@ -2057,13 +2233,174 @@ var shareLabel = function shareLabel(req, res) {
             message: "User not found."
           }));
 
-        case 17:
+        case 12:
           if (user.isActive) {
+            _context21.next = 14;
+            break;
+          }
+
+          return _context21.abrupt("return", res.status(400).json({
+            message: "User is inactive."
+          }));
+
+        case 14:
+          _context21.next = 16;
+          return regeneratorRuntime.awrap(_Box["default"].findOne({
+            _id: boxId
+          }));
+
+        case 16:
+          box = _context21.sent;
+
+          if (box) {
             _context21.next = 19;
             break;
           }
 
           return _context21.abrupt("return", res.status(400).json({
+            message: "Box not found."
+          }));
+
+        case 19:
+          _context21.next = 21;
+          return regeneratorRuntime.awrap(_Box["default"].create({
+            name: box.name,
+            description: box.description,
+            items: box.items,
+            labelNum: box.labelNum,
+            isPrivate: box.isPrivate,
+            privateCode: box.privateCode ? uid.randomUUID(6) : undefined,
+            user: user._id
+          }));
+
+        case 21:
+          newBox = _context21.sent;
+          // Add the box to the user's box list
+          user.boxes.push(newBox._id);
+          _context21.next = 25;
+          return regeneratorRuntime.awrap(user.save());
+
+        case 25:
+          // Get the email template for sharing a box
+          emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-share-label-or-box.html", "utf8");
+          emailTemplate = emailTemplate.replace(/(\*\*email_link\*\*)/g, "".concat(process.env.BASE_URL, "/boxes/").concat(newBox._id, "/items"));
+          emailTemplate = emailTemplate.replace(/(\*\*name_from\*\*)/g, req.user.name);
+          emailTemplate = emailTemplate.replace(/(\*\*name_to\*\*)/g, user.name);
+          emailTemplate = emailTemplate.replace(/(\*\*shared_object\*\*)/g, "box");
+          emailTemplate = emailTemplate.replace(/(\*\*privateCode\*\*)/g, "");
+          _context21.prev = 31;
+          _context21.next = 34;
+          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
+            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
+            to: email,
+            subject: "A box has been shared with you.",
+            text: "".concat(user.name, " has shared a box with you. You can click on the link below to view the box."),
+            html: emailTemplate
+          }));
+
+        case 34:
+          _context21.next = 39;
+          break;
+
+        case 36:
+          _context21.prev = 36;
+          _context21.t0 = _context21["catch"](31);
+          return _context21.abrupt("return", res.status(500).json({
+            message: "Email address rejected because domain not found."
+          }));
+
+        case 39:
+          return _context21.abrupt("return", res.status(200).json({
+            message: "Box shared successfully."
+          }));
+
+        case 40:
+        case "end":
+          return _context21.stop();
+      }
+    }
+  }, null, null, [[31, 36]]);
+};
+
+exports.shareBox = shareBox;
+
+var shareLabel = function shareLabel(req, res) {
+  var _req$body11, labelId, email, uid, err, label, user, emailTemplate;
+
+  return regeneratorRuntime.async(function shareLabel$(_context22) {
+    while (1) {
+      switch (_context22.prev = _context22.next) {
+        case 0:
+          _req$body11 = req.body, labelId = _req$body11.labelId, email = _req$body11.email;
+          uid = new _shortUniqueId["default"]({
+            length: 6,
+            dictionary: "number"
+          }); // show the error if there is any
+
+          if (!(!labelId || !email)) {
+            _context22.next = 4;
+            break;
+          }
+
+          return _context22.abrupt("return", res.status(400).json({
+            message: "Box ID and email are required."
+          }));
+
+        case 4:
+          err = (0, _expressValidator.validationResult)(req);
+
+          if (err.isEmpty()) {
+            _context22.next = 7;
+            break;
+          }
+
+          return _context22.abrupt("return", res.status(422).json({
+            message: err.array()[0].msg
+          }));
+
+        case 7:
+          _context22.next = 9;
+          return regeneratorRuntime.awrap(_Box["default"].findOne({
+            _id: labelId
+          }));
+
+        case 9:
+          label = _context22.sent;
+
+          if (label) {
+            _context22.next = 12;
+            break;
+          }
+
+          return _context22.abrupt("return", res.status(400).json({
+            message: "Label not found."
+          }));
+
+        case 12:
+          _context22.next = 14;
+          return regeneratorRuntime.awrap(_User["default"].findOne({
+            email: email
+          }));
+
+        case 14:
+          user = _context22.sent;
+
+          if (user) {
+            _context22.next = 17;
+            break;
+          }
+
+          return _context22.abrupt("return", res.status(400).json({
+            message: "User not found."
+          }));
+
+        case 17:
+          if (user.isActive) {
+            _context22.next = 19;
+            break;
+          }
+
+          return _context22.abrupt("return", res.status(400).json({
             message: "User is inactive."
           }));
 
@@ -2081,8 +2418,8 @@ var shareLabel = function shareLabel(req, res) {
             emailTemplate = emailTemplate.replace(/(\*\*privateCode\*\*)/g, "");
           }
 
-          _context21.prev = 25;
-          _context21.next = 28;
+          _context22.prev = 25;
+          _context22.next = 28;
           return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
             from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
             to: email,
@@ -2092,24 +2429,24 @@ var shareLabel = function shareLabel(req, res) {
           }));
 
         case 28:
-          _context21.next = 33;
+          _context22.next = 33;
           break;
 
         case 30:
-          _context21.prev = 30;
-          _context21.t0 = _context21["catch"](25);
-          return _context21.abrupt("return", res.status(500).json({
+          _context22.prev = 30;
+          _context22.t0 = _context22["catch"](25);
+          return _context22.abrupt("return", res.status(500).json({
             message: "Email address rejected because domain not found."
           }));
 
         case 33:
-          return _context21.abrupt("return", res.status(200).json({
+          return _context22.abrupt("return", res.status(200).json({
             message: "Label shared successfully."
           }));
 
         case 34:
         case "end":
-          return _context21.stop();
+          return _context22.stop();
       }
     }
   }, null, null, [[25, 30]]);
@@ -2119,94 +2456,7 @@ exports.shareLabel = shareLabel;
 
 var deactivateCurrentUser = function deactivateCurrentUser(req, res) {
   var user, emailTemplate, name, email, role, isActive, mediaPath;
-  return regeneratorRuntime.async(function deactivateCurrentUser$(_context22) {
-    while (1) {
-      switch (_context22.prev = _context22.next) {
-        case 0:
-          _context22.next = 2;
-          return regeneratorRuntime.awrap(_User["default"].findOne({
-            _id: req.user._id
-          }));
-
-        case 2:
-          user = _context22.sent;
-
-          if (user) {
-            _context22.next = 5;
-            break;
-          }
-
-          return _context22.abrupt("return", res.status(404).json({
-            message: "User not found."
-          }));
-
-        case 5:
-          if (user.isActive) {
-            _context22.next = 7;
-            break;
-          }
-
-          return _context22.abrupt("return", res.status(400).json({
-            message: "User is inactive."
-          }));
-
-        case 7:
-          // Deactivate the user
-          user.isActive = false;
-          _context22.next = 10;
-          return regeneratorRuntime.awrap(user.save());
-
-        case 10:
-          // Get the email template
-          emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-deactive-reactive-user.html", "utf8");
-          emailTemplate = emailTemplate.replace(/(\*\*login_link\*\*)/g, "".concat(process.env.BASE_URL, "/login"));
-          emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
-          _context22.prev = 13;
-          _context22.next = 16;
-          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
-            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
-            to: user.email,
-            subject: "Your account has been deactivated.",
-            html: emailTemplate
-          }));
-
-        case 16:
-          _context22.next = 21;
-          break;
-
-        case 18:
-          _context22.prev = 18;
-          _context22.t0 = _context22["catch"](13);
-          return _context22.abrupt("return", res.status(500).json({
-            message: "Email address rejected because domain not found."
-          }));
-
-        case 21:
-          name = user.name, email = user.email, role = user.role, isActive = user.isActive, mediaPath = user.mediaPath;
-          return _context22.abrupt("return", res.status(200).json({
-            message: "User deactivated successfully.",
-            user: {
-              name: name,
-              email: email,
-              role: role,
-              isActive: isActive,
-              mediaPath: mediaPath
-            }
-          }));
-
-        case 23:
-        case "end":
-          return _context22.stop();
-      }
-    }
-  }, null, null, [[13, 18]]);
-};
-
-exports.deactivateCurrentUser = deactivateCurrentUser;
-
-var reactivateCurrentUser = function reactivateCurrentUser(req, res) {
-  var user, name, email, role, isActive, mediaPath;
-  return regeneratorRuntime.async(function reactivateCurrentUser$(_context23) {
+  return regeneratorRuntime.async(function deactivateCurrentUser$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
@@ -2228,25 +2478,50 @@ var reactivateCurrentUser = function reactivateCurrentUser(req, res) {
           }));
 
         case 5:
-          if (!user.isActive) {
+          if (user.isActive) {
             _context23.next = 7;
             break;
           }
 
           return _context23.abrupt("return", res.status(400).json({
-            message: "User is active."
+            message: "User is inactive."
           }));
 
         case 7:
           // Deactivate the user
-          user.isActive = true;
+          user.isActive = false;
           _context23.next = 10;
           return regeneratorRuntime.awrap(user.save());
 
         case 10:
+          // Get the email template
+          emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-deactive-reactive-user.html", "utf8");
+          emailTemplate = emailTemplate.replace(/(\*\*login_link\*\*)/g, "".concat(process.env.BASE_URL, "/login"));
+          emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
+          _context23.prev = 13;
+          _context23.next = 16;
+          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
+            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
+            to: user.email,
+            subject: "Your account has been deactivated.",
+            html: emailTemplate
+          }));
+
+        case 16:
+          _context23.next = 21;
+          break;
+
+        case 18:
+          _context23.prev = 18;
+          _context23.t0 = _context23["catch"](13);
+          return _context23.abrupt("return", res.status(500).json({
+            message: "Email address rejected because domain not found."
+          }));
+
+        case 21:
           name = user.name, email = user.email, role = user.role, isActive = user.isActive, mediaPath = user.mediaPath;
           return _context23.abrupt("return", res.status(200).json({
-            message: "User reactivated successfully.",
+            message: "User deactivated successfully.",
             user: {
               name: name,
               email: email,
@@ -2256,19 +2531,19 @@ var reactivateCurrentUser = function reactivateCurrentUser(req, res) {
             }
           }));
 
-        case 12:
+        case 23:
         case "end":
           return _context23.stop();
       }
     }
-  });
+  }, null, null, [[13, 18]]);
 };
 
-exports.reactivateCurrentUser = reactivateCurrentUser;
+exports.deactivateCurrentUser = deactivateCurrentUser;
 
-var sendDeleteEmail = function sendDeleteEmail(req, res) {
-  var user, emailToken, emailDeleteToken, emailDeleteTokenExpiresAt, emailTemplate, name, email, role, isActive, mediaPath;
-  return regeneratorRuntime.async(function sendDeleteEmail$(_context24) {
+var reactivateCurrentUser = function reactivateCurrentUser(req, res) {
+  var user, name, email, role, isActive, mediaPath;
+  return regeneratorRuntime.async(function reactivateCurrentUser$(_context24) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
@@ -2300,6 +2575,68 @@ var sendDeleteEmail = function sendDeleteEmail(req, res) {
           }));
 
         case 7:
+          // Deactivate the user
+          user.isActive = true;
+          _context24.next = 10;
+          return regeneratorRuntime.awrap(user.save());
+
+        case 10:
+          name = user.name, email = user.email, role = user.role, isActive = user.isActive, mediaPath = user.mediaPath;
+          return _context24.abrupt("return", res.status(200).json({
+            message: "User reactivated successfully.",
+            user: {
+              name: name,
+              email: email,
+              role: role,
+              isActive: isActive,
+              mediaPath: mediaPath
+            }
+          }));
+
+        case 12:
+        case "end":
+          return _context24.stop();
+      }
+    }
+  });
+};
+
+exports.reactivateCurrentUser = reactivateCurrentUser;
+
+var sendDeleteEmail = function sendDeleteEmail(req, res) {
+  var user, emailToken, emailDeleteToken, emailDeleteTokenExpiresAt, emailTemplate, name, email, role, isActive, mediaPath;
+  return regeneratorRuntime.async(function sendDeleteEmail$(_context25) {
+    while (1) {
+      switch (_context25.prev = _context25.next) {
+        case 0:
+          _context25.next = 2;
+          return regeneratorRuntime.awrap(_User["default"].findOne({
+            _id: req.user._id
+          }));
+
+        case 2:
+          user = _context25.sent;
+
+          if (user) {
+            _context25.next = 5;
+            break;
+          }
+
+          return _context25.abrupt("return", res.status(404).json({
+            message: "User not found."
+          }));
+
+        case 5:
+          if (!user.isActive) {
+            _context25.next = 7;
+            break;
+          }
+
+          return _context25.abrupt("return", res.status(400).json({
+            message: "User is active."
+          }));
+
+        case 7:
           emailToken = _crypto["default"].randomBytes(32).toString("hex");
           emailDeleteToken = _crypto["default"].createHash("sha256").update(emailToken).digest("hex");
           emailDeleteTokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -2307,7 +2644,7 @@ var sendDeleteEmail = function sendDeleteEmail(req, res) {
 
           user.emailDeleteToken = emailDeleteToken;
           user.emailDeleteTokenExpiresAt = emailDeleteTokenExpiresAt;
-          _context24.next = 14;
+          _context25.next = 14;
           return regeneratorRuntime.awrap(user.save());
 
         case 14:
@@ -2315,8 +2652,8 @@ var sendDeleteEmail = function sendDeleteEmail(req, res) {
           emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-email-delete-user.html", "utf8");
           emailTemplate = emailTemplate.replace(/(\*\*delete_link\*\*)/g, "".concat(process.env.BASE_URL, "/delete-account/").concat(emailDeleteToken));
           emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
-          _context24.prev = 17;
-          _context24.next = 20;
+          _context25.prev = 17;
+          _context25.next = 20;
           return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
             from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
             to: user.email,
@@ -2325,19 +2662,19 @@ var sendDeleteEmail = function sendDeleteEmail(req, res) {
           }));
 
         case 20:
-          _context24.next = 25;
+          _context25.next = 25;
           break;
 
         case 22:
-          _context24.prev = 22;
-          _context24.t0 = _context24["catch"](17);
-          return _context24.abrupt("return", res.status(500).json({
+          _context25.prev = 22;
+          _context25.t0 = _context25["catch"](17);
+          return _context25.abrupt("return", res.status(500).json({
             message: "Email address rejected because domain not found."
           }));
 
         case 25:
           name = user.name, email = user.email, role = user.role, isActive = user.isActive, mediaPath = user.mediaPath;
-          return _context24.abrupt("return", res.status(200).json({
+          return _context25.abrupt("return", res.status(200).json({
             message: "Delete confirmation email sent successfully.",
             user: {
               name: name,
@@ -2350,7 +2687,7 @@ var sendDeleteEmail = function sendDeleteEmail(req, res) {
 
         case 27:
         case "end":
-          return _context24.stop();
+          return _context25.stop();
       }
     }
   }, null, null, [[17, 22]]);
@@ -2375,6 +2712,7 @@ var _default = {
   createUser: createUser,
   editUser: editUser,
   deleteUser: deleteUser,
+  recoverUser: recoverUser,
   changeUserStatus: changeUserStatus,
   deleteCurrentUser: deleteCurrentUser,
   getNamesAndEmails: getNamesAndEmails,

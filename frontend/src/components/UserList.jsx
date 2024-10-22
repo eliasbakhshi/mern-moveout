@@ -1,7 +1,29 @@
 import { CiEdit } from "react-icons/ci";
 import { LuTrash } from "react-icons/lu";
+import { RxReset } from "react-icons/rx";
 
-function UserList({ users, showModal, changeStatusHandler }) {
+function UserList({
+  users,
+  showModal,
+  showingDeletedUsers,
+  changeStatusHandler,
+  recoverUserHandler,
+}) {
+  // Convert data usage to appropriate size
+  const formatDataUsage = (dataUsage) => {
+    if (dataUsage >= 1024 * 1024 * 1024) {
+      return `${(dataUsage / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    } else if (dataUsage >= 1024 * 1024) {
+      return `${(dataUsage / (1024 * 1024)).toFixed(0)} MB`;
+    } else if (dataUsage >= 1024) {
+      return `${(dataUsage / 1024).toFixed(0)} KB`;
+    } else {
+      return `${dataUsage} B`;
+    }
+  };
+
+  console.log(recoverUserHandler);
+
   return (
     <div className="container flex w-full flex-row flex-wrap gap-x-[10%] gap-y-5 px-4 py-5 md:gap-y-10 xl:px-0">
       {Array.isArray(users) && users.length > 0 && (
@@ -14,7 +36,10 @@ function UserList({ users, showModal, changeStatusHandler }) {
               <div className="flex w-[30%] flex-grow items-center p-3">
                 Email
               </div>
-              <div className="flex w-[20%] flex-grow items-center justify-center p-3">
+              <div className="flex w-[10%] flex-grow items-center p-3">
+                Data Usage
+              </div>
+              <div className="flex w-[10%] flex-grow items-center justify-center p-3">
                 Status
               </div>
               <div className="flex w-[20%] flex-grow items-center justify-center p-3">
@@ -59,10 +84,20 @@ function UserList({ users, showModal, changeStatusHandler }) {
                         {updatedUser.email}
                       </span>
                     </div>
-                    <div className="flex items-center p-4 md:w-[20%] md:p-3">
-                      <span className="w-28 truncate md:hidden">Status</span>
+                    <div className="flex items-center p-4 md:w-[10%] md:p-3">
+                      <span className="w-28 truncate md:hidden">
+                        Data Usage
+                      </span>
+                      <span className="w-[calc(100%-7rem)] truncate md:w-full">
+                        {formatDataUsage(updatedUser.dataUsage)}
+                      </span>
+                    </div>
+                    <div className="flex items-center p-4 md:w-[10%] md:p-3">
+                      <span className="w-28</div> truncate md:hidden">
+                        Status
+                      </span>
                       <span
-                        className={`w-[calc(100%-7rem)] truncate md:w-full text-center ${changeStatusHandler ? "rounded-md bg-blue-100 hover:bg-blue-200  p-1  hover:cursor-pointer transition-transform duration-100 ease-in-out transform hover:-translate-y-0.5 hover:shadow-sm active:-translate-y-0 active:shadow-inner" : ""} `}
+                        className={`w-[calc(100%-7rem)] truncate text-center md:w-full ${changeStatusHandler ? "active:-translat</div>e-y-0 transform rounded-md bg-blue-100 p-1 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-blue-200 hover:shadow-sm active:shadow-inner" : ""} `}
                         onClick={
                           changeStatusHandler
                             ? () =>
@@ -81,15 +116,31 @@ function UserList({ users, showModal, changeStatusHandler }) {
                       </span>
                     </div>
                     <div className="flex items-center justify-evenly p-4 md:w-[20%] md:p-3">
+                      {showingDeletedUsers && recoverUserHandler? (
+                        <button
+                          onClick={() => recoverUserHandler(updatedUser._id)}
+                          className="transform rounded-lg p-3 text-blue-600 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-blue-200 hover:text-blue-900 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
+                        >
+                          <RxReset />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => showModal(updatedUser._id, "edit")}
+                          className="transform rounded-lg p-3 text-blue-600 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-blue-200 hover:text-blue-900 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
+                        >
+                          <CiEdit />
+                        </button>
+                      )}
                       <button
-                        onClick={() => showModal(updatedUser._id, "edit")}
-                        className="rounded-lg p-3 text-blue-600 hover:cursor-pointer hover:bg-blue-200 hover:text-blue-900 transition-transform duration-100 ease-in-out transform hover:-translate-y-0.5 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
-                      >
-                        <CiEdit />
-                      </button>
-                      <button
-                        onClick={() => showModal(updatedUser._id, "delete")}
-                        className="rounded-lg p-3 text-red-600 hover:cursor-pointer hover:bg-red-200 hover:text-red-900 transition-transform duration-100 ease-in-out transform hover:-translate-y-0.5 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
+                        onClick={() =>
+                          showModal(
+                            updatedUser._id,
+                            showingDeletedUsers
+                              ? "delete-permanently"
+                              : "delete",
+                          )
+                        }
+                        className="transform rounded-lg p-3 text-red-600 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-red-200 hover:text-red-900 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
                       >
                         <LuTrash />
                       </button>

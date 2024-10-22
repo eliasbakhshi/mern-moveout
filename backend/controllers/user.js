@@ -434,6 +434,22 @@ export const getUsers = async (req, res) => {
     return res.status(404).json({ message: "No users found." });
   }
 
+  // get the data usage of each user
+  for (const user of users) {
+    const boxes = await Box.find({ user: user._id });
+    let dataUsage = 0;
+    for (const box of boxes) {
+      for (const item of box.items) {
+        if (item.mediaPath && item.deletedAt === undefined) {
+          const stats = fs.statSync(path.join(__dirname, item.mediaPath));
+          dataUsage += stats.size;
+        }
+      }
+    }
+    user.dataUsage = dataUsage;
+    await user.save(); // Save the user with the updated dataUsage
+  }
+
   return res.status(200).json(users);
 };
 
@@ -631,7 +647,7 @@ export const editUser = async (req, res) => {
       .json({ message: "Admin can just do this operation." });
   }
 
-  console.log("req.body", req.body)
+  console.log("req.body", req.body);
   let { userId, name, email, password, isActive } = req.body;
   email = email.trim().toLowerCase();
   if (!name || !email) {
@@ -697,7 +713,7 @@ export const deleteUser = async (req, res) => {
     );
     mediaFiles.forEach((file) => {
       const [fileUserId] = file.split("-");
-      if (fileUserId === req.user._id.toString()) {
+      if (fileUserId === user._id.toString()) {
         const deletedPath = path.join(
           __dirname,
           process.env.DELETED_UPLOADS_PATH,
@@ -740,6 +756,73 @@ export const deleteUser = async (req, res) => {
 
   return res.status(200).json({
     message: "User has been deleted.",
+  });
+};
+
+export const recoverUser = async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "Please provide a userId." });
+  }
+
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+
+  if (!isAdmin) {
+    return res
+      .status(404)
+      .json({ message: "Admin can just do this operation." });
+  }
+
+  // Find the user
+  const deletedUser = await DeletedUser.findById({ _id: userId });
+
+  if (!deletedUser) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  try {
+    // Move all media files that have the user ID from the deleted-uploads to uploads as the first part of the filename
+    const mediaFiles = fs.readdirSync(
+      path.join(__dirname, process.env.DELETED_UPLOADS_PATH),
+    );
+    mediaFiles.forEach((file) => {
+      const [fileUserId] = file.split("-");
+      if (fileUserId === deletedUser._id.toString()) {
+        fs.renameSync(
+          path.join(__dirname, process.env.DELETED_UPLOADS_PATH, file),
+          path.join(__dirname, process.env.UPLOADS_PATH, file), // Move the file back to the uploads folder
+        );
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+  deleteUser.deletedAt = undefined;
+
+  // Move back user from deletedUser model to User model
+  await User.create(deletedUser.toObject());
+  await deletedUser.deleteOne();
+
+  // Move user's DeletedBox to Boxes collection
+  const deletedBoxes = await DeletedBox.find({ user: req.user._id });
+  for (const deletedBox of deletedBoxes) {
+    deletedBox.deletedAt = undefined;
+    deletedBox.items.forEach((item) => {
+      if (item.mediaPath) {
+        item.mediaPath = item.mediaPath.replace(
+          process.env.DELETED_UPLOADS_PATH,
+          process.env.UPLOADS_PATH,
+        );
+      }
+    });
+    await Box.create(deletedBox.toObject());
+    await deletedBox.deleteOne();
+  }
+
+  return res.status(200).json({
+    message: "User has been recovered.",
   });
 };
 
@@ -1160,6 +1243,7 @@ export default {
   createUser,
   editUser,
   deleteUser,
+  recoverUser,
   changeUserStatus,
   deleteCurrentUser,
   getNamesAndEmails,

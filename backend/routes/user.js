@@ -17,6 +17,7 @@ import {
   createUser,
   editUser,
   deleteUser,
+  recoverUser,
   changeUserStatus,
   verifyTokenResetPassword,
   updateUserPasswordById,
@@ -48,12 +49,13 @@ router.post(
         }
       });
     }),
-  body(
-    "password",
-    "The password must be alphanumeric and at least 6 characters long.",
-  )
+  body("password")
     .isLength({ min: 6, max: 100 })
-    .isAlphanumeric(),
+    .withMessage(
+      "Password must be at least 6 characters long and at most 100 characters long.",
+    )
+    .isAlphanumeric()
+    .withMessage("Password must contain only alphanumeric characters."),
   body("confirmPassword").custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error("The passwords do not match.");
@@ -81,12 +83,13 @@ router.post(
 router.post(
   "/login",
   body("email").trim().isEmail().withMessage("The email is not valid."),
-  body(
-    "password",
-    "The password must be alphanumeric and at least 6 characters long.",
-  )
+  body("password")
     .isLength({ min: 6, max: 100 })
-    .isAlphanumeric(),
+    .withMessage(
+      "Password must be at least 6 characters long and at most 100 characters long.",
+    )
+    .isAlphanumeric()
+    .withMessage("Password must contain only alphanumeric characters."),
   asyncHandler(login),
 );
 
@@ -115,12 +118,13 @@ router.get("/reset-password/:token", asyncHandler(verifyTokenResetPassword));
 
 router.put(
   "/reset-password",
-  body(
-    "password",
-    "The password must be alphanumeric and at least 6 characters long.",
-  )
+  body("password")
     .isLength({ min: 6, max: 100 })
-    .isAlphanumeric(),
+    .withMessage(
+      "Password must be at least 6 characters long and at most 100 characters long.",
+    )
+    .isAlphanumeric()
+    .withMessage("Password must contain only alphanumeric characters."),
   body("confirmPassword").custom((value, { req }) => {
     if (value && value !== req.body.password) {
       throw new Error("The passwords do not match.");
@@ -150,13 +154,14 @@ router.put(
   checkAccess("user"),
   getMedia,
   body("email").trim().isEmail().withMessage("The email is not correct."),
-  body(
-    "password",
-    "The password must be alphanumeric and at least 6 characters long.",
-  )
-    .optional({ checkFalsy: true })
+  body("password")
     .isLength({ min: 6, max: 100 })
-    .isAlphanumeric(),
+    .withMessage(
+      "Password must be at least 6 characters long and at most 100 characters long.",
+    )
+    .optional({ checkFalsy: true })
+    .isAlphanumeric()
+    .withMessage("Password must contain only alphanumeric characters."),
   body("confirmPassword")
     .optional({ checkFalsy: true })
     .custom((value, { req }) => {
@@ -256,6 +261,13 @@ router.put(
   validateToken,
   checkAccess("admin"),
   asyncHandler(changeUserStatus),
+);
+
+router.put(
+  "/users/recover",
+  validateToken,
+  checkAccess("admin"),
+  asyncHandler(recoverUser),
 );
 
 export default router;
