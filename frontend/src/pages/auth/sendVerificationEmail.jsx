@@ -19,13 +19,14 @@ function SendVerificationEmail() {
         email,
       }).unwrap();
       if (isVerificationSent) {
-        toast.success(
+        e.target.reset();
+        return toast.success(
           isVerificationSent?.data?.message ||
             "Verification email sent successfully. Please check your email.",
         );
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );

@@ -60,7 +60,6 @@ function Register() {
           dispatch(setCredentials({ user }));
           navigate("/");
         } catch (err) {
-          console.log(err);
           return toast.error(
             err?.data?.message || "Failed to login with Google.",
           );
@@ -89,21 +88,26 @@ function Register() {
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      return toast.error("Passwords do not match");
     }
 
     try {
-      const registered = await register({ name, email, password }).unwrap();
+      const registered = await register({
+        name,
+        email,
+        password,
+        confirmPassword,
+      }).unwrap();
       // Handle successful register
       if (registered) {
-        toast.success("Registration successful. Check your email to verify.");
         e.target.reset();
         navigate("/login");
+        return toast.success(
+          "Registration successful. Check your email to verify.",
+        );
       }
     } catch (err) {
-      console.log(err);
-
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -157,7 +161,7 @@ function Register() {
           maxLength="100"
           pattern="[a-zA-Z0-9]*"
           title="Password must be 6 - 100 characters long and contain only alphanumeric characters."
-          placeholder="6 - 100 characters and alphanumeric"
+          placeholder="6 - 100 alphanumeric"
         />
         <ReCAPTCHA
           sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
@@ -165,26 +169,26 @@ function Register() {
           ref={reCaptchaRef}
         />
 
-          <Button disabled={registerLoading} extraClasses={"mt-auto"}>
-            {registerLoading ? <Spinner /> : "Register"}
-          </Button>
-          <Button
-            onClick={googleRegister}
-            disabled={getUserFromGoogleLoading || registerWithGoogleLoading}
-            extraClasses="mt-3 flex justify-center items-center"
-          >
-            {getUserFromGoogleLoading ||
-              (registerWithGoogleLoading && <Spinner />)}
-            <FcGoogle className="mr-3" />
-            Register with Google
-          </Button>
+        <Button disabled={registerLoading} extraClasses={"mt-auto"}>
+          {registerLoading ? <Spinner /> : ""}Register
+        </Button>
+        <Button
+          onClick={googleRegister}
+          disabled={getUserFromGoogleLoading || registerWithGoogleLoading}
+          extraClasses="mt-3 flex justify-center items-center"
+        >
+          {getUserFromGoogleLoading ||
+            (registerWithGoogleLoading && <Spinner />)}
+          <FcGoogle className="mr-3" />
+          Register with Google
+        </Button>
 
-          <p className="mt-3 text-center">
-            Already have an account?{" "}
-            <Link to="/login" className="text-blue-500">
-              Login
-            </Link>
-          </p>
+        <p className="mt-3 text-center">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-500">
+            Login
+          </Link>
+        </p>
       </form>
       <div className="right-0 top-0 hidden w-[60%] items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover bg-center bg-no-repeat md:block"></div>
     </section>

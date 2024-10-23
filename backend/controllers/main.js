@@ -356,6 +356,7 @@ export const createItem = async (req, res) => {
     if (isNaN(numericValue)) {
       return res.status(400).json({ message: "Invalid value provided" });
     }
+    numericValue = numericValue > 0 ? numericValue : 0;
   }
 
   if (description === "" && !media && type === "standard") {
@@ -406,6 +407,8 @@ export const updateItem = async (req, res) => {
   let mediaType = undefined,
     newMediaPath = undefined;
 
+  console.log(req.body);
+
   // Return the errors if there are any
   const err = validationResult(req);
   if (!err.isEmpty()) {
@@ -429,13 +432,14 @@ export const updateItem = async (req, res) => {
     if (isNaN(numericValue)) {
       return res.status(400).json({ message: "Invalid value provided" });
     }
+    numericValue = numericValue > 0 ? numericValue : 0;
   }
 
   if (
-    ((description === "" || description === "undefined") &&
-      !media &&
-      mediaPath === "",
-    type === "standard")
+    (description === "" || description === "undefined") &&
+    !media &&
+    mediaPath === "" &&
+    type === "standard"
   ) {
     // if there is no description and no media, return an error
     return res

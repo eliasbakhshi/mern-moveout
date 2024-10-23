@@ -62,7 +62,7 @@ function Boxes() {
         type: inputs.type,
       });
       if (error) {
-        toast.error(error.data.message);
+        return toast.error(error.data.message);
       } else {
         setInputs({
           boxId: "",
@@ -74,10 +74,10 @@ function Boxes() {
         });
         e.target.reset();
         setIsOpenModal(false);
-        toast.success(data.message);
+        return toast.success(data.message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -97,7 +97,7 @@ function Boxes() {
       });
 
       if (error) {
-        toast.error(error.data.message);
+        return toast.error(error.data.message);
       } else {
         setInputs({
           boxId: "",
@@ -109,10 +109,10 @@ function Boxes() {
         });
         e.target.reset();
         setIsOpenModal(false);
-        toast.success(data.message);
+        return toast.success(data.message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -126,17 +126,16 @@ function Boxes() {
       const { data, error } = await deleteBox(boxId);
 
       if (error) {
-        toast.error(error.data.message);
+        return toast.error(error.data.message);
       } else {
-        toast.success(data.message);
+        setIsOpenModal(false);
+        return toast.success(data.message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.message || "An error occurred. Please contact the administration.",
       );
     }
-
-    setIsOpenModal(false);
   };
 
   const navigateToAddItems = (boxId, e) => {
@@ -190,12 +189,12 @@ function Boxes() {
           status: !status,
         });
         if (error) {
-          toast.error(error.data.message);
+          return toast.error(error.data.message);
         } else {
-          toast.success(data.message);
+          return toast.success(data.message);
         }
       } catch (err) {
-        toast.error(
+        return toast.error(
           err?.data?.message ||
             "An error occurred. Please contact the administration.",
         );
@@ -237,11 +236,11 @@ function Boxes() {
                         className="h-full w-full"
                       />
                       <div className="absolute flex w-[45%] flex-col items-center">
-                        <p className="mb-10 flex flex-wrap text-center text-sm text-black md:mb-4 xl:mb-6">
+                        <p className="mb-10 w-4/5 overflow-hidden text-center text-sm text-black md:mb-4 xl:mb-6">
                           {e.name}
                         </p>
                         <QRCodeSVG
-                          value={`/api//boxes/${e._id}/items`}
+                          value={`${import.meta.env.VITE_BASE_URL}/boxes/${e._id}/items`}
                           className="h-24 w-24 md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
                           title={e.name}
                         />
@@ -311,7 +310,7 @@ function Boxes() {
 
                       <div className="absolute top-0 flex h-[35%] w-full flex-col items-center justify-center">
                         <p
-                          className="flex flex-wrap text-center text-sm text-black"
+                          className="w-[80%] overflow-hidden text-center text-sm text-black"
                           onClick={(event) => navigateToAddItems(e._id, event)}
                         >
                           {e.name}
@@ -324,7 +323,7 @@ function Boxes() {
                           className="h-24 w-24 md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
                         />
                         <QRCodeSVG
-                          value={`/api//boxes/${e._id}/items`}
+                          value={`${import.meta.env.VITE_BASE_URL}/boxes/${e._id}/items`}
                           className="h-24 w-24 md:h-16 md:w-16 lg:h-20 lg:w-20 xl:h-28 xl:w-28"
                           title={e.name}
                           onClick={(event) => navigateToAddItems(e._id, event)}
@@ -389,7 +388,7 @@ function Boxes() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          extraClasses={"w-full md:mx-4 max-h-[95vh] md:h-auto"}
+          extraClasses={"md:mx-4 max-w-[48rem] max-h-[95vh] md:h-auto"}
           title="Create Box"
           submitText="Create"
           submitColor="blue"
@@ -410,7 +409,7 @@ function Boxes() {
                             type: e.type,
                           })
                         }
-                        className={`relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner  md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                        className={`relative flex max-w-96 flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
                       >
                         <img
                           src={`/img/label_${e.labelNum}.png`}
@@ -418,12 +417,12 @@ function Boxes() {
                           className="h-full w-full"
                         />
                         <div className="absolute left-0 flex w-[50%] flex-col items-center">
-                          <p className="mb-10 flex flex-wrap text-center text-sm text-black md:mb-6">
+                          <p className="mb-8 w-4/5 overflow-hidden text-center text-sm text-black md:mb-6">
                             {inputs.name ? inputs.name : `Box ${e.labelNum}`}
                           </p>
                           <QRCodeSVG
-                            value={`/api//boxes`}
-                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            value={`${import.meta.env.VITE_BASE_URL}/boxes`}
+                            className="h-28 w-28 md:h-28 md:w-28 lg:h-28 lg:w-28 xl:h-28 xl:w-28"
                             title={`Label ${e.labelNum}`}
                           />
                         </div>
@@ -438,7 +437,7 @@ function Boxes() {
                             type: e.type,
                           })
                         }
-                        className={`relative flex w-full flex-col items-center justify-center rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                        className={`relative flex w-full max-w-96 flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
                       >
                         <img
                           src={`/img/label_${e.labelNum}.png`}
@@ -446,20 +445,20 @@ function Boxes() {
                           className="h-full w-full"
                         />
 
-                        <div className="absolute top-0 flex h-[40%] flex-col items-center justify-center">
-                          <p className="flex flex-wrap text-center text-sm text-black">
+                        <div className="absolute top-0 flex h-[30%] w-full flex-col items-center justify-center">
+                          <p className="w-[80%] overflow-hidden text-center text-sm text-black">
                             {inputs.name ? inputs.name : `Box ${e.labelNum}`}
                           </p>
                         </div>
-                        <div className="absolute bottom-0 flex h-[60%] w-full justify-around">
+                        <div className="absolute bottom-0 flex h-[70%] w-full justify-around">
                           <img
                             src={`/img/insurance_logo.png`}
                             alt={`label_${e.labelNum}`}
-                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            className="h-28 w-28 md:h-28 md:w-28 lg:h-28 lg:w-28 xl:h-28 xl:w-28"
                           />
                           <QRCodeSVG
-                            value={`/api//boxes`}
-                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            value={`${import.meta.env.VITE_BASE_URL}/boxes`}
+                            className="h-28 w-28 md:h-28 md:w-28 lg:h-28 lg:w-28 xl:h-28 xl:w-28"
                             title={`Label ${e.labelNum}`}
                           />
                         </div>
@@ -502,7 +501,7 @@ function Boxes() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          extraClasses={"w-full md:mx-4 max-h-[95vh] md:h-auto"}
+          extraClasses={"md:mx-4 max-w-[48rem] max-h-[95vh] md:h-auto"}
           title="Edit Box"
           submitText="Edit"
           cancelText="Cancel"
@@ -522,7 +521,7 @@ function Boxes() {
                             type: e.type,
                           })
                         }
-                        className={`relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                        className={`relative flex max-w-96 flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
                       >
                         <img
                           src={`/img/label_${e.labelNum}.png`}
@@ -530,12 +529,12 @@ function Boxes() {
                           className="h-full w-full"
                         />
                         <div className="absolute left-0 flex w-[50%] flex-col items-center">
-                          <p className="mb-10 flex flex-wrap text-center text-sm text-black md:mb-6">
+                          <p className="mb-8 w-[80%] overflow-hidden text-center text-sm text-black md:mb-6">
                             {inputs.name ? inputs.name : `Box ${e.labelNum}`}
                           </p>
                           <QRCodeSVG
-                            value={`/api//boxes/${inputs._id}/items`}
-                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            value={`${import.meta.env.VITE_BASE_URL}/boxes/${inputs._id}/items`}
+                            className="h-28 w-28 md:h-28 md:w-28 lg:h-28 lg:w-28 xl:h-28 xl:w-28"
                             title={`Label ${e.labelNum}`}
                           />
                         </div>
@@ -550,7 +549,7 @@ function Boxes() {
                             type: e.type,
                           })
                         }
-                        className={`relative flex w-full flex-col items-center justify-center rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                        className={`relative flex w-full max-w-96 flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
                       >
                         <img
                           src={`/img/label_${e.labelNum}.png`}
@@ -558,20 +557,20 @@ function Boxes() {
                           className="h-full w-full"
                         />
 
-                        <div className="absolute top-0 flex h-[45%] flex-col items-center justify-center">
-                          <p className="flex flex-wrap text-center text-sm text-black">
+                        <div className="absolute top-0 flex h-[30%] w-full flex-col items-center justify-center">
+                          <p className="w-[80%] overflow-hidden text-center text-sm text-black">
                             {inputs.name ? inputs.name : `Box ${e.labelNum}`}
                           </p>
                         </div>
-                        <div className="absolute bottom-0 flex h-[60%] w-full justify-around">
+                        <div className="absolute bottom-0 flex h-[70%] w-full justify-around">
                           <img
                             src={`/img/insurance_logo.png`}
                             alt={`label_${e.labelNum}`}
-                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            className="h-28 w-28 md:h-28 md:w-28 lg:h-28 lg:w-28 xl:h-28 xl:w-28"
                           />
                           <QRCodeSVG
-                            value={`/api//boxes`}
-                            className="h-24 w-24 md:h-20 md:w-20 lg:h-28 lg:w-28 xl:h-36 xl:w-36"
+                            value={`${import.meta.env.VITE_BASE_URL}/boxes`}
+                            className="h-28 w-28 md:h-28 md:w-28 lg:h-28 lg:w-28 xl:h-28 xl:w-28"
                             title={`Label ${e.labelNum}`}
                           />
                         </div>

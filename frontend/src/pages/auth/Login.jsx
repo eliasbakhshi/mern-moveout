@@ -89,7 +89,6 @@ function Login() {
         try {
           const { data: user, error } =
             await loginWithGoogle(getUserFromGoogle);
-          console.log("user 2222222", user);
           if (error) {
             return toast.error(error?.data?.message);
           }
@@ -105,8 +104,6 @@ function Login() {
 
     loginWithGoogleAsync();
   }, [getUserFromGoogle]);
-
-  console.log("getUserFromGoogle", getUserFromGoogle);
 
   loginLoading && <Loading />;
 
@@ -134,7 +131,7 @@ function Login() {
           maxLength="100"
           pattern="[a-zA-Z0-9]*"
           title="Password must be 6 - 100 characters long and contain only alphanumeric characters."
-          placeholder="6 - 100 characters and alphanumeric"
+          placeholder="6 - 100 alphanumeric"
           extraClasses="mb-3"
           ref={passwordRef}
         />

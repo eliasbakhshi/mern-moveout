@@ -34,17 +34,31 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
 var _dirname = _path["default"].resolve();
 
 var register = function register(req, res) {
-  var _req$body, name, email, password, userExists, hashed, emailToken, emailVerificationToken, emailVerificationTokenExpiresAt, user, emailTemplate;
+  var err, _req$body, name, email, password, userExists, hashed, emailToken, emailVerificationToken, emailVerificationTokenExpiresAt, user, emailTemplate;
 
   return regeneratorRuntime.async(function register$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
+          console.log(req.body); // Validate the email and password
+
+          err = (0, _expressValidator.validationResult)(req);
+
+          if (err.isEmpty()) {
+            _context.next = 4;
+            break;
+          }
+
+          return _context.abrupt("return", res.status(422).json({
+            message: err.array()[0].msg
+          }));
+
+        case 4:
           _req$body = req.body, name = _req$body.name, email = _req$body.email, password = _req$body.password;
           email = email.trim().toLowerCase();
 
           if (!(!name || !email || !password)) {
-            _context.next = 4;
+            _context.next = 8;
             break;
           }
 
@@ -52,17 +66,17 @@ var register = function register(req, res) {
             message: "Please fill in all the fields."
           }));
 
-        case 4:
-          _context.next = 6;
+        case 8:
+          _context.next = 10;
           return regeneratorRuntime.awrap(_User["default"].findOne({
             email: email
           }));
 
-        case 6:
+        case 10:
           userExists = _context.sent;
 
           if (!userExists) {
-            _context.next = 9;
+            _context.next = 13;
             break;
           }
 
@@ -70,18 +84,18 @@ var register = function register(req, res) {
             message: "Email already exists."
           }));
 
-        case 9:
-          _context.next = 11;
+        case 13:
+          _context.next = 15;
           return regeneratorRuntime.awrap(_bcryptjs["default"].hash(password, 10));
 
-        case 11:
+        case 15:
           hashed = _context.sent;
           emailToken = _crypto["default"].randomBytes(32).toString("hex");
           emailVerificationToken = _crypto["default"].createHash("sha256").update(emailToken).digest("hex");
           emailVerificationTokenExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
           // Create a new user
 
-          _context.next = 17;
+          _context.next = 21;
           return regeneratorRuntime.awrap(_User["default"].create({
             name: name,
             email: email,
@@ -91,15 +105,15 @@ var register = function register(req, res) {
             registeredWith: ["Email"]
           }));
 
-        case 17:
+        case 21:
           user = _context.sent;
           // Get the email template
           emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-email-verification.html", "utf8");
           emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, name);
           emailTemplate = emailTemplate.replace(/(\*\*button_text\*\*)/g, "Verify Me");
           emailTemplate = emailTemplate.replace(/(\*\*email_link\*\*)/g, "".concat(process.env.BASE_URL, "/verify-email/").concat(emailVerificationToken));
-          _context.prev = 22;
-          _context.next = 25;
+          _context.prev = 26;
+          _context.next = 29;
           return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
             from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
             to: email,
@@ -108,32 +122,32 @@ var register = function register(req, res) {
             html: emailTemplate
           }));
 
-        case 25:
-          _context.next = 32;
+        case 29:
+          _context.next = 36;
           break;
 
-        case 27:
-          _context.prev = 27;
-          _context.t0 = _context["catch"](22);
-          _context.next = 31;
+        case 31:
+          _context.prev = 31;
+          _context.t0 = _context["catch"](26);
+          _context.next = 35;
           return regeneratorRuntime.awrap(user.deleteOne());
 
-        case 31:
+        case 35:
           return _context.abrupt("return", res.status(500).json({
             message: "Email address rejected because domain not found."
           }));
 
-        case 32:
+        case 36:
           return _context.abrupt("return", res.status(201).json({
             message: "User created successfully."
           }));
 
-        case 33:
+        case 37:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[22, 27]]);
+  }, null, null, [[26, 31]]);
 };
 
 exports.register = register;
@@ -2507,13 +2521,13 @@ var getNamesAndEmails = function getNamesAndEmails(req, res) {
 exports.getNamesAndEmails = getNamesAndEmails;
 
 var shareBox = function shareBox(req, res) {
-  var _req$body11, boxId, email, uid, err, user, box, newBox, emailTemplate;
+  var _req$body11, boxId, email, type, uid, err, user, box, newBox, emailTemplate;
 
   return regeneratorRuntime.async(function shareBox$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
-          _req$body11 = req.body, boxId = _req$body11.boxId, email = _req$body11.email;
+          _req$body11 = req.body, boxId = _req$body11.boxId, email = _req$body11.email, type = _req$body11.type;
           uid = new _shortUniqueId["default"]({
             length: 6,
             dictionary: "number"
@@ -2595,7 +2609,8 @@ var shareBox = function shareBox(req, res) {
             labelNum: box.labelNum,
             isPrivate: box.isPrivate,
             privateCode: box.privateCode ? uid.randomUUID(6) : undefined,
-            user: user._id
+            user: user._id,
+            type: type
           }));
 
         case 21:

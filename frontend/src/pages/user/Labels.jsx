@@ -65,15 +65,14 @@ function Labels() {
     try {
       const { data, error } = await shareLabel({ labelId, email });
       if (error) {
-        toast.error(error.data.message);
+        return toast.error(error.data.message);
       } else {
-        toast.success(data.message);
         setIsOpenModal(false);
         setIsShowingUsers(false);
+        return toast.success(data.message);
       }
     } catch (err) {
-      console.log(err);
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );

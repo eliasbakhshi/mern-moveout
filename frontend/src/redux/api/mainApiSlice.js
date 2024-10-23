@@ -8,6 +8,7 @@ export const mainApi = apiSlice.injectEndpoints({
         method: "GET",
       }),
       providesTags: ["Box"],
+      keepUnusedDataFor: 0,
     }),
     getBox: builder.query({
       query: (boxId) => ({

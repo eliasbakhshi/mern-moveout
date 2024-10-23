@@ -26,7 +26,6 @@ import Input from "../../components/Input";
 
 // TODO: Add sort by type or name or date
 // TODO: Make a filter for the media type
-// TODO: Reset all the inputs after the submission or close or cancel
 // TODO: Add a loading spinner when the user submit the form
 // TODO: Check tha several toasts are not shown on the top of each other
 // TODO: Add xss protection for the inputs
@@ -39,6 +38,7 @@ import Input from "../../components/Input";
 // TODO: Add a button for the user to go back to the boxes page
 // TODO: Add sharing the label with other users
 // TODO: Change the popup titles with the name of the box or items
+// TODO: Add a preview for the media files before uploading for music
 
 function Items() {
   const { userInfo } = useSelector((state) => state.auth);
@@ -92,8 +92,7 @@ function Items() {
     ];
 
     if (allowedTypes.indexOf(media.type) === -1) {
-      toast.error("The media type is not supported.");
-      return;
+      return toast.error("The media type is not supported.");
     }
 
     console.log("media", media);
@@ -109,7 +108,7 @@ function Items() {
 
   const deletePreview = () => {
     setImage("");
-    setInputs({ ...inputs, media: "", mediaPath: "", mode: "delete" });
+    setInputs({ ...inputs, media: "", mediaPath: "" });
   };
 
   const createItemHandler = async (e) => {
@@ -133,7 +132,7 @@ function Items() {
       const { data, error } = await createItem(productData);
 
       if (error) {
-        toast.error(error.data.message);
+        return toast.error(error.data.message);
       } else {
         setImage("");
         setInputs({
@@ -147,10 +146,10 @@ function Items() {
         });
         setIsOpenModal(false);
         e.target.reset();
-        toast.success(data.message);
+        return toast.success(data.message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -181,7 +180,7 @@ function Items() {
     try {
       const { data, error } = await updateItem(productData);
       if (error) {
-        toast.error(error.data.message);
+        return toast.error(error.data.message);
       } else {
         setInputs({
           itemId: "",
@@ -192,13 +191,11 @@ function Items() {
           labelNum: 1,
           mediaPath: "",
         });
-        e.target.reset();
-        // refetchBox();
         setIsOpenModal(false);
-        toast.success(data.message);
+        return toast.success(data.message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -209,14 +206,28 @@ function Items() {
     e.preventDefault();
     try {
       const { data, error } = await deleteItem(inputs.itemId);
-      toast.success(data.message);
+
+      if (error) {
+        return toast.error(error.data.message);
+      } else {
+        setInputs({
+          itemId: "",
+          description: "",
+          value: "",
+          mode: "",
+          name: "",
+          labelNum: 1,
+          mediaPath: "",
+        });
+        setIsOpenModal(false);
+        return toast.success(data.message);
+      }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.message || "An error occurred. Please contact the administration.",
       );
     }
     // refetchBox();
-    setIsOpenModal(false);
   };
 
   const showModal = (itemId = "", mode = "create") => {
@@ -269,16 +280,16 @@ function Items() {
     }
 
     try {
-      const { data, error } = await shareBox({ boxId, email });
+      const { data, error } = await shareBox({ boxId, email, type: box.type });
       if (error) {
-        toast.error(error.data.message);
+        return toast.error(error.data.message);
       } else {
-        toast.success(data.message);
         setIsOpenModal(false);
         setIsShowingUsers(false);
+        return toast.success(data.message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -291,19 +302,17 @@ function Items() {
     try {
       const { data, error } = await changeCurrency({ boxId, currency });
       if (error) {
-        toast.error(error.data.message);
+        return toast.error(error.data.message);
       } else {
-        toast.success(data.message);
+        return toast.success(data.message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
-
           "An error occurred. Please contact the administration.",
       );
     }
   };
-
 
   // console.log("box", box);
   // console.log("inputs", inputs);
@@ -332,7 +341,12 @@ function Items() {
         <ItemList items={filteredItems} showModal={showModal} />
       )}
       {box.type === "insurance" && (
-        <ItemListInsurance items={filteredItems} showModal={showModal} changeCurrencyHandler={changeCurrencyHandler} currency={box.currency}/>
+        <ItemListInsurance
+          items={filteredItems}
+          showModal={showModal}
+          changeCurrencyHandler={changeCurrencyHandler}
+          currency={box.currency}
+        />
       )}
 
       {/* Show the popup for sharing the label with users. */}
@@ -448,11 +462,16 @@ function Items() {
                   name="value"
                   type="number"
                   step="0.01"
-                  onInput={changeHandler}
                   onKeyDown={(e) => {
                     if (e.key === "e" || e.key === "E") {
                       e.preventDefault();
                     }
+                  }}
+                  onInput={(e) => {
+                    if (e.target.value < 0) {
+                      e.target.value = 0;
+                    }
+                    changeHandler(e);
                   }}
                   extraClasses=""
                   value={inputs.value}
@@ -536,11 +555,16 @@ function Items() {
                   name="value"
                   type="number"
                   step="0.01"
-                  onInput={changeHandler}
                   onKeyDown={(e) => {
                     if (e.key === "e" || e.key === "E") {
                       e.preventDefault();
                     }
+                  }}
+                  onInput={(e) => {
+                    if (e.target.value < 0) {
+                      e.target.value = 0;
+                    }
+                    changeHandler(e);
                   }}
                   value={inputs.value}
                 />

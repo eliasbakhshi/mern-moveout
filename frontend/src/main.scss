@@ -2,22 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-@import './../node_modules/react-h5-audio-player/src/styles.scss';
+@import "./../node_modules/react-h5-audio-player/src/styles.scss";
 
 /* For the audio player */
-.rhap_volume-bar, .rhap_progress-bar  {
-    background-color: #9e9e9e;
+.rhap_volume-bar,
+.rhap_progress-bar {
+  background-color: #9e9e9e;
 }
 .rhap_download-progress {
-    background-color: #868686;
+  background-color: #868686;
 }
-
-
 
 #root {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
-    min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 100vh;
 }
+
+
+ /* Custom scrollbar styles for div and article elements */
+ div::-webkit-scrollbar,
+ article::-webkit-scrollbar {
+     width: 5px;
+ }
+
+ div::-webkit-scrollbar-track,
+ article::-webkit-scrollbar-track {
+     background: #f1f1f1;
+ }
+
+ div::-webkit-scrollbar-thumb,
+ article::-webkit-scrollbar-thumb {
+     background: #888;
+     border-radius: 6px;
+ }
+
+ div::-webkit-scrollbar-thumb:hover,
+ article::-webkit-scrollbar-thumb:hover {
+     background: #555;
+ }

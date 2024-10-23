@@ -34,7 +34,7 @@ function BoxDetails() {
       itemsError?.data &&
       itemsError?.data?.message?.includes("right")
     ) {
-      toast.error(itemsError.data.message);
+      return toast.error(itemsError.data.message);
     }
   }, [itemsError]);
 

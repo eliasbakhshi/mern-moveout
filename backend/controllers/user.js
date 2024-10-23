@@ -14,7 +14,15 @@ import ShortUniqueId from "short-unique-id";
 const __dirname = path.resolve();
 
 export const register = async (req, res) => {
+  console.log(req.body);
+  // Validate the email and password
+  const err = validationResult(req);
+  if (!err.isEmpty()) {
+    return res.status(422).json({ message: err.array()[0].msg });
+  }
+
   let { name, email, password } = req.body;
+
   email = email.trim().toLowerCase();
   if (!name || !email || !password) {
     return res.status(400).json({ message: "Please fill in all the fields." });
@@ -1064,7 +1072,7 @@ export const getNamesAndEmails = async (req, res) => {
 };
 
 export const shareBox = async (req, res) => {
-  const { boxId, email } = req.body;
+  const { boxId, email, type } = req.body;
   const uid = new ShortUniqueId({ length: 6, dictionary: "number" });
 
   // show the error if there is any
@@ -1102,6 +1110,7 @@ export const shareBox = async (req, res) => {
     isPrivate: box.isPrivate,
     privateCode: box.privateCode ? uid.randomUUID(6) : undefined,
     user: user._id,
+    type,
   });
 
   // Add the box to the user's box list

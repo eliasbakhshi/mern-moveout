@@ -32,7 +32,7 @@ function ItemList({ items, showModal }) {
                 style={{ backgroundImage: `url('/api/${e.mediaPath}')` }}
               ></div>
               {e.description && (
-                <p className="p-4 font-light leading-normal text-slate-600">
+                <p className="w-full truncate p-4 text-center font-light leading-normal text-slate-600">
                   {e.description}
                 </p>
               )}
@@ -74,7 +74,7 @@ function ItemList({ items, showModal }) {
                 />
               </div>
               {e.description && (
-                <p className="p-4 font-light leading-normal text-slate-600">
+                <p className="w-full truncate p-4 text-center font-light leading-normal text-slate-600">
                   {e.description}
                 </p>
               )}
@@ -104,7 +104,7 @@ function ItemList({ items, showModal }) {
                 style={{ backgroundImage: `url('/img/text_box.png')` }}
               ></div>
               {e.description && (
-                <p className="p-4 font-light leading-normal text-slate-600">
+                <p className="w-full truncate p-4 text-center font-light leading-normal text-slate-600">
                   {e.description}
                 </p>
               )}

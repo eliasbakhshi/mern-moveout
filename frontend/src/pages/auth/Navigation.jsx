@@ -27,7 +27,7 @@ const Login = () => {
       dispatch(removeCredentials());
       navigate("/login");
     } catch (err) {
-      toast.error(err?.data?.message || err.message);
+      return toast.error(err?.data?.message || err.message);
     }
   };
 

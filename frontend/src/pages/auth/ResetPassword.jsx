@@ -48,9 +48,9 @@ function ResetPassword() {
     const email = emailRef.current.value;
     try {
       const res = await sendEmailResetPassword({ email }).unwrap();
-      toast.success(res.message);
+      return toast.success(res.message);
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -67,10 +67,10 @@ function ResetPassword() {
         confirmPassword,
         userId: user.userId,
       }).unwrap();
-      toast.success(res.message);
       navigate("/login");
+      return toast.success(res.message);
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -102,7 +102,7 @@ function ResetPassword() {
         ) : (
           // show the form to reset the password
           <>
-            <section className="flex flex-grow">
+            <section className="flex flex-grow w-full">
               <form
                 onSubmit={ResetPasswordHandler}
                 className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
@@ -147,7 +147,7 @@ function ResetPassword() {
       ) : (
         // if the token is not provided in the URL and user want to reset the password by email
         <>
-          <section className="flex flex-grow">
+          <section className="flex flex-grow w-full">
             <form
               onSubmit={sendResetPasswordEmailHandler}
               className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"

@@ -33,13 +33,13 @@ function Contact() {
 
     try {
       const res = await sendContactMessage({ name, email, message }).unwrap();
-      // Handle successful register
+      // Handle successful email sending
       if (res) {
-        toast.success(res.message);
         e.target.reset();
+        return toast.success(res.message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -52,7 +52,7 @@ function Contact() {
         onSubmit={sendContactMessageHandler}
         className="left-0 top-0 flex w-full flex-col justify-center bg-[#ffdf27] p-5 align-middle md:w-[40%] md:p-10"
       >
-        <h2 className="mb-4 text-2xl font-bold">Register</h2>
+        <h2 className="mb-4 text-2xl font-bold">Contact Form</h2>
         <label htmlFor="name">Name</label>
         <Input
           type="text"

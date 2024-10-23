@@ -102,8 +102,7 @@ function Profile() {
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
 
     if (allowedTypes.indexOf(media.type) === -1) {
-      toast.error("The media type is not supported.");
-      return;
+      return toast.error("The media type is not supported.");
     }
 
     setImage(URL.createObjectURL(media));
@@ -139,10 +138,12 @@ function Profile() {
 
       const editedUser = await editCurrentUser(productData).unwrap();
       if (editCurrentUserError) {
-        toast.error(editCurrentUserError);
+        return toast.error(editCurrentUserError);
       }
       dispatch(setCredentials({ user: editedUser, remember: true }));
-      editCurrentUserSuccess && toast.success("User updated successfully");
+      if (editCurrentUserSuccess) {
+        return toast.success("User updated successfully");
+      }
 
       if (userInfo?.mediaPath) {
         setImage(
@@ -157,12 +158,12 @@ function Profile() {
       setUser({ ...editedUser, password: "", confirmPassword: "" });
 
       if (editCurrentUserError) {
-        toast.error(editCurrentUserError?.data?.message || err.message);
+        return toast.error(editCurrentUserError?.data?.message || err.message);
       } else {
-        toast.success(editedUser.message);
+        return toast.success(editedUser.message);
       }
     } catch (err) {
-      toast.error(err?.data?.message || err.message);
+      return toast.error(err?.data?.message || err.message);
     }
   };
 
@@ -171,13 +172,13 @@ function Profile() {
     try {
       const { user, message } = await deactivateCurrentUser().unwrap();
       if (deactivateCurrentUserError) {
-        toast.error(deactivateCurrentUserError);
+        return toast.error(deactivateCurrentUserError);
       } else {
-        toast.success(message);
         dispatch(setCredentials({ user, remember: true }));
+        return toast.success(message);
       }
     } catch (err) {
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -189,14 +190,14 @@ function Profile() {
     try {
       const { user, message } = await reactivateCurrentUser().unwrap();
       if (reactivateCurrentUserError) {
-        toast.error(reactivateCurrentUserError);
+        return toast.error(reactivateCurrentUserError);
       } else {
-        toast.success(message);
         dispatch(setCredentials({ user, remember: true }));
+        return toast.success(message);
       }
     } catch (err) {
       console.log("err", err);
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -215,14 +216,13 @@ function Profile() {
     try {
       const { message } = await sendDeleteEmail().unwrap();
       if (sendDeleteEmailError) {
-        toast.error(sendDeleteEmailError);
+        return toast.error(sendDeleteEmailError);
       } else {
-        toast.success(message);
         setEmailSent(true);
+        return toast.success(message);
       }
     } catch (err) {
-      console.log("err", err);
-      toast.error(
+      return toast.error(
         err?.data?.message ||
           "An error occurred. Please contact the administration.",
       );
@@ -250,7 +250,7 @@ function Profile() {
 
   return (
     // <div className="flex h-full w-full flex-grow items-center justify-center md:w-auto">
-    <div className="flex h-full w-full flex-grow items-center justify-center bg-[url('/img/login-bg.jpg')]">
+    <div className="flex h-full w-full flex-grow items-center justify-center bg-[url('/img/login-bg.jpg')] bg-cover">
       <form
         type="multipart/form-data"
         onSubmit={editUserHandler}
