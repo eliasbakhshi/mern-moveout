@@ -14,7 +14,7 @@ export const mainApi = apiSlice.injectEndpoints({
         url: "/api/boxes/" + boxId,
         method: "GET",
       }),
-      providesTags: (result, error, boxId) => [{ type: "Box", id: boxId }],
+      providesTags: ["Box"],
     }),
     createBox: builder.mutation({
       query: (info) => ({
@@ -30,7 +30,7 @@ export const mainApi = apiSlice.injectEndpoints({
         method: "PUT",
         body: info,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Box", id }],
+      invalidatesTags: ["Box"],
     }),
     deleteBox: builder.mutation({
       query: (id) => ({
@@ -38,7 +38,7 @@ export const mainApi = apiSlice.injectEndpoints({
         method: "DELETE",
         invalidatesTags: ["Box"],
       }),
-      invalidatesTags: (result, error, id) => [{ type: "Box", id }],
+      invalidatesTags: ["Box"],
     }),
     changeBoxStatus: builder.mutation({
       query: (info) => ({
@@ -46,7 +46,15 @@ export const mainApi = apiSlice.injectEndpoints({
         body: info,
         method: "PUT",
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Box", id }],
+      invalidatesTags: ["Box"],
+    }),
+    changeCurrency: builder.mutation({
+      query: (info) => ({
+        url: "/api/boxes/currency",
+        body: info,
+        method: "PUT",
+      }),
+      invalidatesTags: ["Box"],
     }),
 
     // public stuff
@@ -55,7 +63,7 @@ export const mainApi = apiSlice.injectEndpoints({
         url: "/api/boxes/" + boxId + "/show",
         method: "GET",
       }),
-      providesTags: (result, error, boxId) => [{ type: "Box", id: boxId }],
+      providesTags: ["Box"],
     }),
     sendContactMessage: builder.mutation({
       query: (info) => ({
@@ -104,6 +112,7 @@ export const mainApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Box"],
     }),
+
   }),
 });
 
@@ -114,6 +123,7 @@ export const {
   useUpdateBoxMutation,
   useDeleteBoxMutation,
   useChangeBoxStatusMutation,
+  useChangeCurrencyMutation,
   // public stuff
   useShowBoxQuery,
   useSendContactMessageMutation,

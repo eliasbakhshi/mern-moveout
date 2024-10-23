@@ -24,6 +24,7 @@ cron.schedule("0 0 * * *", async () => {
     reminderSent: false,
   });
 
+  // Send email to users who need to be reminded
   for (const user of usersToRemind) {
     // Get the email template
     let emailTemplate = fs.readFileSync(
@@ -52,8 +53,32 @@ cron.schedule("0 0 * * *", async () => {
     }
   }
 
+  // Deactivate users who have been inactive for more than a month and send them an email
   for (const user of usersToDeactivate) {
-    user.isActive = false;
-    await user.save();
+    // Get the email template
+    let emailTemplate = fs.readFileSync(
+      path.resolve(".") + "/backend/views/template-deactivate-inactivity.html",
+      "utf8",
+    );
+    emailTemplate = emailTemplate.replace(
+      /(\*\*login_link\*\*)/g,
+      `${process.env.BASE_URL}/login`,
+    );
+    emailTemplate = emailTemplate.replace(/(\*\*name\*\*)/g, user.name);
+
+    try {
+      // Send the email
+      await transporter.sendMail({
+        from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+        to: user.email,
+        subject: "Your account has been deactivated.",
+        html: emailTemplate,
+      });
+      user.isActive = false;
+      await user.save();
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      continue;
+    }
   }
 });

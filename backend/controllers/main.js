@@ -146,6 +146,21 @@ export const deleteBox = async (req, res) => {
   box.deletedAt = Date.now();
   box.items.forEach((item) => {
     if (item.mediaPath) {
+      try {
+        // Move the mediaPath from deleted-uploads to uploads
+        const fileName = item.mediaPath.replace(
+          `${process.env.UPLOADS_PATH}/`,
+          "",
+        );
+        fs.renameSync(
+          path.join(__dirname, process.env.UPLOADS_PATH, fileName),
+          path.join(__dirname, process.env.DELETED_UPLOADS_PATH, fileName), // Move the file back to the deleted uploads folder
+        );
+      } catch (error) {
+        console.log(error);
+      }
+
+      // Update the mediaPath
       item.mediaPath = item.mediaPath.replace(
         process.env.UPLOADS_PATH,
         process.env.DELETED_UPLOADS_PATH,
@@ -154,29 +169,6 @@ export const deleteBox = async (req, res) => {
   });
   await DeletedBox.create(box.toObject());
   await box.deleteOne();
-
-  try {
-    // Remove all media files that have the user ID as the first part of the filename
-    const mediaFiles = fs.readdirSync(
-      path.join(__dirname, process.env.UPLOADS_PATH),
-    );
-    mediaFiles.forEach((file) => {
-      const [fileUserId] = file.split("-");
-      if (fileUserId === user._id.toString()) {
-        const deletedPath = path.join(
-          __dirname,
-          process.env.DELETED_UPLOADS_PATH,
-          file,
-        );
-        fs.renameSync(
-          path.join(__dirname, process.env.UPLOADS_PATH, file),
-          deletedPath,
-        );
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
 
   return res.status(200).json({ message: "Box deleted successfully." });
 };
@@ -210,6 +202,34 @@ export const changeBoxStatus = async (req, res) => {
   return res
     .status(200)
     .json({ message: `Box is ${box.isPrivate ? "private" : "public"} now.` });
+};
+
+export const changeCurrency = async (req, res) => {
+  const { boxId, currency } = req.body;
+
+  // Check if the user is active
+  const user = await User.findOne({ _id: req.user._id, isActive: true });
+  if (!user) {
+    return res.status(400).json({ message: "User is inactive." });
+  }
+
+  if (!boxId || currency == undefined || currency == "") {
+    return res
+      .status(400)
+      .json({ message: "Please provide an box ID and a status" });
+  }
+
+  const box = await Box.findOne({ user: req.user._id, _id: boxId });
+
+  if (!box) {
+    return res.status(400).json({ message: "Box not found" });
+  }
+
+  // Change the status of the box
+  box.currency = currency;
+  await box.save();
+
+  return res.status(200).json({ message: `Currency is ${currency} now.` });
 };
 
 // Public stuff
@@ -392,8 +412,6 @@ export const updateItem = async (req, res) => {
     return res.status(422).json({ message: err.array()[0].msg });
   }
 
-  console.log(req.body);
-
   if (
     (description === "" || description === "undefined") &&
     (value === "" || value === "undefined") &&
@@ -557,6 +575,7 @@ export default {
   updateBox,
   deleteBox,
   changeBoxStatus,
+  changeCurrency,
 
   // Public stuff
   showBoxById,

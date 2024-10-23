@@ -130,8 +130,11 @@ function Login() {
           type="password"
           id="password"
           required
-          minLength={6}
-          placeholder="At least 6 characters"
+          minLength="6"
+          maxLength="100"
+          pattern="[a-zA-Z0-9]*"
+          title="Password must be 6 - 100 characters long and contain only alphanumeric characters."
+          placeholder="6 - 100 characters and alphanumeric"
           extraClasses="mb-3"
           ref={passwordRef}
         />

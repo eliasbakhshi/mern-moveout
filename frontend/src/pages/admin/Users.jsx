@@ -19,7 +19,9 @@ import {
   useChangeUserStatusMutation,
   useRecoverUserMutation,
   useDeleteUserPermanentlyMutation,
+  useSendMarketingEmailMutation,
 } from "../../redux/api/usersApiSlice";
+import Loading from "../../components/Loading";
 
 // TODO: Add a loading page then user is navigating between pages
 // TODO: Add changeStatus function to change the status of the user
@@ -37,9 +39,10 @@ function Users() {
   });
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [showingDeletedUsers, setShowingDeletedUsers] = useState(false);
+  const [marketingUsers, setMarketingUsers] = useState([]);
 
-  const { data: users } = useGetUsersQuery(!showingDeletedUsers || skipToken);
-  const { data: deletedUsers } = useGetDeletedUsersQuery(
+  const { data: users, isLoading: usersLoading } = useGetUsersQuery(!showingDeletedUsers || skipToken);
+  const { data: deletedUsers, isLoading: deletedUsersLoading  } = useGetDeletedUsersQuery(
     showingDeletedUsers || skipToken,
   );
   const [createUser] = useCreateUserMutation();
@@ -48,6 +51,7 @@ function Users() {
   const [changeUserStatus] = useChangeUserStatusMutation();
   const [recoverUser] = useRecoverUserMutation();
   const [deleteUserPermanently] = useDeleteUserPermanentlyMutation();
+  const [sendMarketingEmail] = useSendMarketingEmailMutation();
 
   const showModal = (userId = "", mode = "create") => {
     if (mode === "create") {
@@ -79,6 +83,8 @@ function Users() {
     } else if (mode === "delete") {
       setInputs({ ...inputs, userId, mode });
     } else if (mode === "delete-permanently") {
+      setInputs({ ...inputs, userId, mode });
+    } else if (mode === "marketing-email") {
       setInputs({ ...inputs, userId, mode });
     }
     setIsOpenModal(true);
@@ -203,6 +209,15 @@ function Users() {
       if (error) {
         return toast.error(error.data.message);
       } else {
+        setInputs({
+          userId: "",
+          name: "",
+          email: "",
+          password: "",
+          isActive: false,
+          mode: "",
+        });
+        setIsOpenModal(false);
         return toast.success(data.message);
       }
     } catch (err) {
@@ -214,8 +229,43 @@ function Users() {
     setIsOpenModal(false);
   };
 
+  const sendMarketingEmailHandler = async (e) => {
+    e.preventDefault();
+    const title = e.target.title.value;
+    const message = e.target.message.value;
+    const format = e.target.format.value;
+
+    try {
+      const { data, error } = await sendMarketingEmail({
+        userId: inputs.userId,
+        title,
+        message,
+        format,
+      });
+
+      if (error) {
+        return toast.error(error.data.message);
+      } else {
+        setInputs({
+          userId: "",
+          name: "",
+          email: "",
+          password: "",
+          isActive: false,
+          mode: "",
+        });
+        setIsOpenModal(false);
+        e.target.reset();
+        return toast.success(data.message);
+      }
+    } catch (err) {
+      return toast.error(
+        err?.message || "An error occurred. Please contact the administration.",
+      );
+    }
+  };
+
   const changeStatusHandler = async (userId, isActive) => {
-    console.log(userId, isActive);
     try {
       const { data, error } = await changeUserStatus({
         userId,
@@ -271,24 +321,60 @@ function Users() {
         >
           Create User
         </Button>
-        <Button onClick={() => setShowingDeletedUsers(!showingDeletedUsers)}>
+        <Button
+          extraClasses={"mr-2 mb-3 md:mb-0"}
+          onClick={() => setShowingDeletedUsers(!showingDeletedUsers)}
+        >
           {showingDeletedUsers ? "Show Active Users" : "Show Deleted Users"}
+        </Button>
+        <Button
+          onClick={() => showModal("", "marketing-email")}
+          extraClasses={"mr-2 mb-3 md:mb-0"}
+        >
+          Send Email
         </Button>
       </div>
       {showingDeletedUsers ? (
-        <UserList
-          users={deletedUsers}
-          showModal={showModal}
-          showingDeletedUsers={showingDeletedUsers}
-          recoverUserHandler={recoverUserHandler}
-        />
-      ) : (
-        <UserList
+        deletedUsersLoading ? (<Loading />) :(deletedUsers?.length ? (
+          // For showing the deleted users
+          <UserList
+            users={deletedUsers}
+            showModal={showModal}
+            showingDeletedUsers={showingDeletedUsers}
+            recoverUserHandler={recoverUserHandler}
+          />
+        ) : (
+          <div
+            className="container relative mx-2 mt-4 rounded border border-blue-400 bg-blue-100 py-3 text-center text-blue-700 xl:mx-0"
+            role="alert"
+          >
+            <span className="block sm:inline">
+              There is no deleted user to show.
+            </span>
+          </div>
+        )))
+       : (
+
+        usersLoading ? (<Loading />) :(users?.length ? (
+          // For showing the active users
+          <UserList
           users={users}
           showModal={showModal}
           showingDeletedUsers={showingDeletedUsers}
           changeStatusHandler={changeStatusHandler}
         />
+        ) : (
+          <div
+            className="container relative mx-2 mt-4 rounded border border-blue-400 bg-blue-100 py-3 text-center text-blue-700 xl:mx-0"
+            role="alert"
+          >
+            <span className="block sm:inline">
+              There is no user to show.
+            </span>
+          </div>
+        ))
+        // For showing the active users
+
       )}
 
       {/* Show the popup for creating */}
@@ -323,10 +409,14 @@ function Users() {
               />
               <Input
                 name="password"
-                placeholder="Password (optional)"
+                placeholder="password (optional)"
                 onInput={changeHandler}
                 value={inputs.password}
                 type="password"
+                minLength="6"
+                maxLength="100"
+                pattern="[a-zA-Z0-9]*"
+                title="Password must be 6 - 100 characters long and contain only alphanumeric characters."
               />
             </>
           </div>
@@ -362,9 +452,14 @@ function Users() {
               />
               <Input
                 name="password"
+                type="password"
                 placeholder="Password (optional)"
                 onInput={changeHandler}
                 value={inputs.password}
+                minLength="6"
+                maxLength="100"
+                pattern="[a-zA-Z0-9]*"
+                title="Password must be 6 - 100 characters long and contain only alphanumeric characters."
               />
               <div className="my-4 flex items-center md:pl-4">
                 <span className="mr-2 text-sm text-gray-700">Active</span>
@@ -414,8 +509,48 @@ function Users() {
           extraClasses={"w-96 md:mx-4 h-auto"}
         >
           <p className="py-4">
-            Are you sure you want to delete this user permanently?
+            All media and labels will be deleted. Are you sure you want to
+            delete this user permanently?
           </p>
+        </Overlay>
+      )}
+
+      {/* Show the popup for email marketing */}
+      {isOpenModal && inputs.mode === "marketing-email" && (
+        <Overlay
+          isOpen={isOpenModal}
+          onClose={() => setIsOpenModal(!isOpenModal)}
+          title="Send Email"
+          submitText="Send"
+          submitColor="blue"
+          cancelText="Cancel"
+          onSubmit={sendMarketingEmailHandler}
+          extraClasses={" md:mx-4 h-auto"}
+        >
+          <div className="w-full p-4">
+            <div className="mb-4">
+              <Input
+                name="title"
+                placeholder="Title"
+                required
+                extraClasses={`mb-5`}
+              />
+              <textarea
+                name="message"
+                className="h-32 w-full rounded border border-gray-300 p-2"
+                placeholder="Enter information here..."
+              />
+            </div>
+            <div>
+              <select
+                name="format"
+                className="w-full rounded border border-gray-300 p-2"
+              >
+                <option value="text">Text</option>
+                <option value="html">HTML</option>
+              </select>
+            </div>
+          </div>
         </Overlay>
       )}
     </>

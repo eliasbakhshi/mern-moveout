@@ -49,6 +49,10 @@ const boxSchema = new Schema(
       type: String,
       required: true,
     },
+    currency: {
+      type: String,
+      default: "SEK",
+    },
     items: [itemSchema],
   },
   { timestamps: true },

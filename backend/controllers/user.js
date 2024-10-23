@@ -441,8 +441,12 @@ export const getUsers = async (req, res) => {
     for (const box of boxes) {
       for (const item of box.items) {
         if (item.mediaPath && item.deletedAt === undefined) {
-          const stats = fs.statSync(path.join(__dirname, item.mediaPath));
-          dataUsage += stats.size;
+          try {
+            const stats = fs.statSync(path.join(__dirname, item.mediaPath));
+            dataUsage += stats.size;
+          } catch (error) {
+            console.log(error);
+          }
         }
       }
     }
@@ -647,7 +651,6 @@ export const editUser = async (req, res) => {
       .json({ message: "Admin can just do this operation." });
   }
 
-  console.log("req.body", req.body);
   let { userId, name, email, password, isActive } = req.body;
   email = email.trim().toLowerCase();
   if (!name || !email) {
@@ -706,53 +709,50 @@ export const deleteUser = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  try {
-    // Remove all media files that have the user ID as the first part of the filename
-    const mediaFiles = fs.readdirSync(
-      path.join(__dirname, process.env.UPLOADS_PATH),
-    );
-    mediaFiles.forEach((file) => {
-      const [fileUserId] = file.split("-");
-      if (fileUserId === user._id.toString()) {
-        const deletedPath = path.join(
-          __dirname,
-          process.env.DELETED_UPLOADS_PATH,
-          file,
-        );
-        fs.renameSync(
-          path.join(__dirname, process.env.UPLOADS_PATH, file),
-          deletedPath,
-        );
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
-
-  // Move user to DeletedUser model and delete from User model
-  if (user.emailDeleteToken && user.emailDeleteTokenExpiresAt) {
-    user.emailDeleteToken = undefined;
-    user.emailDeleteTokenExpiresAt = undefined;
-  }
-  user.deletedAt = Date.now();
-  await DeletedUser.create(user.toObject());
-  await user.deleteOne();
-
   // Move user's boxes to DeletedBox collection
-  const userBoxes = await Box.find({ user: req.user._id });
+  const userBoxes = await Box.find({ user: user._id });
   for (const box of userBoxes) {
     box.deletedAt = Date.now();
+
+    // box.items.forEach((item) => {
+    //   if (item.mediaPath) {
+    //     item.mediaPath = item.mediaPath.replace(
+    //       process.env.UPLOADS_PATH,
+    //       process.env.DELETED_UPLOADS_PATH,
+    //     );
+    //   }
+    // });
+
     box.items.forEach((item) => {
       if (item.mediaPath) {
+        try {
+          // Move the mediaPath from deleted-uploads to uploads
+          const fileName = item.mediaPath.replace(
+            `${process.env.UPLOADS_PATH}/`,
+            "",
+          );
+          fs.renameSync(
+            path.join(__dirname, process.env.UPLOADS_PATH, fileName),
+            path.join(__dirname, process.env.DELETED_UPLOADS_PATH, fileName), // Move the file back to the deleted uploads folder
+          );
+        } catch (error) {
+          console.log(error);
+        }
+        // Update the mediaPath
         item.mediaPath = item.mediaPath.replace(
           process.env.UPLOADS_PATH,
           process.env.DELETED_UPLOADS_PATH,
         );
       }
     });
+
     await DeletedBox.create(box.toObject());
     await box.deleteOne();
   }
+
+  user.deletedAt = Date.now();
+  await DeletedUser.create(user.toObject());
+  await user.deleteOne();
 
   return res.status(200).json({
     message: "User has been deleted.",
@@ -782,35 +782,26 @@ export const recoverUser = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  try {
-    // Move all media files that have the user ID from the deleted-uploads to uploads as the first part of the filename
-    const mediaFiles = fs.readdirSync(
-      path.join(__dirname, process.env.DELETED_UPLOADS_PATH),
-    );
-    mediaFiles.forEach((file) => {
-      const [fileUserId] = file.split("-");
-      if (fileUserId === deletedUser._id.toString()) {
-        fs.renameSync(
-          path.join(__dirname, process.env.DELETED_UPLOADS_PATH, file),
-          path.join(__dirname, process.env.UPLOADS_PATH, file), // Move the file back to the uploads folder
-        );
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
-  deleteUser.deletedAt = undefined;
-
-  // Move back user from deletedUser model to User model
-  await User.create(deletedUser.toObject());
-  await deletedUser.deleteOne();
-
   // Move user's DeletedBox to Boxes collection
-  const deletedBoxes = await DeletedBox.find({ user: req.user._id });
+  const deletedBoxes = await DeletedBox.find({ user: deletedUser._id });
   for (const deletedBox of deletedBoxes) {
     deletedBox.deletedAt = undefined;
     deletedBox.items.forEach((item) => {
       if (item.mediaPath) {
+        try {
+          // Move the mediaPath from deleted-uploads to uploads
+          const fileName = item.mediaPath.replace(
+            `${process.env.DELETED_UPLOADS_PATH}/`,
+            "",
+          );
+          fs.renameSync(
+            path.join(__dirname, process.env.DELETED_UPLOADS_PATH, fileName),
+            path.join(__dirname, process.env.UPLOADS_PATH, fileName), // Move the file back to the uploads folder
+          );
+        } catch (error) {
+          console.log(error);
+        }
+
         item.mediaPath = item.mediaPath.replace(
           process.env.DELETED_UPLOADS_PATH,
           process.env.UPLOADS_PATH,
@@ -820,6 +811,11 @@ export const recoverUser = async (req, res) => {
     await Box.create(deletedBox.toObject());
     await deletedBox.deleteOne();
   }
+  deleteUser.deletedAt = undefined;
+
+  // Move back user from deletedUser model to User model
+  await User.create(deletedUser.toObject());
+  await deletedUser.deleteOne();
 
   return res.status(200).json({
     message: "User has been recovered.",
@@ -856,9 +852,136 @@ export const changeUserStatus = async (req, res) => {
   return res.status(201).json({ message: "User status updated successfully." });
 };
 
+export const sendMarketingEmail = async (req, res) => {
+  const { userId, title, message, format } = req.body;
+
+  console.log(req.body);
+  if (title === "" && message === "" && format === "") {
+    return res
+      .status(400)
+      .json({ message: "Please provide a userId, a message and a format." });
+  }
+
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+
+  if (!isAdmin) {
+    return res
+      .status(404)
+      .json({ message: "Admin can just do this operation." });
+  }
+
+  // Get the email template
+  let emailTemplate = fs.readFileSync(
+    path.resolve(".") +
+      `/backend/views/template-${format}-marketing-email.html`,
+    "utf8",
+  );
+  emailTemplate = emailTemplate.replace(/(\*\*title\*\*)/g, title);
+  emailTemplate = emailTemplate.replace(/(\*\*message\*\*)/g, message);
+  emailTemplate = emailTemplate.replace(
+    /(\*\*site_name\*\*)/g,
+    process.env.SITE_NAME,
+  );
+  emailTemplate = emailTemplate.replace(
+    /(\*\*site_url\*\*)/g,
+    process.env.BASE_URL,
+  );
+
+  // Find the user if userId is defined
+  if (userId !== "") {
+    const user = await User.findById({ _id: userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    try {
+      // Send the email
+      await transporter.sendMail({
+        from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+        to: user.email,
+        subject: title,
+        html: emailTemplate,
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Email not sent." });
+    }
+  } else {
+    // Get all the users except the current user
+    const users = await User.find({
+      isActive: true,
+      _id: { $ne: req.user._id },
+    });
+
+    if (!users) {
+      return res.status(404).json({ message: "No users found." });
+    }
+
+    try {
+      // Send the email
+      for (const user of users) {
+        await transporter.sendMail({
+          from: `"${process.env.SITE_NAME}" <${process.env.SMTP_USER}>`,
+          to: user.email,
+          subject: title,
+          html: emailTemplate,
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: "Email not sent." });
+    }
+  }
+
+  return res.status(200).json({ message: "Email sent successfully." });
+};
+
+export const deleteUserPermanently = async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "Please provide a userId." });
+  }
+
+  // Check if the user is an admin
+  const isAdmin = await User.findById({ _id: req.user._id, role: "admin" });
+
+  if (!isAdmin) {
+    return res
+      .status(404)
+      .json({ message: "Admin can just do this operation." });
+  }
+
+  // Find the user
+  const user = await DeletedUser.findById({ _id: userId });
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  // Move user's boxes to DeletedBox collection
+  const userBoxes = await DeletedBox.find({ user: user._id });
+  for (const box of userBoxes) {
+    box.items.forEach((item) => {
+      if (item.mediaPath) {
+        try {
+          fs.unlinkSync(path.join(__dirname, item.mediaPath));
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    });
+
+    await box.deleteOne();
+  }
+
+  await user.deleteOne();
+
+  return res.status(200).json({
+    message: "User has been deleted permanently.",
+  });
+};
+
 export const deleteCurrentUser = async (req, res) => {
   const { token } = req.query;
-
   // Find the user
   const user = await User.findOne({
     _id: req.user._id,
@@ -870,27 +993,36 @@ export const deleteCurrentUser = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  try {
-    // Remove all media files that have the user ID as the first part of the filename
-    const mediaFiles = fs.readdirSync(
-      path.join(__dirname, process.env.UPLOADS_PATH),
-    );
-    mediaFiles.forEach((file) => {
-      const [fileUserId] = file.split("-");
-      if (fileUserId === req.user._id.toString()) {
-        const deletedPath = path.join(
-          __dirname,
+  // Move user's boxes to DeletedBox collection
+  const userBoxes = await Box.find({ user: user._id });
+  for (const box of userBoxes) {
+    box.deletedAt = Date.now();
+
+    box.items.forEach((item) => {
+      if (item.mediaPath) {
+        try {
+          // Move the mediaPath from deleted-uploads to uploads
+          const fileName = item.mediaPath.replace(
+            `${process.env.UPLOADS_PATH}/`,
+            "",
+          );
+          fs.renameSync(
+            path.join(__dirname, process.env.UPLOADS_PATH, fileName),
+            path.join(__dirname, process.env.DELETED_UPLOADS_PATH, fileName), // Move the file back to the deleted uploads folder
+          );
+        } catch (error) {
+          console.log(error);
+        }
+        // Update the mediaPath
+        item.mediaPath = item.mediaPath.replace(
+          process.env.UPLOADS_PATH,
           process.env.DELETED_UPLOADS_PATH,
-          file,
-        );
-        fs.renameSync(
-          path.join(__dirname, process.env.UPLOADS_PATH, file),
-          deletedPath,
         );
       }
     });
-  } catch (error) {
-    console.log(error);
+
+    await DeletedBox.create(box.toObject());
+    await box.deleteOne();
   }
 
   // Move user to DeletedUser model and delete from User model
@@ -901,22 +1033,6 @@ export const deleteCurrentUser = async (req, res) => {
   user.deletedAt = Date.now();
   await DeletedUser.create(user.toObject());
   await user.deleteOne();
-
-  // Move user's boxes to DeletedBox collection
-  const userBoxes = await Box.find({ user: req.user._id });
-  for (const box of userBoxes) {
-    box.deletedAt = Date.now();
-    box.items.forEach((item) => {
-      if (item.mediaPath) {
-        item.mediaPath = item.mediaPath.replace(
-          process.env.UPLOADS_PATH,
-          process.env.DELETED_UPLOADS_PATH,
-        );
-      }
-    });
-    await DeletedBox.create(box.toObject());
-    await box.deleteOne();
-  }
 
   // Clear the cookie
   res.clearCookie("JWTMERNMoveOut");
@@ -1112,7 +1228,8 @@ export const deactivateCurrentUser = async (req, res) => {
 
   // Get the email template
   let emailTemplate = fs.readFileSync(
-    path.resolve(".") + "/backend/views/template-deactive-reactive-user.html",
+    path.resolve(".") +
+      "/backend/views/template-deactive-reactive-account.html",
     "utf8",
   );
   emailTemplate = emailTemplate.replace(
@@ -1193,7 +1310,7 @@ export const sendDeleteEmail = async (req, res) => {
   await user.save();
   // Get the email template
   let emailTemplate = fs.readFileSync(
-    path.resolve(".") + "/backend/views/template-email-delete-user.html",
+    path.resolve(".") + "/backend/views/template-email-delete-account.html",
     "utf8",
   );
   emailTemplate = emailTemplate.replace(
@@ -1245,6 +1362,8 @@ export default {
   deleteUser,
   recoverUser,
   changeUserStatus,
+  sendMarketingEmail,
+  deleteUserPermanently,
   deleteCurrentUser,
   getNamesAndEmails,
   shareBox,

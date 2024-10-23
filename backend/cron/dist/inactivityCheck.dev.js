@@ -14,7 +14,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
 
 // Cron Job for Inactivity Check
 _nodeCron["default"].schedule("0 0 * * *", function _callee() {
-  var oneMonthAgo, threeWeeksAgo, usersToDeactivate, usersToRemind, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, user, emailTemplate, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _user;
+  var oneMonthAgo, threeWeeksAgo, usersToDeactivate, usersToRemind, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, user, emailTemplate, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _user, _emailTemplate;
 
   return regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
@@ -46,6 +46,7 @@ _nodeCron["default"].schedule("0 0 * * *", function _callee() {
 
         case 9:
           usersToRemind = _context.sent;
+          // Send email to users who need to be reminded
           _iteratorNormalCompletion = true;
           _didIteratorError = false;
           _iteratorError = undefined;
@@ -127,6 +128,7 @@ _nodeCron["default"].schedule("0 0 * * *", function _callee() {
           return _context.finish(41);
 
         case 49:
+          // Deactivate users who have been inactive for more than a month and send them an email
           _iteratorNormalCompletion2 = true;
           _didIteratorError2 = false;
           _iteratorError2 = undefined;
@@ -135,58 +137,82 @@ _nodeCron["default"].schedule("0 0 * * *", function _callee() {
 
         case 54:
           if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-            _context.next = 62;
+            _context.next = 74;
             break;
           }
 
           _user = _step2.value;
+          // Get the email template
+          _emailTemplate = _fs["default"].readFileSync(_path["default"].resolve(".") + "/backend/views/template-deactivate-inactivity.html", "utf8");
+          _emailTemplate = _emailTemplate.replace(/(\*\*login_link\*\*)/g, "".concat(process.env.BASE_URL, "/login"));
+          _emailTemplate = _emailTemplate.replace(/(\*\*name\*\*)/g, _user.name);
+          _context.prev = 59;
+          _context.next = 62;
+          return regeneratorRuntime.awrap(_nodemailer["default"].sendMail({
+            from: "\"".concat(process.env.SITE_NAME, "\" <").concat(process.env.SMTP_USER, ">"),
+            to: _user.email,
+            subject: "Your account has been deactivated.",
+            html: _emailTemplate
+          }));
+
+        case 62:
           _user.isActive = false;
-          _context.next = 59;
+          _context.next = 65;
           return regeneratorRuntime.awrap(_user.save());
 
-        case 59:
+        case 65:
+          _context.next = 71;
+          break;
+
+        case 67:
+          _context.prev = 67;
+          _context.t2 = _context["catch"](59);
+          console.error("Failed to send email:", _context.t2);
+          return _context.abrupt("continue", 71);
+
+        case 71:
           _iteratorNormalCompletion2 = true;
           _context.next = 54;
           break;
 
-        case 62:
-          _context.next = 68;
+        case 74:
+          _context.next = 80;
           break;
 
-        case 64:
-          _context.prev = 64;
-          _context.t2 = _context["catch"](52);
+        case 76:
+          _context.prev = 76;
+          _context.t3 = _context["catch"](52);
           _didIteratorError2 = true;
-          _iteratorError2 = _context.t2;
+          _iteratorError2 = _context.t3;
 
-        case 68:
-          _context.prev = 68;
-          _context.prev = 69;
+        case 80:
+          _context.prev = 80;
+          _context.prev = 81;
 
           if (!_iteratorNormalCompletion2 && _iterator2["return"] != null) {
             _iterator2["return"]();
           }
 
-        case 71:
-          _context.prev = 71;
+        case 83:
+          _context.prev = 83;
 
           if (!_didIteratorError2) {
-            _context.next = 74;
+            _context.next = 86;
             break;
           }
 
           throw _iteratorError2;
 
-        case 74:
-          return _context.finish(71);
+        case 86:
+          return _context.finish(83);
 
-        case 75:
-          return _context.finish(68);
+        case 87:
+          return _context.finish(80);
 
-        case 76:
+        case 88:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[13, 37, 41, 49], [20, 28], [42,, 44, 48], [52, 64, 68, 76], [69,, 71, 75]]);
+  }, null, null, [[13, 37, 41, 49], [20, 28], [42,, 44, 48], [52, 76, 80, 88], [59, 67], [81,, 83, 87]]);
 });

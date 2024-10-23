@@ -389,7 +389,7 @@ function Boxes() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          extraClasses={"w-full md:mx-4 h-[95vh] md:h-auto"}
+          extraClasses={"w-full md:mx-4 max-h-[95vh] md:h-auto"}
           title="Create Box"
           submitText="Create"
           submitColor="blue"
@@ -410,7 +410,7 @@ function Boxes() {
                             type: e.type,
                           })
                         }
-                        className={`relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
+                        className={`relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner  md:w-[calc(95%/2)] ${inputs.labelNum === e.labelNum ? "border-2 border-blue-500" : ""}`}
                       >
                         <img
                           src={`/img/label_${e.labelNum}.png`}
@@ -502,7 +502,7 @@ function Boxes() {
         <Overlay
           isOpen={isOpenModal}
           onClose={() => setIsOpenModal(!isOpenModal)}
-          extraClasses={"w-full md:mx-4 h-[95vh] md:h-auto"}
+          extraClasses={"w-full md:mx-4 max-h-[95vh] md:h-auto"}
           title="Edit Box"
           submitText="Edit"
           cancelText="Cancel"

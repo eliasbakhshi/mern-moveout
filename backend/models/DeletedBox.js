@@ -50,6 +50,10 @@ const deletedBoxSchema = new Schema(
       type: String,
       required: true,
     },
+    currency: {
+      type: String,
+      default: "SEK",
+    },
     deletedAt: {
       type: Date,
       default: Date.now,

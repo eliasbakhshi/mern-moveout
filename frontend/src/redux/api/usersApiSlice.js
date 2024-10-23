@@ -219,6 +219,13 @@ export const usersApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+    sendMarketingEmail: builder.mutation({
+      query: (info) => ({
+        url: `/api/users/MarketingEmail`,
+        body: info,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -251,4 +258,5 @@ export const {
   useChangeUserStatusMutation,
   useRecoverUserMutation,
   useDeleteUserPermanentlyMutation,
+  useSendMarketingEmailMutation,
 } = usersApi;

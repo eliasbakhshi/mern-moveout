@@ -6,6 +6,7 @@ import {
   useDeleteItemMutation,
   useUpdateItemMutation,
   useGetBoxQuery,
+  useChangeCurrencyMutation,
 } from "../../redux/api/mainApiSlice";
 import {
   useGetUsersEmailAndNameQuery,
@@ -63,6 +64,7 @@ function Items() {
   const [updateItem] = useUpdateItemMutation();
   const [deleteItem] = useDeleteItemMutation();
   const [shareBox] = useShareBoxMutation();
+  const [changeCurrency] = useChangeCurrencyMutation();
   const {
     data: box,
     isLoading: boxLoading,
@@ -104,6 +106,7 @@ function Items() {
     const { value, name, id } = e.target;
     setInputs({ ...inputs, [name]: value });
   };
+
   const deletePreview = () => {
     setImage("");
     setInputs({ ...inputs, media: "", mediaPath: "", mode: "delete" });
@@ -154,20 +157,6 @@ function Items() {
     }
   };
 
-  const deleteItemHandler = async (e) => {
-    e.preventDefault();
-    try {
-      const { data, error } = await deleteItem(inputs.itemId);
-      toast.success(data.message);
-    } catch (err) {
-      toast.error(
-        err?.message || "An error occurred. Please contact the administration.",
-      );
-    }
-    // refetchBox();
-    setIsOpenModal(false);
-  };
-
   const editItemHandler = async (e) => {
     e.preventDefault();
 
@@ -214,6 +203,20 @@ function Items() {
           "An error occurred. Please contact the administration.",
       );
     }
+  };
+
+  const deleteItemHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await deleteItem(inputs.itemId);
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(
+        err?.message || "An error occurred. Please contact the administration.",
+      );
+    }
+    // refetchBox();
+    setIsOpenModal(false);
   };
 
   const showModal = (itemId = "", mode = "create") => {
@@ -282,6 +285,26 @@ function Items() {
     }
   };
 
+  const changeCurrencyHandler = async (e) => {
+    e.preventDefault();
+    const currency = e.target.value;
+    try {
+      const { data, error } = await changeCurrency({ boxId, currency });
+      if (error) {
+        toast.error(error.data.message);
+      } else {
+        toast.success(data.message);
+      }
+    } catch (err) {
+      toast.error(
+        err?.data?.message ||
+
+          "An error occurred. Please contact the administration.",
+      );
+    }
+  };
+
+
   // console.log("box", box);
   // console.log("inputs", inputs);
 
@@ -309,7 +332,7 @@ function Items() {
         <ItemList items={filteredItems} showModal={showModal} />
       )}
       {box.type === "insurance" && (
-        <ItemListInsurance items={filteredItems} showModal={showModal} />
+        <ItemListInsurance items={filteredItems} showModal={showModal} changeCurrencyHandler={changeCurrencyHandler} currency={box.currency}/>
       )}
 
       {/* Show the popup for sharing the label with users. */}

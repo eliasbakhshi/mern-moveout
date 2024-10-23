@@ -106,6 +106,8 @@ router.put("/users", _validateToken["default"], (0, _checkAccess["default"])("ad
 router["delete"]("/users", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.deleteUser));
 router.put("/users/status", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.changeUserStatus));
 router.put("/users/recover", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.recoverUser));
+router["delete"]("/users/permanently", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.deleteUserPermanently));
+router.post("/users/MarketingEmail", _validateToken["default"], (0, _checkAccess["default"])("admin"), (0, _expressAsyncHandler["default"])(_user.sendMarketingEmail));
 var _default = router; // TODO: redirect to verification page after the token was expired or changed or invalid
 // TODO: Implement reset password
 

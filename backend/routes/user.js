@@ -18,6 +18,8 @@ import {
   editUser,
   deleteUser,
   recoverUser,
+  deleteUserPermanently,
+  sendMarketingEmail,
   changeUserStatus,
   verifyTokenResetPassword,
   updateUserPasswordById,
@@ -268,6 +270,20 @@ router.put(
   validateToken,
   checkAccess("admin"),
   asyncHandler(recoverUser),
+);
+
+router.delete(
+  "/users/permanently",
+  validateToken,
+  checkAccess("admin"),
+  asyncHandler(deleteUserPermanently),
+);
+
+router.post(
+  "/users/MarketingEmail",
+  validateToken,
+  checkAccess("admin"),
+  asyncHandler(sendMarketingEmail),
 );
 
 export default router;

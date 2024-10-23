@@ -28,7 +28,8 @@ router.get("/boxes/:boxId", _validateToken["default"], (0, _checkAccess["default
 router.post("/boxes", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("name").trim().isString().notEmpty(), (0, _expressValidator.body)("label").trim().isString().notEmpty(), (0, _expressAsyncHandler["default"])(_main.createBox));
 router.put("/boxes", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressValidator.body)("name").trim().isString().notEmpty(), (0, _expressValidator.body)("label").trim().isString().notEmpty(), (0, _expressAsyncHandler["default"])(_main.updateBox));
 router["delete"]("/boxes/:boxId", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.deleteBox));
-router.put("/boxes/status", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.changeBoxStatus)); // Public stuff
+router.put("/boxes/status", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.changeBoxStatus));
+router.put("/boxes/currency", _validateToken["default"], (0, _checkAccess["default"])("user"), (0, _expressAsyncHandler["default"])(_main.changeCurrency)); // Public stuff
 
 router.get("/boxes/:boxId/show", (0, _expressAsyncHandler["default"])(_main.showBoxById));
 router.post("/contact", (0, _expressAsyncHandler["default"])(_main.sendContactMessage)); // Items

@@ -7,6 +7,7 @@ import {
   updateBox,
   deleteBox,
   changeBoxStatus,
+  changeCurrency,
   showBoxById,
   sendContactMessage,
   getBoxItems,
@@ -69,6 +70,13 @@ router.put(
   validateToken,
   checkAccess("user"),
   asyncHandler(changeBoxStatus),
+);
+
+router.put(
+  "/boxes/currency",
+  validateToken,
+  checkAccess("user"),
+  asyncHandler(changeCurrency),
 );
 
 // Public stuff

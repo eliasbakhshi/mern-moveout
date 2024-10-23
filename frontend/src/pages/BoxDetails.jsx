@@ -55,7 +55,7 @@ function BoxDetails() {
     items.type === "standard" ? (
       <ItemList items={items.items} />
     ) : (
-      <ItemListInsurance items={items.items} />
+      <ItemListInsurance items={items.items} currency={items.currency} />
     )
   ) : itemsError?.data?.message?.includes("private") ? (
     <>

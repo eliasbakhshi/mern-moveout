@@ -138,20 +138,26 @@ function Register() {
           type="password"
           id="password"
           required
-          minLength={6}
           extraClasses="mb-3"
           ref={passwordRef}
-          placeholder="At least 6 characters"
+          minLength="6"
+          maxLength="100"
+          pattern="[a-zA-Z0-9]*"
+          title="Password must be 6 - 100 characters long and contain only alphanumeric characters."
+          placeholder="6 - 100 characters and alphanumeric"
         />
         <label htmlFor="confirmPassword">Confirm Password</label>
         <Input
           type="password"
           id="confirmPassword"
           required
-          minLength={6}
           extraClasses="mb-3"
           ref={confirmPasswordRef}
-          placeholder="At least 6 characters"
+          minLength="6"
+          maxLength="100"
+          pattern="[a-zA-Z0-9]*"
+          title="Password must be 6 - 100 characters long and contain only alphanumeric characters."
+          placeholder="6 - 100 characters and alphanumeric"
         />
         <ReCAPTCHA
           sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}

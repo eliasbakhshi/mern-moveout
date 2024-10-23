@@ -1,6 +1,8 @@
 import { CiEdit } from "react-icons/ci";
 import { LuTrash } from "react-icons/lu";
 import { RxReset } from "react-icons/rx";
+import { MdOutlineEmail } from "react-icons/md";
+
 
 function UserList({
   users,
@@ -21,8 +23,6 @@ function UserList({
       return `${dataUsage} B`;
     }
   };
-
-  console.log(recoverUserHandler);
 
   return (
     <div className="container flex w-full flex-row flex-wrap gap-x-[10%] gap-y-5 px-4 py-5 md:gap-y-10 xl:px-0">
@@ -65,6 +65,8 @@ function UserList({
                   >
                     <div className="flex items-center truncate p-4 md:w-[30%] md:p-3">
                       <span className="w-28 truncate md:hidden">Name</span>
+
+                      <span className="w-[calc(100%-7rem)] truncate md:w-full flex items-center">
                       <img
                         src={
                           updatedUser.mediaPath
@@ -74,7 +76,6 @@ function UserList({
                         alt="User"
                         className="mr-3 h-10 w-10 rounded-full"
                       />
-                      <span className="w-[calc(100%-7rem)] truncate md:w-full">
                         {updatedUser.name}
                       </span>
                     </div>
@@ -93,11 +94,19 @@ function UserList({
                       </span>
                     </div>
                     <div className="flex items-center p-4 md:w-[10%] md:p-3">
-                      <span className="w-28</div> truncate md:hidden">
+                      <span className="w-28 truncate md:hidden">
                         Status
                       </span>
                       <span
-                        className={`w-[calc(100%-7rem)] truncate text-center md:w-full ${changeStatusHandler ? "active:-translat</div>e-y-0 transform rounded-md bg-blue-100 p-1 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-blue-200 hover:shadow-sm active:shadow-inner" : ""} `}
+                        className={`w-[calc(100%-7rem)] truncate text-center md:w-full ${
+                          changeStatusHandler
+                            ? `active:-translate-y-0 transform rounded-md bg-${
+                                updatedUser.isActive ? "blue" : "red"
+                              }-100 p-1 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-${
+                                updatedUser.isActive ? "blue" : "red"
+                              }-200 hover:shadow-sm active:shadow-inner`
+                            : ""
+                        }`}
                         onClick={
                           changeStatusHandler
                             ? () =>
@@ -116,7 +125,7 @@ function UserList({
                       </span>
                     </div>
                     <div className="flex items-center justify-evenly p-4 md:w-[20%] md:p-3">
-                      {showingDeletedUsers && recoverUserHandler? (
+                      {showingDeletedUsers && recoverUserHandler ? (
                         <button
                           onClick={() => recoverUserHandler(updatedUser._id)}
                           className="transform rounded-lg p-3 text-blue-600 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-blue-200 hover:text-blue-900 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
@@ -124,12 +133,20 @@ function UserList({
                           <RxReset />
                         </button>
                       ) : (
-                        <button
-                          onClick={() => showModal(updatedUser._id, "edit")}
-                          className="transform rounded-lg p-3 text-blue-600 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-blue-200 hover:text-blue-900 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
-                        >
-                          <CiEdit />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => showModal(updatedUser._id, "edit")}
+                            className="transform rounded-lg p-3 text-blue-600 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-blue-200 hover:text-blue-900 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
+                          >
+                            <CiEdit />
+                          </button>
+                          <button
+                            onClick={() => showModal(updatedUser._id, "marketing-email")}
+                            className="transform rounded-lg p-3 text-blue-600 transition-transform duration-100 ease-in-out hover:-translate-y-0.5 hover:cursor-pointer hover:bg-blue-200 hover:text-blue-900 hover:shadow-sm active:-translate-y-0 active:shadow-inner"
+                          >
+                            <MdOutlineEmail  />
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() =>
