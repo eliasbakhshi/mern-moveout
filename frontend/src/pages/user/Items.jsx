@@ -402,14 +402,14 @@ function Items() {
             {box.type === "standard" && (
               <>
                 <div
-                  className={`group relative h-96 w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
+                  className={`group relative h-[30rem] w-full overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-md transition-all ease-in-out hover:shadow-lg active:shadow-inner`}
                   style={{ backgroundImage: `url(${image})` }}
                 >
                   <label
                     htmlFor="media"
                     className="z-30 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/30 duration-200 ease-in hover:bg-gray-100/70 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800"
                   >
-                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                    <div className="flex flex-col items-center justify-center pb-6 md:pb-0">
                       <div className="flex flex-row items-center justify-center gap-5">
                         <FaDownload size="2rem" className="mb-3" />
                       </div>

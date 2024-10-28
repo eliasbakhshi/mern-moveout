@@ -48,6 +48,7 @@ function ResetPassword() {
     const email = emailRef.current.value;
     try {
       const res = await sendEmailResetPassword({ email }).unwrap();
+      e.target.reset();
       return toast.success(res.message);
     } catch (err) {
       return toast.error(
@@ -67,6 +68,7 @@ function ResetPassword() {
         confirmPassword,
         userId: user.userId,
       }).unwrap();
+      e.target.reset();
       navigate("/login");
       return toast.success(res.message);
     } catch (err) {

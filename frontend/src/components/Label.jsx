@@ -1,6 +1,8 @@
 import { QRCodeCanvas } from "qrcode.react";
 import { forwardRef } from "react";
 
+// TODO: Half of the title in the printed labels in PDF shows
+
 const Label = forwardRef(({ label: l, extraClasses }, ref) => {
   return (
     <div
@@ -17,7 +19,9 @@ const Label = forwardRef(({ label: l, extraClasses }, ref) => {
           className="h-full w-full"
         />
         <div className="absolute left-0 flex w-[50%] flex-col items-center justify-center">
-          <p className="mb-3 flex flex-wrap items-center text-center justify-center text-sm text-black md:text-xl lg:text-base">
+          <p className="mb-4 h-6 text-sm text-center text-black md:text-xl lg:text-base overflow-hidden w-4/5">
+          {/* <p className="flex flex-wrap text-sm text-black text-center">{l.name}</p> */}
+
             {l.name}
           </p>
           <QRCodeCanvas

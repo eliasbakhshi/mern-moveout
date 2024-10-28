@@ -66,7 +66,7 @@ const router = createBrowserRouter(
         <Route path="users" element={<Users />} />
       </Route>
 
-      <Route path="*" element={<Error404 />} />
+      <Route path="*" element={<Home />} />
     </Route>,
   ),
 );
