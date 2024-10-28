@@ -1,6 +1,9 @@
 ## dotenv environment variable files
 .env.development
+.env.production
 
 node_modules/
+/uploads
+/deleted-uploads
 
 Done.txt
